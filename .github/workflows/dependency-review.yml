@@ -22,6 +22,10 @@ permissions:
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
+    env:
+      # JS-based actions (checkout, dependency-review, harden-runner) until they default to Node 24.
+      # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2.16.1

@@ -6,7 +6,7 @@ This repository uses several tools to lint workflows, surface supply-chain postu
 
 **What it does:** Validates GitHub Actions workflow YAML (syntax, contexts, runner labels, reusable workflow usage).
 
-**Where it runs:** `.github/workflows/reusable-workflows-quality.yml` job `actionlint-zizmor`.
+**Where it runs:** `.github/workflows/reusable-workflows-quality.yml` job `actionlint-zizmor`. The step prints the workflow and composite-action paths being scanned, then `actionlint: OK (no findings).` when the run is clean.
 
 **Local use**
 
@@ -27,7 +27,7 @@ docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
 
 **Where it runs:** `reusable-workflows-quality.yml` against `.github/workflows/`, `.github/actions/`, and `examples/`.
 
-**Policy:** [`.github/config/zizmor.yml`](../.github/config/zizmor.yml) sets `unpinned-uses` to **ref-pin** (tag or SHA). The default zizmor policy is hash-pin for all actions; ref-pin matches typical Dependabot + semver tags. Tighten to full SHA pinning when you adopt a pin-updater (for example [pinact](https://github.com/suzuki-shunsuke/pinact) or [frizbee](https://github.com/stacklok/frizbee)).
+**Policy:** [`.github/config/zizmor.yml`](../.github/config/zizmor.yml) sets `unpinned-uses` to **ref-pin** (tag or SHA) and ignores `secrets-outside-env` for `python-quality.yml` only (optional `caller_pat` for fork PR comments without requiring callers to define a GitHub Environment). The default zizmor policy is hash-pin for all actions; ref-pin matches typical Dependabot + semver tags. Tighten to full SHA pinning when you adopt a pin-updater (for example [pinact](https://github.com/suzuki-shunsuke/pinact) or [frizbee](https://github.com/stacklok/frizbee)).
 
 **Local use**
 
@@ -41,11 +41,11 @@ Run from the repository root and pass `-c .github/config/zizmor.yml` (or set `ZI
 
 ## OpenSSF Scorecard
 
-**What it does:** Scores repository security health (branch protection, dependencies, CI, etc.) and can publish SARIF to the GitHub Security tab.
+**What it does:** Scores repository security health (branch protection, dependencies, CI, etc.). CI writes **SARIF** (`results.sarif`) and **publishes** it to GitHub code scanning. The same SARIF file is parsed by `scripts/scorecard_summary.py` to print a Markdown table and verdict in the log and the GitHub **job summary** (Scorecard encodes each check as `score is N: …` in SARIF result messages).
 
 **Where it runs:** `reusable-workflows-quality.yml` job `openssf-scorecard` using `ossf/scorecard-action@v2.4.3`.
 
-**Requirements:** Publishing results needs `id-token: write` and `security-events: write`, and a non-fork repository. Forks skip this job.
+**Requirements:** The job uses `id-token: write` and `security-events: write` for the action; runs are skipped on forks.
 
 **Docs:** [OpenSSF Scorecard](https://scorecard.dev/), [scorecard-action](https://github.com/ossf/scorecard-action).
 

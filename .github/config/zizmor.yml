@@ -5,3 +5,8 @@ rules:
     config:
       policies:
         "*": ref-pin
+  # Optional caller PAT for fork PR comments falls back to github.token; reusable-workflow consumers
+  # are not required to define a GitHub Environment for this single secret reference.
+  secrets-outside-env:
+    ignore:
+      - python-quality.yml

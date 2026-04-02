@@ -26,6 +26,8 @@ jobs:
   scripts:
     name: pytest, pylint, interrogate, radon
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@v2.16.1
@@ -58,32 +60,7 @@ jobs:
       - name: interrogate (scripts)
         run: uv run interrogate scripts -vv
 
-      - name: Radon — max cyclomatic complexity ≤ 5 (quality_gates)
-        run: |
-          uv run python << 'PY'
-          import json
-          import subprocess
-          import sys
-
-          raw = subprocess.check_output(
-              ["uv", "run", "radon", "cc", "-j", "scripts/quality_gates"],
-              text=True,
-          )
-          data = json.loads(raw)
-          max_cc = 0.0
-          for blocks in data.values():
-              if not isinstance(blocks, list):
-                  continue
-              for b in blocks:
-                  if isinstance(b, dict) and "complexity" in b:
-                      max_cc = max(max_cc, float(b["complexity"]))
-          if max_cc > 5:
-              print(f"Max cyclomatic complexity {max_cc} exceeds 5", file=sys.stderr)
-              sys.exit(1)
-          print(f"Max CC {max_cc} (limit 5)")
-          PY
-
-      - name: Radon — maintainability index > 40 per file (quality_gates)
+      - name: Radon — cyclomatic complexity (quality_gates)
         run: |
           uv run python << 'PY'
           import json
@@ -91,14 +68,85 @@ jobs:
           import sys
           from pathlib import Path
 
-          files = sorted(str(p) for p in Path("scripts/quality_gates").glob("*.py"))
-          raw = subprocess.check_output(["uv", "run", "radon", "mi", "-j", *files], text=True)
+          root = Path("scripts/quality_gates")
+          py_files = sorted(p.name for p in root.glob("*.py"))
+          print("Radon CC — scope: scripts/quality_gates/*.py")
+          print(f"Modules scanned ({len(py_files)}): {', '.join(py_files)}")
+          print()
+
+          raw = subprocess.check_output(
+              ["uv", "run", "radon", "cc", "-j", str(root)],
+              text=True,
+          )
+          data = json.loads(raw)
+          rows: list[tuple[str, float, int]] = []
+          overall_max = 0.0
+          for path in sorted(data.keys()):
+              blocks = data[path]
+              if not isinstance(blocks, list):
+                  continue
+              max_c = 0.0
+              n = 0
+              for b in blocks:
+                  if isinstance(b, dict) and "complexity" in b:
+                      max_c = max(max_c, float(b["complexity"]))
+                      n += 1
+              if n:
+                  rel = str(Path(path).as_posix())
+                  rows.append((rel, max_c, n))
+                  overall_max = max(overall_max, max_c)
+
+          print(f"{'File':<48} {'Max CC':>8}  {'Blocks':>8}")
+          print("-" * 68)
+          for rel, max_c, n in rows:
+              print(f"{rel:<48} {max_c:>8.1f}  {n:>8d}")
+          print("-" * 68)
+          print(f"{'Overall max CC (across files)':<48} {overall_max:>8.1f}  (limit ≤ 5.0)")
+          if overall_max > 5:
+              print(f"FAIL: max cyclomatic complexity {overall_max} exceeds 5", file=sys.stderr)
+              sys.exit(1)
+          print("PASS: cyclomatic complexity within limit.")
+          PY
+
+      - name: Radon — maintainability index (quality_gates)
+        run: |
+          uv run python << 'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path("scripts/quality_gates")
+          files = sorted(root.glob("*.py"))
+          paths = [str(p) for p in files]
+          print("Radon MI — scope: scripts/quality_gates/*.py")
+          print(f"Modules scanned ({len(paths)}): {', '.join(p.name for p in files)}")
+          print()
+
+          raw = subprocess.check_output(["uv", "run", "radon", "mi", "-j", *paths], text=True)
           data = json.loads(raw)
           floor = 40.0
-          bad = [(path, meta["mi"]) for path, meta in data.items() if meta.get("mi", 0) <= floor]
+          rows: list[tuple[str, float, str]] = []
+          for path in sorted(data.keys()):
+              meta = data[path]
+              if not isinstance(meta, dict):
+                  continue
+              mi = float(meta.get("mi", 0.0))
+              rnk = meta.get("rank", "?")
+              rnk_s = rnk if isinstance(rnk, str) else "?"
+              rows.append((str(Path(path).as_posix()), mi, rnk_s))
+
+          print(f"{'File':<48} {'MI':>10}  {'Rank':>6}")
+          print("-" * 70)
+          for rel, mi, rnk_s in rows:
+              print(f"{rel:<48} {mi:>10.2f}  {rnk_s:>6}")
+          print("-" * 70)
+          mins = min((mi for _, mi, _ in rows), default=0.0)
+          print(f"{'Minimum MI (worst file)':<48} {mins:>10.2f}  (must be > {floor})")
+          bad = [(rel, mi) for rel, mi, _ in rows if mi <= floor]
           if bad:
-              for path, mi in bad:
-                  print(f"{path}: MI {mi} (must be > {floor})", file=sys.stderr)
+              for rel, mi in bad:
+                  print(f"FAIL: {rel}: MI {mi:.2f} (must be > {floor})", file=sys.stderr)
               sys.exit(1)
-          print("All quality_gates modules MI >", floor)
+          print("PASS: maintainability index above floor for all files.")
           PY
