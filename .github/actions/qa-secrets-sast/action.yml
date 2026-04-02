@@ -1,0 +1,98 @@
+name: QA — Secrets & SAST (Gitleaks + Semgrep)
+description: >
+  Phase "Shield" entrypoints: secret scanning with SARIF upload and blocking Semgrep
+  (p/python + repo custom rules). Expects the application repo checked out at workspace root
+  and DevOps at devops-checkout-path.
+
+inputs:
+  workspace:
+    description: Absolute path to application repository root (e.g. github.workspace)
+    required: true
+  quality-output-dir:
+    description: Absolute path to quality-output directory
+    required: true
+  devops-checkout-path:
+    description: Absolute path to the DevOps clone (…/workspace/.devops)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Gitleaks
+      shell: bash
+      run: |
+        set -euo pipefail
+        GITLEAKS_VERSION=8.21.2
+        curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
+
+    - name: Gitleaks — reports (JSON + SARIF)
+      shell: bash
+      env:
+        OUT: ${{ inputs.quality-output-dir }}
+        WS: ${{ inputs.workspace }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$OUT"
+        cd "$WS"
+        gitleaks detect --source . --no-banner --verbose --redact \
+          --report-format json --report-path "$OUT/gitleaks.json" --exit-code 0
+        gitleaks detect --source . --no-banner --verbose --redact \
+          --report-format sarif --report-path "$OUT/gitleaks.sarif" --exit-code 0
+
+    - name: Gitleaks — fail on findings
+      shell: bash
+      env:
+        OUT: ${{ inputs.quality-output-dir }}
+      run: |
+        set -euo pipefail
+        n=$(jq 'if . == null then 0 elif type == "array" then length else 0 end' "$OUT/gitleaks.json")
+        if [ "${n:-0}" -gt 0 ]; then
+          echo "::error::Gitleaks reported ${n} finding(s). See gitleaks.json in artifacts."
+          exit 1
+        fi
+
+    - name: Upload Gitleaks SARIF
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.quality-output-dir }}/gitleaks.sarif
+      continue-on-error: true
+
+    - name: Install Semgrep (pipx)
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        SPEC=$(grep -v '^#' "$DEVOPS/.github/dependencies/semgrep/requirements.txt" | head -1 | tr -d ' \n\r')
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends pipx
+        pipx ensurepath
+        pipx install "$SPEC"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    - name: Semgrep scan (SARIF + blocking)
+      shell: bash
+      env:
+        OUT: ${{ inputs.quality-output-dir }}
+        WS: ${{ inputs.workspace }}
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$OUT"
+        cd "$WS"
+        export PATH="$HOME/.local/bin:$PATH"
+        semgrep scan --config p/python \
+          --config "$DEVOPS/.github/config/semgrep/python-custom.yml" \
+          --exclude .devops \
+          --sarif --output "$OUT/semgrep.sarif" . || true
+        semgrep scan --config p/python \
+          --config "$DEVOPS/.github/config/semgrep/python-custom.yml" \
+          --exclude .devops \
+          --error
+
+    - name: Upload Semgrep SARIF
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ inputs.quality-output-dir }}/semgrep.sarif
+      continue-on-error: true

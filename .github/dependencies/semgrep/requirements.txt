@@ -1,0 +1,2 @@
+# Semgrep installed via pipx in python-quality.yml. Dependabot: pip, /.github/dependencies/semgrep
+semgrep==1.118.0

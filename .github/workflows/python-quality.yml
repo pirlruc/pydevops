@@ -1,0 +1,346 @@
+name: Python Quality (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      strictness_level:
+        description: "Low, Medium, or High gate thresholds"
+        type: string
+        default: "Medium"
+      docstring_format:
+        description: "Google, Numpy, or Pep257 (ruff pydocstyle convention)"
+        type: string
+        default: "Google"
+      enable_dast:
+        description: "Run OWASP ZAP + Locust via docker compose"
+        type: boolean
+        default: false
+      license_deny_list:
+        description: 'JSON array of license substrings to forbid (SPDX SBOM), e.g. ["GPL-3.0"]'
+        type: string
+        default: "[]"
+      devops_repository:
+        description: "This DevOps repository (owner/name)"
+        type: string
+        required: true
+      devops_ref:
+        description: "Tag, branch, or SHA for DevOps checkout (use SemVer tag in production)"
+        type: string
+        required: true
+      working_directory:
+        description: "App subdirectory containing pyproject / package"
+        type: string
+        default: "."
+      python_version:
+        description: "Python version for uv"
+        type: string
+        default: "3.13"
+      app_install_command:
+        description: "Install app deps before tests (empty to skip)"
+        type: string
+        default: "if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; elif [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi"
+      docker_compose_file:
+        description: "Compose file for DAST (relative to app root)"
+        type: string
+        default: "docker-compose.yml"
+      dast_target_url:
+        description: "Base URL for OWASP ZAP (app must listen in compose)"
+        type: string
+        default: "http://localhost:8080"
+    secrets:
+      github_token:
+        description: "Optional token override for comments / forks"
+        required: false
+
+  workflow_dispatch:
+    inputs:
+      strictness_level:
+        type: choice
+        options: [Low, Medium, High]
+        default: Medium
+      docstring_format:
+        type: choice
+        options: [Google, Numpy, Pep257]
+        default: Google
+      enable_dast:
+        type: boolean
+        default: false
+      license_deny_list:
+        type: string
+        default: "[]"
+      working_directory:
+        type: string
+        default: "."
+      python_version:
+        type: string
+        default: "3.13"
+      docker_compose_file:
+        type: string
+        default: "docker-compose.yml"
+      dast_target_url:
+        type: string
+        default: "http://localhost:8080"
+      app_install_command:
+        description: "Optional override (empty uses pyproject/requirements heuristic)"
+        type: string
+        default: ""
+
+# Least privilege: each job declares only the token scopes it needs. Callers should use
+# `permissions: {}` at workflow level and `secrets: inherit` only when required.
+permissions: {}
+
+env:
+  QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
+
+jobs:
+  python-quality:
+    name: Quality pipeline
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout application
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Checkout DevOps tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || inputs.devops_repository }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || inputs.devops_ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Prepare output directory
+        run: mkdir -p "$QUALITY_OUTPUT_DIR"
+
+      # --- Phase 4 (Shield): secrets + SAST (Gitleaks, Semgrep) — no app venv required ---
+      - name: "QA phase: Secrets & SAST"
+        uses: ./.devops/.github/actions/qa-secrets-sast
+        with:
+          workspace: ${{ github.workspace }}
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+
+      # --- Toolchain: Node/jscpd, cloc, Syft/Grype, uv, quality CLIs ---
+      - name: "QA phase: Install toolchain"
+        uses: ./.devops/.github/actions/qa-install-toolchain
+        with:
+          workspace: ${{ github.workspace }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          working-directory: ${{ inputs.working_directory }}
+          python-version: ${{ inputs.python_version }}
+
+      # --- Phase 3 (Gatekeeper): app deps + Ruff (pydocstyle) + static bundle ---
+      - name: "QA phase: App install & Ruff"
+        uses: ./.devops/.github/actions/qa-app-install-and-ruff
+        with:
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          runner-temp: ${{ runner.temp }}
+          docstring-format: ${{ inputs.docstring_format }}
+          github-event-name: ${{ github.event_name }}
+          app-install-command: ${{ inputs.app_install_command }}
+
+      - name: "QA phase: Static analysis & quality metrics (Pylint, Mypy, pydoclint, Interrogate, jscpd, Radon)"
+        uses: ./.devops/.github/actions/qa-run-quality-phase
+        with:
+          phase: static
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+
+      # --- Phase 4 (Shield): Bandit, deptry, pip-audit, SBOM, Grype JSON, uv lock --check ---
+      - name: "QA phase: Security & supply chain"
+        uses: ./.devops/.github/actions/qa-run-quality-phase
+        with:
+          phase: security
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+
+      # --- Phase 5: Pytest + coverage ---
+      - name: "QA phase: Tests & coverage"
+        uses: ./.devops/.github/actions/qa-run-quality-phase
+        with:
+          phase: test
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+
+      - name: License deny list (SPDX)
+        env:
+          SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
+          LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
+        run: python3 "${{ github.workspace }}/.devops/scripts/license_gate.py"
+
+      - name: Grype — fail on High severities
+        run: |
+          SBOM="$QUALITY_OUTPUT_DIR/sbom-cyclonedx.json"
+          if [ -f "$SBOM" ] && [ -s "$SBOM" ]; then
+            grype "sbom:$SBOM" --fail-on high
+          else
+            echo "No CycloneDX SBOM; skipping Grype scan."
+          fi
+
+      - name: Evaluate quality gates
+        env:
+          STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
+        run: uv run --directory "${{ github.workspace }}/.devops" python -m scripts.quality_gates
+
+      - name: Consolidate artifacts
+        if: always()
+        run: python3 "${{ github.workspace }}/.devops/scripts/consolidate_artifacts.py"
+
+      - name: Upload quality bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-bundle
+          path: ${{ env.QUALITY_OUTPUT_DIR }}/
+
+      - name: Write PR comment body
+        if: always() && github.event_name == 'pull_request'
+        run: python3 "${{ github.workspace }}/.devops/scripts/pr_comment_markdown.py" > "${{ github.workspace }}/quality-pr-comment.md"
+
+      - name: Upload PR comment artifact
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-quality-comment
+          path: quality-pr-comment.md
+          if-no-files-found: ignore
+
+  pr-quality-comment:
+    name: Post PR quality summary
+    needs: python-quality
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - name: Download PR comment body
+        id: download
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: pr-quality-comment
+
+      - name: Post PR comment
+        if: steps.download.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.github_token || github.token }}
+          script: |
+            const fs = require('fs');
+            const path = 'quality-pr-comment.md';
+            if (!fs.existsSync(path)) return;
+            const body = fs.readFileSync(path, 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+  dast:
+    name: DAST (ZAP + Locust)
+    if: ${{ inputs.enable_dast == true }}
+    runs-on: ubuntu-latest
+    needs: python-quality
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout application
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout DevOps tooling
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || inputs.devops_repository }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || inputs.devops_ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Install uv
+        uses: ./.devops/.github/actions/install-uv
+
+      - name: Prepare DAST output dir
+        run: mkdir -p "${{ github.workspace }}/quality-output"
+
+      - name: Start stack and run Locust (smoke)
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          COMPOSE_FILE: ${{ inputs.docker_compose_file }}
+          DAST_TARGET_URL: ${{ inputs.dast_target_url }}
+        run: |
+          docker compose -f "$COMPOSE_FILE" up -d --build
+          sleep 15
+          LOCUST_SPEC=$(grep -v '^#' "${{ github.workspace }}/.devops/.github/dependencies/dast-python/requirements.txt" | head -1 | tr -d ' \n\r')
+          uv tool install "${LOCUST_SPEC}"
+          export PATH="$HOME/.local/bin:$PATH"
+          if [ -f locustfile.py ]; then
+            locust -f locustfile.py --headless -u 5 -r 1 -t 30s --host "$DAST_TARGET_URL" \
+              --html "${{ github.workspace }}/quality-output/locust_report.html" || true
+          else
+            echo "No locustfile.py; skipping Locust." > "${{ github.workspace }}/quality-output/locust_skip.txt"
+          fi
+
+      - name: OWASP ZAP Baseline
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ inputs.dast_target_url }}
+          rules_file_name: ".zap/rules.tsv"
+          cmd_options: "-a"
+          allow_issue_writing: false
+
+      - name: Collect ZAP report into bundle folder
+        if: always()
+        run: |
+          if [ -f report_html.html ]; then
+            cp report_html.html "${{ github.workspace }}/quality-output/zap_report.html" || true
+          fi
+
+      - name: Tear down compose
+        if: always()
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          COMPOSE_FILE: ${{ inputs.docker_compose_file }}
+        run: docker compose -f "$COMPOSE_FILE" down -v || true
+
+      - name: Upload DAST artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-reports
+          path: |
+            report_html.html
+            quality-output

@@ -1,0 +1,93 @@
+# -----------------------------------------------------------------------------
+# Standalone workflow — NOT workflow_call / NOT reusable.
+# Validates correctness and security posture of workflow and composite-action
+# definitions in this repository (including the QaaS reusable workflows).
+#
+# Tools: StepSecurity Harden-Runner | actionlint | zizmor | OpenSSF Scorecard
+# -----------------------------------------------------------------------------
+
+name: Reusable workflows quality
+
+on:
+  pull_request:
+    paths:
+      - ".github/**"
+      - "examples/**"
+      - "docs/**"
+  push:
+    branches: [main, master]
+    paths:
+      - ".github/**"
+      - "examples/**"
+      - "docs/**"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions: {}
+
+jobs:
+  actionlint-zizmor:
+    name: actionlint & zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.7
+        run: |
+          set -euo pipefail
+          curl -sSL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash" | bash -s -- "${ACTIONLINT_VERSION}"
+          sudo mv actionlint /usr/local/bin/
+
+      - name: Run actionlint
+        run: actionlint -color
+
+      - name: Install zizmor
+        run: |
+          python3 -m pip install --user -r "${{ github.workspace }}/.github/dependencies/zizmor/requirements.txt"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run zizmor
+        run: |
+          zizmor -c .github/config/zizmor.yml --format plain .github/workflows/
+          zizmor -c .github/config/zizmor.yml --format plain .github/actions/
+          zizmor -c .github/config/zizmor.yml --format plain examples/
+
+  openssf-scorecard:
+    name: OpenSSF Scorecard
+    if: >
+      github.event.repository.fork == false &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true

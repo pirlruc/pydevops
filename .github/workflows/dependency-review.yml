@@ -1,0 +1,35 @@
+# Optional supply-chain signal for repositories with lockfiles (see docs/improvements.md).
+
+name: Dependency review
+
+on:
+  pull_request:
+    paths:
+      - "**/uv.lock"
+      - "**/package-lock.json"
+      - "**/pnpm-lock.yaml"
+      - "**/yarn.lock"
+      - "**/requirements*.txt"
+      - "**/poetry.lock"
+      - "**/Pipfile.lock"
+      - ".github/dependencies/jscpd/package.json"
+      - ".github/dependabot.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/dependency-review-action@v4

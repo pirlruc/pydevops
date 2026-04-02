@@ -1,0 +1,22 @@
+rules:
+  - id: avoid-eval
+    languages: [python]
+    severity: ERROR
+    message: Avoid eval(); it is a common source of code injection.
+    pattern: eval(...)
+
+  - id: avoid-exec
+    languages: [python]
+    severity: ERROR
+    message: Avoid exec(); prefer safer alternatives.
+    pattern: exec(...)
+
+  - id: subprocess-shell-true
+    languages: [python]
+    severity: WARNING
+    message: subprocess with shell=True can be dangerous; validate inputs carefully.
+    patterns:
+      - pattern: subprocess.$CALL(..., shell=True, ...)
+      - metavariable-regex:
+          metavariable: $CALL
+          regex: ^(run|Popen|call|check_call|check_output)$

@@ -1,0 +1,33 @@
+name: QA — Run ci_run_quality.sh phase
+description: >
+  Invokes scripts/ci_run_quality.sh with QUALITY_PHASES=static|security|test (Gatekeeper,
+  Shield supply-chain slice, or Tests).
+
+inputs:
+  phase:
+    description: static, security, or test
+    required: true
+  workspace:
+    required: true
+  working-directory:
+    required: true
+  devops-checkout-path:
+    required: true
+  quality-output-dir:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run quality phase (${{ inputs.phase }})
+      shell: bash
+      env:
+        QUALITY_PHASES: ${{ inputs.phase }}
+        QUALITY_OUTPUT_DIR: ${{ inputs.quality-output-dir }}
+        DEVOPS_DIR: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        export PATH="$HOME/.local/bin:$PATH"
+        export APP_DIR="${{ inputs.workspace }}/${{ inputs.working-directory }}"
+        export SKIP_RUFF_IN_BUNDLE=1
+        bash "${{ inputs.devops-checkout-path }}/scripts/ci_run_quality.sh"

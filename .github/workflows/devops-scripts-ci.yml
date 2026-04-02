@@ -1,0 +1,104 @@
+# CI for this repository: scripts, tests, and local Radon/Pylint/Interrogate gates.
+
+name: DevOps scripts CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/devops-scripts-ci.yml"
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/devops-scripts-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: pytest, pylint, interrogate, radon
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/install-uv
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Sync
+        run: uv sync
+
+      - name: pytest
+        run: uv run pytest
+
+      - name: pylint (scripts)
+        run: uv run pylint scripts
+
+      - name: interrogate (scripts)
+        run: uv run interrogate scripts -vv
+
+      - name: Radon — max cyclomatic complexity ≤ 5 (quality_gates)
+        run: |
+          uv run python << 'PY'
+          import json
+          import subprocess
+          import sys
+
+          raw = subprocess.check_output(
+              ["uv", "run", "radon", "cc", "-j", "scripts/quality_gates"],
+              text=True,
+          )
+          data = json.loads(raw)
+          max_cc = 0.0
+          for blocks in data.values():
+              if not isinstance(blocks, list):
+                  continue
+              for b in blocks:
+                  if isinstance(b, dict) and "complexity" in b:
+                      max_cc = max(max_cc, float(b["complexity"]))
+          if max_cc > 5:
+              print(f"Max cyclomatic complexity {max_cc} exceeds 5", file=sys.stderr)
+              sys.exit(1)
+          print(f"Max CC {max_cc} (limit 5)")
+          PY
+
+      - name: Radon — maintainability index > 40 per file (quality_gates)
+        run: |
+          uv run python << 'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          files = sorted(str(p) for p in Path("scripts/quality_gates").glob("*.py"))
+          raw = subprocess.check_output(["uv", "run", "radon", "mi", "-j", *files], text=True)
+          data = json.loads(raw)
+          floor = 40.0
+          bad = [(path, meta["mi"]) for path, meta in data.items() if meta.get("mi", 0) <= floor]
+          if bad:
+              for path, mi in bad:
+                  print(f"{path}: MI {mi} (must be > {floor})", file=sys.stderr)
+              sys.exit(1)
+          print("All quality_gates modules MI >", floor)
+          PY

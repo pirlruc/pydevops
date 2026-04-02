@@ -1,0 +1,22 @@
+name: Install Astral uv (pinned)
+description: >
+  Installs uv using .github/dependencies/uv-version.txt (single source of truth).
+  Use ./.github/actions/install-uv from this repo, or ./.devops/.github/actions/install-uv from an app checkout.
+
+inputs:
+  enable-cache:
+    description: Forwarded to astral-sh/setup-uv (string "true" / "false")
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - id: uv_version
+      shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/../../dependencies/emit-uv-version.sh"
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ steps.uv_version.outputs.version }}
+        enable-cache: ${{ inputs.enable-cache }}

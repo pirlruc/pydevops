@@ -1,0 +1,88 @@
+name: QA — Install toolchain (Node, cloc, Syft, Grype, uv, quality CLIs)
+description: >
+  Prepares runners for Gatekeeper / Shield / Test phases: Node (jscpd), cloc, Syft/Grype,
+  Astral uv (version from DevOps dependencies/uv-version.txt), DevOps script sync, and
+  pinned tools from dependencies/quality-tools/requirements.txt. Uses only public actions
+  or run steps so it works when this action lives under a .devops checkout.
+
+inputs:
+  workspace:
+    description: Application repo root (github.workspace)
+    required: true
+  devops-checkout-path:
+    description: Absolute path to DevOps clone
+    required: true
+  working-directory:
+    description: App subdirectory for Python install
+    required: true
+  python-version:
+    description: CPython version for uv
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node (jscpd)
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install cloc and jq
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cloc jq
+
+    - name: Install Syft and Grype
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b "$HOME/.local/bin"
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b "$HOME/.local/bin"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    - id: uv_version
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: bash "$DEVOPS/.github/dependencies/emit-uv-version.sh"
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ steps.uv_version.outputs.version }}
+
+    - name: Pin Python (app tree)
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        WD: ${{ inputs.working-directory }}
+        PY: ${{ inputs.python-version }}
+      run: |
+        set -euo pipefail
+        cd "$WS/$WD"
+        uv python install "$PY"
+
+    - name: Sync DevOps script dependencies (radon)
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        cd "$DEVOPS"
+        uv sync
+
+    - name: Install quality CLI tools (uv tool install)
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        REQ="$DEVOPS/.github/dependencies/quality-tools/requirements.txt"
+        while IFS= read -r line || [[ -n "${line}" ]]; do
+          line="${line#"${line%%[![:space:]]*}"}"
+          line="${line%"${line##*[![:space:]]}"}"
+          [[ -z "${line}" ]] && continue
+          [[ "${line}" =~ ^# ]] && continue
+          uv tool install "${line}"
+        done < "$REQ"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
