@@ -20,13 +20,15 @@ permissions:
 
 jobs:
   eol-check:
+    name: Track Python support end of life
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out policy configuration
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Evaluate Python support vs endoflife.date
+      - name: Open or skip EOL tracking issues
         uses: actions/github-script@v7
         with:
           script: |

@@ -1,7 +1,7 @@
-name: QA — Run ci_run_quality.sh phase
+name: Run single quality bundle phase
 description: >
-  Invokes scripts/ci_run_quality.sh with QUALITY_PHASES=static|security|test (Gatekeeper,
-  Shield supply-chain slice, or Tests).
+  Runs scripts/ci_run_quality.sh with QUALITY_PHASES set to static, security, or test
+  (Gatekeeper metrics, supply chain slice, or tests and coverage).
 
 inputs:
   phase:
@@ -23,7 +23,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Run quality phase (${{ inputs.phase }})
+    - name: Run ${{ inputs.phase }} phase of bundle
       shell: bash
       env:
         QUALITY_PHASES: ${{ inputs.phase }}

@@ -9,38 +9,40 @@ permissions: {}
 
 jobs:
   mutmut:
+    name: Scheduled mutation testing run
     runs-on: ubuntu-latest
     permissions:
       contents: read
       actions: write
     steps:
-      - name: Harden Runner
+      - name: Harden runner with audited egress
         uses: step-security/harden-runner@v2.16.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Install uv
+      - name: Install pinned package tooling
         uses: ./.github/actions/install-uv
 
-      - name: Install Mutmut
+      - name: Install mutation testing runner
         run: |
           MUT=$(grep -v '^#' .github/dependencies/mutmut/requirements.txt | head -1 | tr -d ' \n\r')
           uv tool install "${MUT}"
 
-      - name: Install project + test deps
+      - name: Sync project and test dependencies
         run: |
           if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; fi
 
-      - name: Run Mutmut
+      - name: Run mutation testing suite
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           mutmut run || true
 
-      - name: Upload mutmut artifacts
+      - name: Upload mutation results artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:

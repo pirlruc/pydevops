@@ -1,9 +1,9 @@
-name: QA — Install toolchain (Node, cloc, Syft, Grype, uv, quality CLIs)
+name: Prepare host for quality phases
 description: >
-  Prepares runners for Gatekeeper / Shield / Test phases: Node (jscpd), cloc, Syft/Grype,
-  Astral uv (version from DevOps dependencies/uv-version.txt), DevOps script sync, and
-  pinned tools from dependencies/quality-tools/requirements.txt. Uses only public actions
-  or run steps so it works when this action lives under a .devops checkout.
+  Sets up the runner for Gatekeeper, Shield, and test phases: JavaScript runtime for
+  duplication detection, line counts, SBOM and vulnerability scanners, pinned dependency
+  manager and CPython, DevOps script sync, and pinned CLIs from quality-tools. Uses only
+  public actions or shell steps so it works under a .devops checkout.
 
 inputs:
   workspace:
@@ -22,16 +22,16 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Node (jscpd)
+    - name: Install runtime for duplication checks
       uses: actions/setup-node@v4
       with:
         node-version: "20"
 
-    - name: Install cloc and jq
+    - name: Install counting and JSON utilities
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cloc jq
 
-    - name: Install Syft and Grype (pinned release tarballs)
+    - name: Install SBOM scanner binaries pinned
       shell: bash
       env:
         DEVOPS: ${{ inputs.devops-checkout-path }}
@@ -48,17 +48,18 @@ runs:
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
     - id: uv_version
+      name: Read pinned installer version file
       shell: bash
       env:
         DEVOPS: ${{ inputs.devops-checkout-path }}
       run: bash "$DEVOPS/.github/dependencies/emit-uv-version.sh"
 
-    - name: Setup uv
+    - name: Install pinned dependency tooling
       uses: astral-sh/setup-uv@v5
       with:
         version: ${{ steps.uv_version.outputs.version }}
 
-    - name: Pin Python (app tree)
+    - name: Install requested Python interpreter
       shell: bash
       env:
         WS: ${{ inputs.workspace }}
@@ -69,7 +70,7 @@ runs:
         cd "$WS/$WD"
         uv python install "$PY"
 
-    - name: Sync DevOps script dependencies (radon)
+    - name: Sync DevOps workspace dependencies
       shell: bash
       env:
         DEVOPS: ${{ inputs.devops-checkout-path }}
@@ -78,7 +79,7 @@ runs:
         cd "$DEVOPS"
         uv sync
 
-    - name: Install quality CLI tools (uv tool install)
+    - name: Install pinned quality helper CLIs
       shell: bash
       env:
         WS: ${{ inputs.workspace }}

@@ -1,7 +1,8 @@
-name: QA — App install + Ruff (QaaS docstrings)
+name: Install application and lint sources
 description: >
-  Installs application dependencies and runs Ruff with the selected pydocstyle convention,
-  writing ruff.json / ruff_format.txt to the quality output dir.
+  Installs application dependencies when the workflow says to, writes docstring lint
+  configuration for the chosen convention, and runs check plus format verification.
+  Writes ruff.json and ruff_format.txt into the quality output directory.
 
 inputs:
   workspace:
@@ -24,7 +25,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install application dependencies
+    - name: Install app dependencies if needed
       shell: bash
       env:
         WS: ${{ inputs.workspace }}
@@ -47,7 +48,7 @@ runs:
           run_install
         fi
 
-    - name: Write dynamic Ruff pydocstyle config
+    - name: Write docstring lint configuration
       shell: bash
       env:
         INPUT_DOCSTRING_FORMAT: ${{ inputs.docstring-format }}
@@ -67,7 +68,7 @@ runs:
         convention = "${CONV}"
         EOF
 
-    - name: Pydoclint style from docstring_format
+    - name: Export docstring style for later steps
       shell: bash
       env:
         INPUT_DOCSTRING_FORMAT: ${{ inputs.docstring-format }}
@@ -80,7 +81,7 @@ runs:
           *) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
         esac
 
-    - name: Run Ruff with QaaS docstring convention
+    - name: Run check and format verification
       shell: bash
       env:
         WS: ${{ inputs.workspace }}

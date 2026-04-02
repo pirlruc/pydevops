@@ -24,23 +24,25 @@ permissions:
 
 jobs:
   scripts:
-    name: pytest, pylint, interrogate, radon
+    name: Verify scripts tests and gates
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - name: Harden Runner
+      - name: Harden runner with audited egress
         uses: step-security/harden-runner@v2.16.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/install-uv
+      - name: Install pinned package tooling
+        uses: ./.github/actions/install-uv
 
-      - name: Cache uv
+      - name: Restore dependency install cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/uv
@@ -48,19 +50,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-
 
-      - name: Sync
+      - name: Sync dependencies from lockfile
         run: uv sync
 
-      - name: pytest
+      - name: Run automated test suite
         run: uv run pytest
 
-      - name: pylint (scripts)
+      - name: Lint scripts directory
         run: uv run pylint scripts
 
-      - name: interrogate (scripts)
+      - name: Check docstring coverage on scripts
         run: uv run interrogate scripts -vv
 
-      - name: Radon — cyclomatic complexity (quality_gates)
+      - name: Enforce complexity limits on gates
         run: |
           uv run python << 'PY'
           import json
@@ -108,7 +110,7 @@ jobs:
           print("PASS: cyclomatic complexity within limit.")
           PY
 
-      - name: Radon — maintainability index (quality_gates)
+      - name: Enforce maintainability floor on gates
         run: |
           uv run python << 'PY'
           import json

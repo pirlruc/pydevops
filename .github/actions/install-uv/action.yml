@@ -1,7 +1,8 @@
-name: Install Astral uv (pinned)
+name: Pinned dependency tooling setup
 description: >
-  Installs uv using .github/dependencies/uv-version.txt (single source of truth).
-  Use ./.github/actions/install-uv from this repo, or ./.devops/.github/actions/install-uv from an app checkout.
+  Reads .github/dependencies/uv-version.txt and installs that release on the runner.
+  Reference as ./.github/actions/install-uv here or ./.devops/.github/actions/install-uv
+  from an application checkout.
 
 inputs:
   enable-cache:
@@ -13,9 +14,10 @@ runs:
   using: composite
   steps:
     - id: uv_version
+      name: Read pinned installer version file
       shell: bash
       run: bash "${GITHUB_ACTION_PATH}/../../dependencies/emit-uv-version.sh"
-    - name: Setup uv
+    - name: Install pinned dependency tooling
       uses: astral-sh/setup-uv@v5
       with:
         version: ${{ steps.uv_version.outputs.version }}
