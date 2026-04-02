@@ -64,6 +64,13 @@ STRICTNESS: dict[str, Thresholds] = {
     ),
 }
 
+
+def normalized_strictness_level(raw: str) -> str:
+    """Return ``Low`` | ``Medium`` | ``High`` (case-insensitive); unknown values map to Medium."""
+    key = raw.strip().title()
+    return key if key in STRICTNESS else "Medium"
+
+
 # When STRICTNESS_LEVEL=High, these artifacts must exist (non-empty files) so gates are not skipped.
 HIGH_REQUIRED_FILES: tuple[str, ...] = (
     "coverage.json",

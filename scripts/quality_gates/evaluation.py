@@ -1,4 +1,4 @@
-"""Collect gate rows and failure messages (orchestration only, no I/O except reads)."""
+"""Collect gate rows and failure messages; ``evaluate`` also writes ``gates.json``."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from scripts.quality_gates.config import STRICTNESS, Thresholds
+from scripts.quality_gates.config import STRICTNESS, Thresholds, normalized_strictness_level
 from scripts.quality_gates.gates_artifacts import enforce_high_artifact_presence
 from scripts.quality_gates.gates_complexity import (
     gate_cyclomatic,
@@ -42,32 +42,32 @@ def collect_gate_results(  # pylint: disable=too-many-locals
     root: Path, strictness: str
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Run all gate checks and return (rows, failure labels)."""
-    t: Thresholds = STRICTNESS.get(strictness, STRICTNESS["Medium"])
+    sn = normalized_strictness_level(strictness)
+    t: Thresholds = STRICTNESS[sn]
     rows: list[dict[str, Any]] = []
     failures: list[str] = []
 
-    art_rows, art_fail = enforce_high_artifact_presence(root, strictness)
+    art_rows, art_fail = enforce_high_artifact_presence(root, sn)
     rows.extend(art_rows)
     failures.extend(art_fail)
 
     line_cov, branch_cov = load_coverage_totals(root)
-    for gf, arg in (
-        (gate_coverage_line, line_cov),
-        (gate_coverage_branch, branch_cov),
-    ):
-        r, f = gf(arg, t)
-        rows.extend(r)
-        failures.extend(f)
-
-    r, f = gate_pylint(pylint_score(root), t)
+    r, f = gate_coverage_line(line_cov, t, sn)
+    rows.extend(r)
+    failures.extend(f)
+    r, f = gate_coverage_branch(branch_cov, t, sn)
     rows.extend(r)
     failures.extend(f)
 
-    r, f = gate_cyclomatic(radon_cc_max(root), t)
+    r, f = gate_pylint(pylint_score(root), t, sn)
     rows.extend(r)
     failures.extend(f)
 
-    r, f = gate_maintainability(radon_mi_min(root), t)
+    r, f = gate_cyclomatic(radon_cc_max(root), t, sn)
+    rows.extend(r)
+    failures.extend(f)
+
+    r, f = gate_maintainability(radon_mi_min(root), t, sn)
     rows.extend(r)
     failures.extend(f)
 
@@ -80,7 +80,7 @@ def collect_gate_results(  # pylint: disable=too-many-locals
     rows.extend(r)
     failures.extend(f)
 
-    r, f = gate_docstring_coverage(interrogate_coverage(root), t)
+    r, f = gate_docstring_coverage(interrogate_coverage(root), t, sn)
     rows.extend(r)
     failures.extend(f)
 

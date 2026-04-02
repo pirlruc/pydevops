@@ -46,7 +46,11 @@ def main() -> int:
         print(f"No SPDX SBOM at {sbom}; skipping license gate.")
         return 0
 
-    data = json.loads(sbom.read_text(encoding="utf-8", errors="replace"))
+    try:
+        data = json.loads(sbom.read_text(encoding="utf-8", errors="replace"))
+    except json.JSONDecodeError as e:
+        print(f"Invalid SPDX JSON at {sbom}: {e}", file=sys.stderr)
+        return 3
     packages = data.get("packages", [])
     if not isinstance(packages, list):
         packages = []

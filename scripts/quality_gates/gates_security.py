@@ -19,8 +19,9 @@ def gate_vulnerabilities(
     """Evaluate pip-audit and Grype vulnerability aggregates."""
     pa_h, pa_m = pip_audit_vulns(root)
     gr_h, gr_m = grype_severities(root)
-    high_v = max(pa_h, gr_h)
-    med_v = max(pa_m, gr_m)
+    # Sum counts so distinct findings from pip-audit vs Grype are not under-counted (conservative).
+    high_v = pa_h + gr_h
+    med_v = pa_m + gr_m
     ok_h = high_v <= t.vuln_high_max
     ok_m = med_v <= t.vuln_medium_max
     rows: RowList = [

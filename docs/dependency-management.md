@@ -4,7 +4,7 @@
 
 | Path | Role |
 | --- | --- |
-| [`.github/dependencies/`](../.github/dependencies/) | **Dependabot-managed** pins: `requirements.txt` subtrees, `jscpd/package.json`, `uv-version.txt`, and `emit-uv-version.sh` (used by composite actions) |
+| [`.github/dependencies/`](../.github/dependencies/) | **Dependabot-managed** pins: `requirements.txt` subtrees, `jscpd/package.json`, `uv-version.txt`, `syft-version.txt` / `grype-version.txt` (Anchore CLI pins for `qa-install-toolchain`), and `emit-uv-version.sh` (used by composite actions) |
 | [`.github/config/`](../.github/config/) | **Tool configuration** only (zizmor policy, Semgrep rules, Python interpreter list for EOL watch) — not package manifests |
 | [`.github/dependabot.yml`](../.github/dependabot.yml) | Dependabot configuration |
 
@@ -34,7 +34,8 @@ Bump **only** `uv-version.txt` (and merge) to roll the CLI forward. Dependabot d
 
 ## Not covered by Dependabot (manual or follow-up)
 
-- **Gitleaks** install URL / version in `python-quality.yml`.
+- **Syft** / **Grype** release versions in `syft-version.txt` and `grype-version.txt` (bump when you want new scanner behavior; composite installs pinned GitHub release tarballs).
+- **Gitleaks** install URL / version in `qa-secrets-sast` / `python-quality.yml`.
 - **actionlint** download version in `reusable-workflows-quality.yml` (`ACTIONLINT_VERSION`).
 - Numeric **`with:`** inputs on third-party actions other than what composites centralize.
 

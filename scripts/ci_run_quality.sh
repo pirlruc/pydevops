@@ -10,6 +10,13 @@ mkdir -p "$OUT"
 
 cd "$APP_DIR"
 
+# High strictness: do not write non-empty placeholders for artifacts required by quality_gates
+# (empty/missing files let enforce_high_artifact_presence and parsers fail closed).
+_high=0
+case "$(echo "${STRICTNESS_LEVEL:-Medium}" | tr '[:upper:]' '[:lower:]')" in
+  high) _high=1 ;;
+esac
+
 # When the DevOps repo is checked out into .devops/, exclude it from app scans
 IGNORE_PYLINT="${IGNORE_PYLINT:-^\\.devops/}"
 RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build}"
@@ -67,7 +74,11 @@ if [[ "${want_static}" == "1" ]]; then
   if command -v cloc >/dev/null 2>&1; then
     cloc . --json --out="$OUT/cloc.json" --include-lang=Python --exclude-dir=.devops,.git,.venv,dist,build,htmlcov || true
   else
-    echo '{}' >"$OUT/cloc.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/cloc.json"
+    else
+      echo '{}' >"$OUT/cloc.json"
+    fi
   fi
 
   # Ruff (optional; workflow may run Ruff with QaaS docstring config and set SKIP_RUFF_IN_BUNDLE=1)
@@ -78,7 +89,11 @@ if [[ "${want_static}" == "1" ]]; then
     ruff check . --exclude "$RUFF_EXCL" --output-format=json >"$OUT/ruff.json" 2>"$OUT/ruff.stderr" || true
     ruff format --check . --exclude "$RUFF_EXCL" >"$OUT/ruff_format.txt" 2>&1 || true
   else
-    echo '[]' >"$OUT/ruff.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/ruff.json"
+    else
+      echo '[]' >"$OUT/ruff.json"
+    fi
   fi
 
   # Pylint (JSON + score line for quality_gates)
@@ -91,8 +106,12 @@ if [[ "${want_static}" == "1" ]]; then
       echo "rated at 0/10" >"$OUT/pylint_score.txt"
     fi
   else
-    echo '[]' >"$OUT/pylint.json"
-    echo "rated at 0/10" >"$OUT/pylint_score.txt"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/pylint.json" "$OUT/pylint_score.txt"
+    else
+      echo '[]' >"$OUT/pylint.json"
+      echo "rated at 0/10" >"$OUT/pylint_score.txt"
+    fi
   fi
 
   if command -v pylint-json2html >/dev/null 2>&1 && [[ -s "$OUT/pylint.json" ]]; then
@@ -118,7 +137,11 @@ if [[ "${want_static}" == "1" ]]; then
   if command -v interrogate >/dev/null 2>&1; then
     interrogate . -vv -e .devops >"$OUT/interrogate.txt" 2>&1 || true
   else
-    echo "interrogate not installed" >"$OUT/interrogate.txt"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/interrogate.txt"
+    else
+      echo "interrogate not installed" >"$OUT/interrogate.txt"
+    fi
   fi
 
   # jscpd (JS tool; version from .github/dependencies/jscpd for Dependabot npm updates)
@@ -134,6 +157,9 @@ if [[ "${want_static}" == "1" ]]; then
     elif [[ -f jscpd-report.json ]]; then
       mv jscpd-report.json "$OUT/" 2>/dev/null || true
     fi
+    if [[ ! -f "$OUT/jscpd-report.json" ]]; then
+      echo "jscpd did not produce ${OUT}/jscpd-report.json (see ${OUT}/jscpd.stderr)" >&2
+    fi
   else
     echo '{"statistics":{"total":{"percentage":0}}}' >"$OUT/jscpd-report.json"
   fi
@@ -143,8 +169,12 @@ if [[ "${want_static}" == "1" ]]; then
     radon cc -j . >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
     radon mi -j . >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
   else
-    echo '{}' >"$OUT/radon_cc.json"
-    echo '{}' >"$OUT/radon_mi.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/radon_cc.json" "$OUT/radon_mi.json"
+    else
+      echo '{}' >"$OUT/radon_cc.json"
+      echo '{}' >"$OUT/radon_mi.json"
+    fi
   fi
 fi
 
@@ -164,7 +194,11 @@ if [[ "${want_security}" == "1" ]]; then
   if command -v bandit >/dev/null 2>&1; then
     bandit -q -r . -x ./.devops -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
   else
-    echo '{"results":[]}' >"$OUT/bandit.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/bandit.json"
+    else
+      echo '{"results":[]}' >"$OUT/bandit.json"
+    fi
   fi
 
   # deptry
@@ -194,7 +228,11 @@ if [[ "${want_security}" == "1" ]]; then
   if command -v grype >/dev/null 2>&1 && [[ -f "$OUT/sbom-cyclonedx.json" ]]; then
     grype "sbom:$OUT/sbom-cyclonedx.json" -o json >"$OUT/grype.json" 2>"$OUT/grype.stderr" || true
   else
-    echo '{"matches":[]}' >"$OUT/grype.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/grype.json"
+    else
+      echo '{"matches":[]}' >"$OUT/grype.json"
+    fi
   fi
 fi
 
@@ -211,8 +249,12 @@ if [[ "${want_test}" == "1" ]]; then
       -q \
       >"$OUT/pytest.txt" 2>&1 || true
   else
-    echo '{"totals":{"percent_covered":0,"percent_branches_covered":0}}' >"$OUT/coverage.json"
-    echo "pytest not installed" >"$OUT/pytest.txt"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/coverage.json" "$OUT/pytest.txt"
+    else
+      echo '{"totals":{"percent_covered":0,"percent_branches_covered":0}}' >"$OUT/coverage.json"
+      echo "pytest not installed" >"$OUT/pytest.txt"
+    fi
   fi
 fi
 

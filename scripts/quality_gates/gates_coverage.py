@@ -12,9 +12,18 @@ RowList = list[dict[str, Any]]
 def gate_coverage_line(
     line_cov: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate line coverage gate."""
     if line_cov is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Coverage (line)",
+                "actual": "missing or unparseable coverage.json",
+                "required": f">= {t.coverage_line_min:.1f}%",
+                "ok": False,
+            }
+            return [row], ["line coverage"]
         return [], []
     ok = line_cov >= t.coverage_line_min
     row = {
@@ -29,9 +38,18 @@ def gate_coverage_line(
 def gate_coverage_branch(
     branch_cov: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate branch coverage gate."""
     if branch_cov is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Coverage (branch)",
+                "actual": "missing or unparseable coverage.json",
+                "required": f">= {t.coverage_branch_min:.1f}%",
+                "ok": False,
+            }
+            return [row], ["branch coverage"]
         return [], []
     ok = branch_cov >= t.coverage_branch_min
     row = {
@@ -46,9 +64,18 @@ def gate_coverage_branch(
 def gate_pylint(
     score: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate Pylint score gate (minimum /10)."""
     if score is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Pylint score",
+                "actual": "missing or unparseable pylint_score.txt",
+                "required": f">= {t.pylint_score_min:.1f}",
+                "ok": False,
+            }
+            return [row], ["pylint score"]
         return [], []
     ok = score >= t.pylint_score_min
     row = {

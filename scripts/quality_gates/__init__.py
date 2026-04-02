@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from scripts.quality_gates.config import HIGH_REQUIRED_FILES, STRICTNESS, Thresholds
+from scripts.quality_gates.config import HIGH_REQUIRED_FILES, STRICTNESS, Thresholds, normalized_strictness_level
 from scripts.quality_gates.evaluation import evaluate
 from scripts.quality_gates.engine import main
 from scripts.quality_gates.jsonutil import parse_float_or_none as _parse_float_or_none
@@ -21,6 +21,7 @@ __all__ = [
     "HIGH_REQUIRED_FILES",
     "STRICTNESS",
     "Thresholds",
+    "normalized_strictness_level",
     "evaluate",
     "main",
     "_gitleaks_findings",

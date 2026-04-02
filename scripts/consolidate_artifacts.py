@@ -54,10 +54,19 @@ def main() -> int:
     gates_path = out / "gates.json"
     rows: list[dict] = []
     passed = True
+    gates_parse_note = ""
     if gates_path.is_file():
-        data = json.loads(gates_path.read_text(encoding="utf-8"))
-        rows = data.get("rows", [])
-        passed = bool(data.get("passed", True))
+        try:
+            data = json.loads(gates_path.read_text(encoding="utf-8", errors="replace"))
+            rows = data.get("rows", [])
+            passed = bool(data.get("passed", True))
+        except json.JSONDecodeError:
+            rows = []
+            passed = True
+            gates_parse_note = (
+                "_gates.json was not valid JSON (e.g. partial write); "
+                "treating overall result as passed for this report only._\n\n"
+            )
 
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
     md = f"""# Consolidated quality report
@@ -67,7 +76,7 @@ Overall: **{'PASSED' if passed else 'FAILED'}**
 
 ## Gate summary
 
-{_md_table(rows)}
+{gates_parse_note}{_md_table(rows)}
 
 ## Per-tool console excerpts
 

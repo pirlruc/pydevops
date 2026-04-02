@@ -15,7 +15,15 @@ def main() -> int:
     if not p.is_file():
         print("## Quality pipeline\n\n_No gates output found._")
         return 0
-    data = json.loads(p.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+    except json.JSONDecodeError:
+        print(
+            "## Quality-as-a-Service summary\n\n"
+            "_gates.json was missing or not valid JSON (e.g. cancelled job); "
+            "see workflow artifacts for partial outputs._",
+        )
+        return 0
     rows = data.get("rows", [])
     passed = data.get("passed", True)
     status = "PASSED" if passed else "FAILED"

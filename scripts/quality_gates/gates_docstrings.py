@@ -12,9 +12,18 @@ RowList = list[dict[str, Any]]
 def gate_docstring_coverage(
     doc_cov: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate interrogate docstring coverage (High >= 95%)."""
     if doc_cov is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Docstring coverage",
+                "actual": "missing or unparseable interrogate.txt",
+                "required": f">= {t.docstring_coverage_min:.1f}%",
+                "ok": False,
+            }
+            return [row], ["docstring coverage"]
         return [], []
     ok = doc_cov >= t.docstring_coverage_min
     row = {

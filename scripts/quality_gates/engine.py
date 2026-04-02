@@ -6,13 +6,15 @@ import os
 import sys
 from pathlib import Path
 
+from scripts.quality_gates.config import normalized_strictness_level
 from scripts.quality_gates.evaluation import evaluate
 
 
 def main() -> int:
     """CLI entrypoint: read ``QUALITY_OUTPUT_DIR`` and ``STRICTNESS_LEVEL``."""
     root = Path(os.environ.get("QUALITY_OUTPUT_DIR", "quality-output")).resolve()
-    strictness = os.environ.get("STRICTNESS_LEVEL", "Medium")
+    raw = os.environ.get("STRICTNESS_LEVEL", "Medium")
+    strictness = normalized_strictness_level(raw)
     passed, rows = evaluate(root, strictness)
 
     print("=== Quality gate summary ===")

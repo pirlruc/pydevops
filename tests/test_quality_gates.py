@@ -66,6 +66,13 @@ def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
     assert passed
 
 
+def test_high_strictness_normalized_from_lowercase(tmp_out: Path) -> None:
+    """STRICTNESS_LEVEL casing must not bypass High rules."""
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    assert qg.evaluate(tmp_out, "high")[0]
+    assert qg.normalized_strictness_level("HIGH") == "High"
+
+
 def test_pylint_gate_fails_low_score(tmp_out: Path) -> None:
     """Pylint below threshold fails."""
     (tmp_out / "pylint_score.txt").write_text("rated at 5.0/10", encoding="utf-8")
@@ -88,6 +95,17 @@ def test_maintainability_high_limit(tmp_out: Path) -> None:
     (tmp_out / "radon_mi.json").write_text(json.dumps({"x.py": {"mi": 45.0, "rank": "A"}}), encoding="utf-8")
     passed, _rows = qg.evaluate(tmp_out, "High")
     assert not passed
+
+
+def test_license_gate_invalid_sbom_json(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Malformed SPDX JSON yields a distinct exit code."""
+    from scripts import license_gate
+
+    sbom = tmp_path / "sbom.json"
+    sbom.write_text("{not-json", encoding="utf-8")
+    monkeypatch.setenv("SPDX_SBOM_PATH", str(sbom))
+    monkeypatch.setenv("LICENSE_DENY_LIST", "[]")
+    assert license_gate.main() == 3
 
 
 def test_license_gate_hits(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -120,6 +138,22 @@ def test_vulnerabilities_fail_high(tmp_out: Path) -> None:
     assert not passed
 
 
+def test_vulnerabilities_sum_pip_audit_and_grype(tmp_out: Path) -> None:
+    """pip-audit and Grype highs are summed (not max) for a conservative gate."""
+    (tmp_out / "pip_audit.json").write_text(
+        json.dumps([{"vulns": [{"id": "h1", "severity": "HIGH", "description": ""}]}]),
+        encoding="utf-8",
+    )
+    (tmp_out / "grype.json").write_text(
+        json.dumps({"matches": [{"vulnerability": {"severity": "High"}}]}),
+        encoding="utf-8",
+    )
+    passed, rows = qg.evaluate(tmp_out, "Medium")
+    assert not passed
+    high_row = next(r for r in rows if r.get("gate") == "Vulnerabilities (High)")
+    assert high_row["actual"] == "2"
+
+
 def test_vulnerabilities_fail_medium(tmp_out: Path) -> None:
     """Too many medium vulnerabilities fails Medium tier."""
     vulns = [{"id": f"m{i}", "severity": "medium", "description": ""} for i in range(15)]
@@ -128,8 +162,48 @@ def test_vulnerabilities_fail_medium(tmp_out: Path) -> None:
     assert not passed
 
 
+def test_high_fails_when_cloc_missing_python_section(tmp_out: Path) -> None:
+    """High-tier substance check rejects empty cloc.json."""
+    (tmp_out / "cloc.json").write_text("{}", encoding="utf-8")
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any("cloc.json" in str(r.get("gate", "")) for r in rows)
+
+
+def test_pr_comment_malformed_gates_json(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """PR comment script tolerates invalid gates.json."""
+    from scripts import pr_comment_markdown
+
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
+    (tmp_path / "gates.json").write_text("{", encoding="utf-8")
+    assert pr_comment_markdown.main() == 0
+    assert "not valid JSON" in capsys.readouterr().out
+
+
+def test_consolidate_malformed_gates_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Consolidation tolerates invalid gates.json and still writes the report."""
+    from scripts import consolidate_artifacts
+
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
+    (tmp_path / "gates.json").write_text("{", encoding="utf-8")
+    assert consolidate_artifacts.main() == 0
+    body = (tmp_path / "quality_report.md").read_text(encoding="utf-8")
+    assert "not valid JSON" in body
+
+
 def test_main_cli_exit_code(tmp_out: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """main() respects STRICTNESS_LEVEL and QUALITY_OUTPUT_DIR."""
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_out))
     monkeypatch.setenv("STRICTNESS_LEVEL", "Low")
     assert qg.main() == 0
+
+
+def test_duplication_gate_fails_when_jscpd_report_missing(tmp_out: Path) -> None:
+    """Missing or unreadable jscpd-report.json must not skip the duplication gate."""
+    (tmp_out / "jscpd-report.json").unlink()
+    passed, rows = qg.evaluate(tmp_out, "Low")
+    assert not passed
+    assert any(r.get("gate") == "Duplication (jscpd)" and r.get("ok") is False for r in rows)

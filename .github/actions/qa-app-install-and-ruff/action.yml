@@ -34,13 +34,17 @@ runs:
       run: |
         set -euo pipefail
         cd "$WS/$WD"
+        run_install() {
+          # Login shell + one parse (avoid eval); input must be trusted workflow config
+          bash -lc "$INSTALL_CMD"
+        }
         if [ "$EVENT" = "workflow_dispatch" ]; then
           if [ -n "$INSTALL_CMD" ]; then
-            eval "$INSTALL_CMD"
+            run_install
           elif [ -f pyproject.toml ]; then uv sync --all-groups --all-extras
           elif [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
         elif [ -n "$INSTALL_CMD" ]; then
-          eval "$INSTALL_CMD"
+          run_install
         fi
 
     - name: Write dynamic Ruff pydocstyle config

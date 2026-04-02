@@ -12,9 +12,21 @@ RowList = list[dict[str, Any]]
 def gate_cyclomatic(
     cc: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate max cyclomatic complexity (High: max <= 5, strictly below 6)."""
     if cc is None:
+        if strictness_norm == "High":
+            req = f"<= {t.cyclomatic_max:.0f}"
+            if t.cyclomatic_max <= 5:
+                req += ", target <= 4"
+            row = {
+                "gate": "Cyclomatic complexity (max; High < 6)",
+                "actual": "missing or unparseable radon_cc.json",
+                "required": req,
+                "ok": False,
+            }
+            return [row], ["cyclomatic complexity"]
         return [], []
     ok = cc <= t.cyclomatic_max
     label = "Cyclomatic complexity (max; High < 6)"
@@ -33,9 +45,18 @@ def gate_cyclomatic(
 def gate_maintainability(
     mi: float | None,
     t: Thresholds,
+    strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate minimum MI across files (High targets >= 60)."""
     if mi is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Maintainability index (min; High targets >= 60)",
+                "actual": "missing or unparseable radon_mi.json",
+                "required": f">= {t.maintainability_index_min:.1f}",
+                "ok": False,
+            }
+            return [row], ["maintainability index"]
         return [], []
     ok = mi >= t.maintainability_index_min
     row = {
@@ -53,7 +74,13 @@ def gate_duplication(
 ) -> tuple[RowList, list[str]]:
     """Evaluate jscpd duplication percentage."""
     if dup is None:
-        return [], []
+        row = {
+            "gate": "Duplication (jscpd)",
+            "actual": "(missing or invalid jscpd-report.json)",
+            "required": f"<= {t.duplication_max_pct:.1f}%",
+            "ok": False,
+        }
+        return [row], ["duplication"]
     ok = dup <= t.duplication_max_pct
     row = {
         "gate": "Duplication (jscpd)",

@@ -160,6 +160,7 @@ jobs:
           working-directory: ${{ inputs.working_directory }}
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          strictness-level: ${{ inputs.strictness_level }}
 
       # --- Phase 4 (Shield): Bandit, deptry, pip-audit, SBOM, Grype JSON, uv lock --check ---
       - name: "QA phase: Security & supply chain"
@@ -170,6 +171,7 @@ jobs:
           working-directory: ${{ inputs.working_directory }}
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          strictness-level: ${{ inputs.strictness_level }}
 
       # --- Phase 5: Pytest + coverage ---
       - name: "QA phase: Tests & coverage"
@@ -180,6 +182,7 @@ jobs:
           working-directory: ${{ inputs.working_directory }}
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          strictness-level: ${{ inputs.strictness_level }}
 
       - name: License deny list (SPDX)
         env:
