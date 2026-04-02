@@ -48,8 +48,8 @@ on:
         type: string
         default: "http://localhost:8080"
     secrets:
-      github_token:
-        description: "Optional token override for comments / forks"
+      caller_pat:
+        description: "Optional PAT from caller for PR comments / forks"
         required: false
 
   workflow_dispatch:
@@ -250,7 +250,7 @@ jobs:
         if: steps.download.outcome == 'success'
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.github_token || github.token }}
+          github-token: ${{ secrets.caller_pat || github.token }}
           script: |
             const fs = require('fs');
             const path = 'quality-pr-comment.md';

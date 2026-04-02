@@ -66,7 +66,7 @@ Gitleaks and Semgrep run **before** the full toolchain so secret and pattern iss
 
 | Secret | Required | Purpose |
 | --- | --- | --- |
-| `github_token` | No | Optional PAT override for PR comments (e.g. forks / bots). If omitted, `github.token` is used in the PR comment job. |
+| `caller_pat` | No | Optional caller PAT for PR comments (e.g. forks / bots). If omitted, `github.token` is used. (Do not use the name `github_token` for this mapping — GitHub reserves it for `workflow_call` secrets.) |
 
 #### Strictness tiers (`strictness_level`)
 
