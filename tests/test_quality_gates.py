@@ -97,6 +97,25 @@ def test_maintainability_high_limit(tmp_out: Path) -> None:
     assert not passed
 
 
+def test_license_gate_dedupes_multiple_patterns_per_package(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """One SBOM package matching several deny substrings yields one hit line, not several."""
+    from scripts import license_gate
+
+    sbom = tmp_path / "sbom.json"
+    sbom.write_text(
+        json.dumps({"packages": [{"name": "badlib", "licenseConcluded": "GPL-3.0-only"}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SPDX_SBOM_PATH", str(sbom))
+    monkeypatch.setenv("LICENSE_DENY_LIST", json.dumps(["gpl", "gpl-3.0"]))
+    assert license_gate.main() == 1
+    err = capsys.readouterr().err
+    assert err.count("badlib") == 1
+    assert "gpl" in err and "gpl-3.0" in err
+
+
 def test_license_gate_invalid_sbom_json(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Malformed SPDX JSON yields a distinct exit code."""
     from scripts import license_gate

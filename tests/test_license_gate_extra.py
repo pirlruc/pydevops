@@ -55,3 +55,30 @@ def test_license_gate_packages_not_list(monkeypatch: pytest.MonkeyPatch, tmp_pat
     assert license_gate.main() == 0
 
 
+def test_license_gate_skips_non_dict_package_entries(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Non-object entries in packages are ignored; dict entries are still evaluated."""
+    from scripts import license_gate
+
+    sbom = tmp_path / "s.json"
+    sbom.write_text(
+        json.dumps(
+            {
+                "packages": [
+                    "not-a-dict",
+                    {"name": "clean", "licenseConcluded": "MIT"},
+                    {"name": "bad", "licenseConcluded": "GPL-3.0-only"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("SPDX_SBOM_PATH", str(sbom))
+    monkeypatch.setenv("LICENSE_DENY_LIST", json.dumps(["gpl"]))
+    assert license_gate.main() == 1
+    err = capsys.readouterr().err
+    assert err.count("bad") == 1
+    assert "clean" not in err
+
+

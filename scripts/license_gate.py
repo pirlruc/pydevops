@@ -21,14 +21,17 @@ def _find_license_hits(packages: list[dict], deny_l: list[str]) -> list[str]:
     """Collect human-readable hit strings for packages matching any deny pattern."""
     hits: list[str] = []
     for pkg in packages:
+        if not isinstance(pkg, dict):
+            continue
         lic = pkg.get("licenseConcluded") or pkg.get("licenseDeclared") or ""
         if not lic or lic == "NOASSERTION":
             continue
         lics = str(lic).lower()
-        for d in deny_l:
-            if d and d in lics:
-                name = pkg.get("name", "?")
-                hits.append(f"{name}: {lic} (matched deny pattern '{d}')")
+        matched = [d for d in deny_l if d and d in lics]
+        if matched:
+            name = pkg.get("name", "?")
+            pat = ", ".join(f"'{m}'" for m in matched)
+            hits.append(f"{name}: {lic} (matched deny pattern(s) {pat})")
     return hits
 
 
