@@ -8,6 +8,13 @@ from typing import Any
 from scripts.quality_gates.jsonutil import parse_float_or_none, read_json
 
 
+def _dict_get(d: Any, key: str) -> Any | None:
+    """Safely read ``key`` from a mapping-like JSON node."""
+    if not isinstance(d, dict):
+        return None
+    return d.get(key)
+
+
 def ruff_messages_in_files(files: list[Any]) -> int:
     """Sum message counts across Ruff file objects."""
     return sum(len(f.get("messages", [])) for f in files if isinstance(f, dict))
@@ -24,7 +31,7 @@ def ruff_issue_count_from_obj(data: dict[str, Any]) -> int:
 def ruff_issue_count(root: Path) -> int:
     """Count Ruff diagnostics from ruff.json (list or object with files[].messages)."""
     data = read_json(root / "ruff.json")
-    if not data:
+    if data is None:
         return 0
     if isinstance(data, list):
         return len(data)
@@ -36,15 +43,7 @@ def ruff_issue_count(root: Path) -> int:
 def jscpd_duplication_pct(root: Path) -> float | None:
     """Total duplication percentage from jscpd JSON report."""
     data = read_json(root / "jscpd-report.json")
-    if not isinstance(data, dict):
-        return None
-    statistics = data.get("statistics")
-    if not isinstance(statistics, dict):
-        return None
-    total = statistics.get("total")
-    if not isinstance(total, dict):
-        return None
-    pct = total.get("percentage")
+    pct = _dict_get(_dict_get(_dict_get(data, "statistics"), "total"), "percentage")
     if isinstance(pct, (int, float)):
         return float(pct)
     if isinstance(pct, str):

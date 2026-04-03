@@ -13,94 +13,65 @@ from scripts.quality_gates.readers_py_coverage import pylint_score
 RowList = list[dict[str, Any]]
 
 
-def _json_validator_list(data: Any, name: str) -> tuple[bool, str]:
-    """Validate that an artifact payload is a JSON array."""
-    if not isinstance(data, list):
-        return False, f"{name} must be a JSON array"
-    return True, ""
+SPECIAL_TEXT_CHECKS: dict[str, tuple[Any, str]] = {
+    "pylint_score.txt": (pylint_score, "pylint_score.txt missing rated at X/10 line"),
+    "interrogate.txt": (interrogate_coverage, "interrogate.txt missing parseable coverage line"),
+}
 
+JSON_SHAPES: dict[str, tuple[type[Any] | tuple[type[Any], ...], str]] = {
+    "cloc.json": (dict, "cloc.json must be a JSON object"),
+    "coverage.json": (dict, "coverage.json must be a JSON object"),
+    "pylint.json": (list, "pylint.json must be a JSON array"),
+    "ruff.json": ((list, dict), "ruff.json must be array or object"),
+    "gitleaks.json": (list, "gitleaks.json must be a JSON array"),
+    "bandit.json": (dict, "bandit.json must be a JSON object"),
+    "pip_audit.json": (list, "pip_audit.json must be a JSON array"),
+    "grype.json": (dict, "grype.json must be a JSON object"),
+    "radon_cc.json": (dict, "radon_cc.json must be a JSON object"),
+    "radon_mi.json": (dict, "radon_mi.json must be a JSON object"),
+}
 
-def _json_validator_ruff(data: Any, _name: str) -> tuple[bool, str]:
-    """Validate Ruff payload shape (list or object)."""
-    if not isinstance(data, (list, dict)):
-        return False, "ruff.json must be array or object"
-    return True, ""
-
-
-def _json_validator_dict(data: Any, name: str) -> tuple[bool, str]:
-    """Validate that an artifact payload is a JSON object."""
-    if not isinstance(data, dict):
-        return False, f"{name} must be a JSON object"
-    return True, ""
-
-
-def _json_validator_bandit(data: Any, _name: str) -> tuple[bool, str]:
-    """Validate Bandit JSON includes its ``results`` key."""
-    if not isinstance(data, dict) or "results" not in data:
-        return False, "bandit.json missing results"
-    return True, ""
-
-
-def _json_validator_cloc(data: Any, _name: str) -> tuple[bool, str]:
-    """Validate CLOC JSON includes Python language totals."""
-    if not isinstance(data, dict) or "Python" not in data:
-        return False, "cloc.json missing Python stats"
-    return True, ""
-
-
-def _json_validator_coverage(data: Any, _name: str) -> tuple[bool, str]:
-    """Validate coverage JSON includes totals and ``percent_covered``."""
-    if not isinstance(data, dict) or "totals" not in data:
-        return False, "coverage.json missing totals"
-    if data["totals"].get("percent_covered") is None:
-        return False, "coverage.json missing percent_covered"
-    return True, ""
-
-
-JSON_VALIDATORS: dict[str, Any] = {
-    "cloc.json": _json_validator_cloc,
-    "coverage.json": _json_validator_coverage,
-    "pylint.json": _json_validator_list,
-    "ruff.json": _json_validator_ruff,
-    "gitleaks.json": _json_validator_list,
-    "bandit.json": _json_validator_bandit,
-    "pip_audit.json": _json_validator_list,
-    "grype.json": _json_validator_dict,
-    "radon_cc.json": _json_validator_dict,
-    "radon_mi.json": _json_validator_dict,
+JSON_REQUIRED_PATHS: dict[str, list[tuple[tuple[str, ...], str]]] = {
+    "bandit.json": [(("results",), "bandit.json missing results")],
+    "cloc.json": [(("Python",), "cloc.json missing Python stats")],
+    "coverage.json": [
+        (("totals",), "coverage.json missing totals"),
+        (("totals", "percent_covered"), "coverage.json missing percent_covered"),
+    ],
 }
 
 
-def _special_artifact_substance_check(root: Path, name: str) -> tuple[bool, str] | None:
-    """Run parsers for non-JSON artifacts and return a result when applicable."""
-    if name == "pylint_score.txt":
-        if pylint_score(root) is None:
-            return False, "pylint_score.txt missing rated at X/10 line"
-        return True, ""
-    if name == "interrogate.txt":
-        if interrogate_coverage(root) is None:
-            return False, "interrogate.txt missing parseable coverage line"
-        return True, ""
-    return None
+def _json_path_present(data: Any, path: tuple[str, ...]) -> bool:
+    """Return whether a nested key-path exists and ends in a non-None value."""
+    cur = data
+    for key in path:
+        if not isinstance(cur, dict) or key not in cur:
+            return False
+        cur = cur[key]
+    return cur is not None
 
 
 def _json_artifact_substance_check(path: Path, name: str) -> tuple[bool, str]:
-    """Validate JSON artifact payload and then apply any file-specific validator."""
+    """Validate JSON artifact shape and required nested paths when configured."""
     data = read_json(path)
     if data is None:
         return False, f"{name} is missing or invalid JSON"
-    validator = JSON_VALIDATORS.get(name)
-    if validator is None:
-        return True, ""
-    return validator(data, name)
+    expected = JSON_SHAPES.get(name)
+    if expected and not isinstance(data, expected[0]):
+        return False, expected[1]
+    for req_path, message in JSON_REQUIRED_PATHS.get(name, []):
+        if not _json_path_present(data, req_path):
+            return False, message
+    return True, ""
 
 
 def high_artifact_substance_ok(root: Path, name: str) -> tuple[bool, str]:
     """Validate High-tier artifact content (not just non-empty file)."""
     path = root / name
-    special_result = _special_artifact_substance_check(root, name)
-    if special_result is not None:
-        return special_result
+    special = SPECIAL_TEXT_CHECKS.get(name)
+    if special:
+        reader, message = special
+        return (True, "") if reader(root) is not None else (False, message)
     return _json_artifact_substance_check(path, name)
 
 
