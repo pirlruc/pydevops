@@ -216,7 +216,11 @@ if [[ "${want_security}" == "1" ]]; then
   if command -v pip-audit >/dev/null 2>&1; then
     pip-audit --format json --output "$OUT/pip_audit.json" 2>"$OUT/pip_audit.stderr" || true
   else
-    echo '[]' >"$OUT/pip_audit.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/pip_audit.json"
+    else
+      echo '[]' >"$OUT/pip_audit.json"
+    fi
   fi
 
   # Syft SBOMs

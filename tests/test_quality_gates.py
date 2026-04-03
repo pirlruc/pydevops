@@ -106,6 +106,14 @@ def test_grype_non_object_json_fails(tmp_out: Path) -> None:
     assert any("Grype report" in str(r.get("gate", "")) for r in rows)
 
 
+def test_pip_audit_missing_fails(tmp_out: Path) -> None:
+    """Missing pip_audit.json should fail via report-shape row, not pass as zero vulns."""
+    (tmp_out / "pip_audit.json").unlink()
+    passed, rows = qg.evaluate(tmp_out, "Medium")
+    assert not passed
+    assert any("pip-audit report" in str(r.get("gate", "")) for r in rows)
+
+
 def test_cyclomatic_high_limit(tmp_out: Path) -> None:
     """High tier rejects complexity >= 6 (max allowed 5)."""
     (tmp_out / "radon_cc.json").write_text(
@@ -237,6 +245,7 @@ def test_consolidate_malformed_gates_json(tmp_path: Path, monkeypatch: pytest.Mo
     assert consolidate_artifacts.main() == 0
     body = (tmp_path / "quality_report.md").read_text(encoding="utf-8")
     assert "not valid JSON" in body
+    assert "FAILED" in body
 
 
 def test_main_cli_exit_code(tmp_out: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -102,10 +102,6 @@ on:
       dast_target_url:
         type: string
         default: "http://localhost:8080"
-      app_install_command:
-        description: "Optional override (empty uses pyproject/requirements heuristic)"
-        type: string
-        default: ""
 
 # Least privilege: each job declares only the token scopes it needs. Callers should use
 # `permissions: {}` at workflow level and `secrets: inherit` only when required.
@@ -172,7 +168,7 @@ jobs:
           runner-temp: ${{ runner.temp }}
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
-          app-install-command: ${{ inputs.app_install_command }}
+          app-install-command: ${{ inputs.app_install_command || '' }}
 
       - name: Run static analysis quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase

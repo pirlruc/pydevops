@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from scripts.quality_gates.jsonutil import read_json
+from scripts.quality_gates.jsonutil import parse_float_or_none, read_json
 
 
 def ruff_messages_in_files(files: list[Any]) -> int:
@@ -42,4 +42,10 @@ def jscpd_duplication_pct(root: Path) -> float | None:
         return None
     total = (data.get("statistics") or {}).get("total") or {}
     pct = total.get("percentage")
-    return float(pct) if pct is not None else None
+    if pct is None:
+        return None
+    if isinstance(pct, (int, float)):
+        return float(pct)
+    if isinstance(pct, str):
+        return parse_float_or_none(pct)
+    return None

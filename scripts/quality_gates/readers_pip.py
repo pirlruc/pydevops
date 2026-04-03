@@ -55,12 +55,15 @@ def accumulate_pip_vulns(vulns: Any, highs: int, mediums: int) -> tuple[int, int
     return highs, mediums
 
 
-def pip_audit_vulns(root: Path) -> tuple[int, int]:
-    """Approximate high/medium counts from pip-audit JSON."""
+def pip_audit_vulns(root: Path) -> tuple[int, int] | None:
+    """Approximate high/medium counts from pip-audit JSON.
+
+    Returns ``None`` when ``pip_audit.json`` is missing, invalid JSON, or not a list.
+    """
     data = read_json(root / "pip_audit.json")
-    if not data:
-        return 0, 0
-    rows: list[Any] = data if isinstance(data, list) else []
+    if data is None or not isinstance(data, list):
+        return None
+    rows: list[Any] = data
     highs = mediums = 0
     for row in rows:
         vulns = pip_row_vulnerabilities(row)

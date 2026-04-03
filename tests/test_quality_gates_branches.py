@@ -84,6 +84,11 @@ def test_pip_audit_dict_row(tmp_path: Path) -> None:
     assert m >= 1
 
 
+def test_pip_audit_missing_returns_none(tmp_path: Path) -> None:
+    """Missing pip_audit.json is treated as unreadable report, not zero vulns."""
+    assert qg._pip_audit_vulns(tmp_path) is None
+
+
 def test_grype_high(tmp_path: Path) -> None:
     """_grype_severities counts high/critical."""
     (tmp_path / "grype.json").write_text(
@@ -109,6 +114,11 @@ def test_grype_medium(tmp_path: Path) -> None:
 def test_grype_non_object_root(tmp_path: Path) -> None:
     """Valid JSON array is not a Grype document."""
     (tmp_path / "grype.json").write_text("[]", encoding="utf-8")
+    assert qg._grype_severities(tmp_path) is None
+
+
+def test_grype_missing_returns_none(tmp_path: Path) -> None:
+    """Missing grype.json is treated as unreadable report, not zero vulns."""
     assert qg._grype_severities(tmp_path) is None
 
 
@@ -146,6 +156,17 @@ def test_ruff_unknown_shape(tmp_path: Path) -> None:
     """_ruff_issue_count returns 0 for unrecognized JSON shape."""
     (tmp_path / "ruff.json").write_text('{"other": true}', encoding="utf-8")
     assert qg._ruff_issue_count(tmp_path) == 0
+
+
+def test_jscpd_invalid_percentage_returns_none(tmp_path: Path) -> None:
+    """Unparseable jscpd percentage must not raise and should return None."""
+    from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct
+
+    (tmp_path / "jscpd-report.json").write_text(
+        json.dumps({"statistics": {"total": {"percentage": ""}}}),
+        encoding="utf-8",
+    )
+    assert jscpd_duplication_pct(tmp_path) is None
 
 
 def test_radon_cc_skips_nonlist_blocks(tmp_path: Path) -> None:

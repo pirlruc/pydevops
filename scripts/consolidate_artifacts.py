@@ -63,10 +63,10 @@ def main() -> int:
             rows, passed = gates_rows_and_passed(data)
         except json.JSONDecodeError:
             rows = []
-            passed = True
+            passed = False
             gates_parse_note = (
                 "_gates.json was not valid JSON (e.g. partial write); "
-                "treating overall result as passed for this report only._\n\n"
+                "marking overall result as failed for this report._\n\n"
             )
 
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
