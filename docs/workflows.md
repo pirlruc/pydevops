@@ -53,7 +53,7 @@ Gitleaks and Semgrep run **before** the full toolchain so secret and pattern iss
 | `devops_repository` | string | yes | — | `owner/name` of this DevOps repo |
 | `devops_ref` | string | yes | — | Tag, branch, or SHA (prefer SemVer tag, e.g. `v1.0.0`) |
 | `strictness_level` | string | no | `Medium` | `Low` \| `Medium` \| `High` — see **Strictness tiers** below |
-| `docstring_format` | string | no | `Google` | `Google` \| `Numpy` \| `Pep257` (Pep257 maps to Google for pydoclint) |
+| `docstring_format` | string | no | `Google` | `Google` \| `Numpy` \| `Pep257` — Ruff pydocstyle convention matches the name; **Pep257** uses pydoclint `--style=sphinx` (pydoclint has no pep257 mode; Google/NumPy section layouts conflict with pep257-focused Ruff) |
 | `enable_dast` | boolean | no | `false` | Runs ZAP + Locust job after quality |
 | `license_deny_list` | string | no | `[]` | JSON array string; SPDX substring deny list |
 | `working_directory` | string | no | `.` | App subdirectory with `pyproject.toml` / package |

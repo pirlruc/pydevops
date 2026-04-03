@@ -77,7 +77,7 @@ runs:
         case "$INPUT_DOCSTRING_FORMAT" in
           Google|google) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
           Numpy|numpy) echo "PYDOCLINT_FLAGS=--style=numpy" >> "$GITHUB_ENV" ;;
-          Pep257|pep257) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
+          Pep257|pep257) echo "PYDOCLINT_FLAGS=--style=sphinx" >> "$GITHUB_ENV" ;;
           *) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
         esac
 

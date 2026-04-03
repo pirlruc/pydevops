@@ -8,7 +8,9 @@ on:
         type: string
         default: "Medium"
       docstring_format:
-        description: "Google, Numpy, or Pep257 (ruff pydocstyle convention)"
+        description: >
+          Google, Numpy, or Pep257 for Ruff pydocstyle. Pep257 selects pydoclint --style=sphinx
+          (pydoclint has no pep257; avoids conflicting Google-style checks with Ruff pep257).
         type: string
         default: "Google"
       enable_dast:
@@ -64,6 +66,8 @@ on:
         options: [Low, Medium, High]
         default: Medium
       docstring_format:
+        description: >
+          Google, Numpy, or Pep257 for Ruff pydocstyle. Pep257 uses pydoclint --style=sphinx.
         type: choice
         options: [Google, Numpy, Pep257]
         default: Google
