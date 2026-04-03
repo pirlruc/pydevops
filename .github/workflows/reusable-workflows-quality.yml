@@ -68,9 +68,18 @@ jobs:
 
       - name: Scan workflows for unsafe patterns
         run: |
-          zizmor -c .github/config/zizmor.yml --format plain .github/workflows/
-          zizmor -c .github/config/zizmor.yml --format plain .github/actions/
-          zizmor -c .github/config/zizmor.yml --format plain examples/
+          set -euo pipefail
+          inputs=()
+          for p in .github/workflows .github/actions .github/dependabot.yml examples; do
+            if [ -e "$p" ]; then
+              inputs+=("$p")
+            fi
+          done
+          if [ "${#inputs[@]}" -eq 0 ]; then
+            echo "No zizmor inputs found; skipping."
+            exit 0
+          fi
+          zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}"
 
   openssf-scorecard:
     name: Score supply chain security posture
