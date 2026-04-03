@@ -28,19 +28,27 @@ def count_one_grype_match(m: dict, highs: int, mediums: int) -> tuple[int, int]:
     return highs, mediums
 
 
+def _grype_matches(data: object) -> list[dict] | None:
+    """Return validated Grype matches as dict objects, or None on invalid shape."""
+    if not isinstance(data, dict):
+        return None
+    matches = data.get("matches")
+    if not isinstance(matches, list):
+        return None
+    return [m for m in matches if isinstance(m, dict)]
+
+
 def grype_severities(root: Path) -> tuple[int, int] | None:
     """Count high/critical and medium vulnerabilities from grype.json.
 
     Returns ``None`` when the file is missing, JSON is invalid, or root is not an object,
     so the gate can fail closed instead of under-counting vulnerabilities.
     """
-    data = read_json(root / "grype.json")
-    if data is None or not isinstance(data, dict):
+    matches = _grype_matches(read_json(root / "grype.json"))
+    if matches is None:
         return None
     highs = mediums = 0
-    for m in data.get("matches", []):
-        if not isinstance(m, dict):
-            continue
+    for m in matches:
         highs, mediums = count_one_grype_match(m, highs, mediums)
     return highs, mediums
 

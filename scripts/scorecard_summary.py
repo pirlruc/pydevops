@@ -156,6 +156,21 @@ def _sarif_result_to_check(
     return {"name": name, "score": score, "reason": reason}
 
 
+def _sarif_driver(run: dict[str, Any]) -> dict[str, Any]:
+    """Return the SARIF tool.driver object or raise a controlled error."""
+    tool = run.get("tool")
+    if tool is None:
+        return {}
+    if not isinstance(tool, dict):
+        raise ValueError("Invalid SARIF run: tool must be an object")
+    driver = tool.get("driver")
+    if driver is None:
+        return {}
+    if not isinstance(driver, dict):
+        raise ValueError("Invalid SARIF run: tool.driver must be an object")
+    return driver
+
+
 def sarif_to_payload(sarif: dict[str, Any], repo_display: str | None) -> dict[str, Any]:
     """Build a Scorecard-like dict (repo + checks) from Scorecard SARIF 2.1.0 output."""
     runs = sarif.get("runs")
@@ -165,7 +180,7 @@ def sarif_to_payload(sarif: dict[str, Any], repo_display: str | None) -> dict[st
     if not isinstance(run0, dict):
         raise ValueError("Invalid SARIF run")
 
-    driver = (run0.get("tool") or {}).get("driver") or {}
+    driver = _sarif_driver(run0)
     rules_raw = driver.get("rules")
     rules_list: list[dict[str, Any]] = rules_raw if isinstance(rules_raw, list) else []
     rule_by_id = {str(r["id"]): r for r in rules_list if isinstance(r, dict) and r.get("id")}

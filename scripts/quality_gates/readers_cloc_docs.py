@@ -11,9 +11,11 @@ from scripts.quality_gates.jsonutil import read_json
 def cloc_slocs_comments(root: Path) -> tuple[float, float]:
     """Return (Python code lines, Python comment lines) from cloc.json."""
     data = read_json(root / "cloc.json")
-    if not data or "Python" not in data:
+    if not isinstance(data, dict):
         return 0.0, 0.0
-    py = data["Python"]
+    py = data.get("Python")
+    if not isinstance(py, dict):
+        return 0.0, 0.0
     return float(py.get("code", 0)), float(py.get("comment", 0))
 
 

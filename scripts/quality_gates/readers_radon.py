@@ -13,9 +13,11 @@ def _as_complexity(v: Any) -> float | None:
     if not isinstance(v, dict):
         return None
     raw = v.get("complexity")
-    if raw is None:
-        return None
-    return float(raw)
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    if isinstance(raw, str):
+        return parse_float_or_none(raw)
+    return None
 
 
 def max_cc_in_block_list(blocks: Any) -> tuple[float, bool]:
@@ -50,7 +52,7 @@ def radon_cc_max(root: Path) -> float | None:
 def mi_value_from_entry(v: Any) -> float | None:
     """Parse a single radon mi file entry to a float MI, or None."""
     if isinstance(v, dict) and "mi" in v:
-        return float(v["mi"])
+        return parse_float_or_none(str(v["mi"]))
     if isinstance(v, (int, float)):
         return float(v)
     if isinstance(v, str):

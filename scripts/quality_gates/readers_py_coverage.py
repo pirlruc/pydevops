@@ -5,20 +5,22 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from scripts.quality_gates.jsonutil import read_json
+from scripts.quality_gates.jsonutil import parse_float_or_none, read_json
 
 
 def load_coverage_totals(root: Path) -> tuple[float | None, float | None]:
     """Return (line_coverage_pct, branch_coverage_pct) from coverage.json totals."""
     data = read_json(root / "coverage.json")
-    if not data or "totals" not in data:
+    if not isinstance(data, dict):
         return None, None
-    t = data["totals"]
-    line = t.get("percent_covered")
-    branches = t.get("percent_branches_covered")
+    totals = data.get("totals")
+    if not isinstance(totals, dict):
+        return None, None
+    line = totals.get("percent_covered")
+    branches = totals.get("percent_branches_covered")
     return (
-        float(line) if line is not None else None,
-        float(branches) if branches is not None else None,
+        parse_float_or_none(str(line)) if line is not None else None,
+        parse_float_or_none(str(branches)) if branches is not None else None,
     )
 
 

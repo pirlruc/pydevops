@@ -21,6 +21,14 @@ esac
 IGNORE_PYLINT="${IGNORE_PYLINT:-^\\.devops/}"
 RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build}"
 PYTEST_IGNORE="${PYTEST_IGNORE:-.devops}"
+IFS=',' read -ra RUFF_EXCL_ITEMS <<< "$RUFF_EXCL"
+RUFF_EXCLUDE_ARGS=()
+for _pat in "${RUFF_EXCL_ITEMS[@]}"; do
+  _trimmed="${_pat// /}"
+  if [[ -n "$_trimmed" ]]; then
+    RUFF_EXCLUDE_ARGS+=(--exclude "$_trimmed")
+  fi
+done
 
 # shellcheck disable=SC2155
 QUALITY_PHASES_RAW="${QUALITY_PHASES:-all}"
@@ -85,9 +93,8 @@ if [[ "${want_static}" == "1" ]]; then
   if [[ "${SKIP_RUFF_IN_BUNDLE:-0}" == "1" ]]; then
     :
   elif command -v ruff >/dev/null 2>&1; then
-    # shellcheck disable=SC2086
-    ruff check . --exclude "$RUFF_EXCL" --output-format=json >"$OUT/ruff.json" 2>"$OUT/ruff.stderr" || true
-    ruff format --check . --exclude "$RUFF_EXCL" >"$OUT/ruff_format.txt" 2>&1 || true
+    ruff check . "${RUFF_EXCLUDE_ARGS[@]}" --output-format=json >"$OUT/ruff.json" 2>"$OUT/ruff.stderr" || true
+    ruff format --check . "${RUFF_EXCLUDE_ARGS[@]}" >"$OUT/ruff_format.txt" 2>&1 || true
   else
     if [[ "${_high}" == "1" ]]; then
       rm -f "$OUT/ruff.json"

@@ -18,7 +18,12 @@ def pip_tuple_row_vulns(row: list[Any] | tuple[Any, ...]) -> list[Any]:
 
 def pip_dict_row_vulns(row: dict[str, Any]) -> list[Any]:
     """Vulnerabilities from a dict-shaped pip-audit row."""
-    return list(row.get("vulns") or row.get("vulnerabilities") or [])
+    raw = row.get("vulns")
+    if raw is None:
+        raw = row.get("vulnerabilities")
+    if isinstance(raw, (list, tuple)):
+        return list(raw)
+    return []
 
 
 def pip_row_vulnerabilities(row: Any) -> list[Any]:
