@@ -47,6 +47,19 @@ def test_pr_comment_failed_overall(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert "FAILED" in capsys.readouterr().out
 
 
+def test_pr_comment_missing_passed_defaults_failed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Missing ``passed`` is treated conservatively as failed."""
+    (tmp_path / "gates.json").write_text(
+        json.dumps({"rows": [{"gate": "X", "actual": "1", "required": "1", "ok": True}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
+    assert pr_main() == 0
+    assert "FAILED" in capsys.readouterr().out
+
+
 def test_pr_comment_coerces_malformed_rows(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

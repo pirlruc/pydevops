@@ -32,7 +32,8 @@ def gates_rows_and_passed(data: Any) -> tuple[list[dict[str, Any]], bool]:
     raw_rows = data.get("rows", [])
     if isinstance(raw_rows, list):
         rows = [r for r in raw_rows if isinstance(r, dict)]
-        passed = bool(data.get("passed", True))
+        # Fail closed when legacy/malformed payloads omit "passed".
+        passed = bool(data.get("passed", False))
     else:
         rows = []
         passed = False

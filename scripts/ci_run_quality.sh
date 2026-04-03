@@ -228,8 +228,12 @@ if [[ "${want_security}" == "1" ]]; then
     syft scan dir:. -o cyclonedx-json="$OUT/sbom-cyclonedx.json" 2>"$OUT/syft.stderr" || true
     syft scan dir:. -o spdx-json="$OUT/sbom-spdx.json" 2>>"$OUT/syft.stderr" || true
   else
-    echo '{}' >"$OUT/sbom-cyclonedx.json"
-    echo '{}' >"$OUT/sbom-spdx.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/sbom-cyclonedx.json" "$OUT/sbom-spdx.json"
+    else
+      echo '{}' >"$OUT/sbom-cyclonedx.json"
+      echo '{}' >"$OUT/sbom-spdx.json"
+    fi
   fi
 
   # Grype (SBOM)
