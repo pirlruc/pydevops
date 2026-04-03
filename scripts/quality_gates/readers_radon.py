@@ -15,9 +15,13 @@ def max_cc_in_block_list(blocks: Any) -> tuple[float, bool]:
     best = 0.0
     found = False
     for b in blocks:
-        if isinstance(b, dict) and "complexity" in b:
-            found = True
-            best = max(best, float(b["complexity"]))
+        if not isinstance(b, dict):
+            continue
+        complexity = b.get("complexity")
+        if complexity is None:
+            continue
+        found = True
+        best = max(best, float(complexity))
     return best, found
 
 

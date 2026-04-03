@@ -163,6 +163,12 @@ jobs:
 
       - name: Final quality gate status
         if: always()
+        env:
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+          PYLINT_OUTCOME: ${{ steps.pylint.outcome }}
+          DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
+          RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
+          RADON_MI_OUTCOME: ${{ steps.radon_mi.outcome }}
         run: |
           set -euo pipefail
           failed=0
@@ -176,11 +182,11 @@ jobs:
               failed=1
             fi
           }
-          report_step "pytest" "${{ steps.tests.outcome }}"
-          report_step "pylint" "${{ steps.pylint.outcome }}"
-          report_step "interrogate (>=95%)" "${{ steps.docstrings.outcome }}"
-          report_step "radon cyclomatic complexity" "${{ steps.radon_cc.outcome }}"
-          report_step "radon maintainability index" "${{ steps.radon_mi.outcome }}"
+          report_step "pytest" "${TESTS_OUTCOME}"
+          report_step "pylint" "${PYLINT_OUTCOME}"
+          report_step "interrogate (>=95%)" "${DOCSTRINGS_OUTCOME}"
+          report_step "radon cyclomatic complexity" "${RADON_CC_OUTCOME}"
+          report_step "radon maintainability index" "${RADON_MI_OUTCOME}"
           if [ "$failed" -ne 0 ]; then
             echo "One or more quality checks failed."
             exit 1

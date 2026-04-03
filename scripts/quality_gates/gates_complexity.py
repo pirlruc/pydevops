@@ -9,30 +9,27 @@ from scripts.quality_gates.config import Thresholds
 RowList = list[dict[str, Any]]
 
 
+def _missing_metric_row(gate: str, required: str, actual: str) -> dict[str, Any]:
+    """Build a standardized failing row for missing metrics."""
+    return {"gate": gate, "actual": actual, "required": required, "ok": False}
+
+
 def gate_cyclomatic(
     cc: float | None,
     t: Thresholds,
     strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate max cyclomatic complexity (High: max <= 5, strictly below 6)."""
-    if cc is None:
-        if strictness_norm == "High":
-            req = f"<= {t.cyclomatic_max:.0f}"
-            if t.cyclomatic_max <= 5:
-                req += ", target <= 4"
-            row = {
-                "gate": "Cyclomatic complexity (max; High < 6)",
-                "actual": "missing or unparseable radon_cc.json",
-                "required": req,
-                "ok": False,
-            }
-            return [row], ["cyclomatic complexity"]
-        return [], []
-    ok = cc <= t.cyclomatic_max
-    label = "Cyclomatic complexity (max; High < 6)"
     req = f"<= {t.cyclomatic_max:.0f}"
     if t.cyclomatic_max <= 5:
         req += ", target <= 4"
+    label = "Cyclomatic complexity (max; High < 6)"
+    if cc is None:
+        if strictness_norm == "High":
+            row = _missing_metric_row(label, req, "missing or unparseable radon_cc.json")
+            return [row], ["cyclomatic complexity"]
+        return [], []
+    ok = cc <= t.cyclomatic_max
     row = {
         "gate": label,
         "actual": f"{cc:.1f}",
@@ -50,12 +47,11 @@ def gate_maintainability(
     """Evaluate minimum MI across files (High targets >= 60)."""
     if mi is None:
         if strictness_norm == "High":
-            row = {
-                "gate": "Maintainability index (min; High targets >= 60)",
-                "actual": "missing or unparseable radon_mi.json",
-                "required": f">= {t.maintainability_index_min:.1f}",
-                "ok": False,
-            }
+            row = _missing_metric_row(
+                "Maintainability index (min; High targets >= 60)",
+                f">= {t.maintainability_index_min:.1f}",
+                "missing or unparseable radon_mi.json",
+            )
             return [row], ["maintainability index"]
         return [], []
     ok = mi >= t.maintainability_index_min

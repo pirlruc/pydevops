@@ -36,14 +36,15 @@ def ruff_issue_count(root: Path) -> int:
 def jscpd_duplication_pct(root: Path) -> float | None:
     """Total duplication percentage from jscpd JSON report."""
     data = read_json(root / "jscpd-report.json")
-    if not data:
-        return None
     if not isinstance(data, dict):
         return None
-    total = (data.get("statistics") or {}).get("total") or {}
-    pct = total.get("percentage")
-    if pct is None:
+    statistics = data.get("statistics")
+    if not isinstance(statistics, dict):
         return None
+    total = statistics.get("total")
+    if not isinstance(total, dict):
+        return None
+    pct = total.get("percentage")
     if isinstance(pct, (int, float)):
         return float(pct)
     if isinstance(pct, str):

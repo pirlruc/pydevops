@@ -75,11 +75,13 @@ def _truncate_cell(s: str, max_len: int) -> str:
 
 
 def _ascii_hline(w_n: int, w_s: int, w_r: int) -> str:
+    """Return the horizontal border line for the ASCII checks table."""
     seg = "+{0}+{1}+{2}+"
     return seg.format("-" * (w_n + 2), "-" * (w_s + 2), "-" * (w_r + 2))
 
 
 def _ascii_row(row: tuple[str, str, str], w_n: int, w_s: int, w_r: int) -> str:
+    """Render one left/right aligned row for the ASCII checks table."""
     a, b, c = row
     return f"| {a:<{w_n}} | {b:>{w_s}} | {c:<{w_r}} |"
 
