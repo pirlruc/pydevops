@@ -8,15 +8,17 @@ from typing import Any
 from scripts.quality_gates.jsonutil import parse_float_or_none, read_json
 
 
-def max_cc_in_block_list(blocks: Any) -> float:
-    """Largest ``complexity`` value in a radon cc block list."""
+def max_cc_in_block_list(blocks: Any) -> tuple[float, bool]:
+    """Largest ``complexity`` in a radon cc block list, and whether any block had it."""
     if not isinstance(blocks, list):
-        return 0.0
+        return 0.0, False
     best = 0.0
+    found = False
     for b in blocks:
         if isinstance(b, dict) and "complexity" in b:
+            found = True
             best = max(best, float(b["complexity"]))
-    return best
+    return best, found
 
 
 def radon_cc_max(root: Path) -> float | None:
@@ -24,8 +26,14 @@ def radon_cc_max(root: Path) -> float | None:
     data = read_json(root / "radon_cc.json")
     if not data or not isinstance(data, dict):
         return None
-    max_cc = max((max_cc_in_block_list(blocks) for blocks in data.values()), default=0.0)
-    return max_cc if max_cc else None
+    max_cc = 0.0
+    any_found = False
+    for blocks in data.values():
+        local_max, found = max_cc_in_block_list(blocks)
+        if found:
+            any_found = True
+            max_cc = max(max_cc, local_max)
+    return max_cc if any_found else None
 
 
 def mi_value_from_entry(v: Any) -> float | None:

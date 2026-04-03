@@ -154,6 +154,15 @@ def test_radon_cc_skips_nonlist_blocks(tmp_path: Path) -> None:
     assert qg._radon_cc_max(tmp_path) is None
 
 
+def test_radon_cc_max_zero_is_valid(tmp_path: Path) -> None:
+    """Max complexity 0.0 must not be coerced to None (float truthiness bug)."""
+    (tmp_path / "radon_cc.json").write_text(
+        json.dumps({"m.py": [{"complexity": 0}]}),
+        encoding="utf-8",
+    )
+    assert qg._radon_cc_max(tmp_path) == 0.0
+
+
 def test_main_failure_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """main returns 1 when gates fail."""
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
