@@ -52,6 +52,17 @@ def test_consolidate_with_gate_rows(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert "| G |" in (out / "quality_report.md").read_text(encoding="utf-8")
 
 
+def test_consolidate_gates_json_array_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Valid JSON array is not a gates object — report shows failed overall, empty safe rows."""
+    out = tmp_path / "q5"
+    out.mkdir()
+    (out / "gates.json").write_text("[]", encoding="utf-8")
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(out))
+    assert consolidate_main() == 0
+    text = (out / "quality_report.md").read_text(encoding="utf-8")
+    assert "FAILED" in text
+
+
 def test_consolidate_summary_snippet(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """summary_*.txt files appear in report body."""
     out = tmp_path / "q3"

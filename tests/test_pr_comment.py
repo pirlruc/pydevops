@@ -10,20 +10,15 @@ import pytest
 from scripts.pr_comment_markdown import main as pr_main
 
 
-def test_pr_comment_empty_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pr_comment_empty_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """Without gates.json, emit placeholder Markdown."""
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
-    # capsys not imported - use monkeypatch on print? main uses print
-    import io
-    import sys
-
-    buf = io.StringIO()
-    monkeypatch.setattr(sys, "stdout", buf)
     assert pr_main() == 0
-    assert "gates output" in buf.getvalue().lower() or "quality" in buf.getvalue().lower()
+    out = capsys.readouterr().out
+    assert "gates output" in out.lower() or "quality" in out.lower()
 
 
-def test_pr_comment_with_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pr_comment_with_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """With gates.json, table includes gate rows."""
     (tmp_path / "gates.json").write_text(
         json.dumps(
@@ -35,28 +30,31 @@ def test_pr_comment_with_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
         encoding="utf-8",
     )
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
-    import io
-    import sys
-
-    buf = io.StringIO()
-    monkeypatch.setattr(sys, "stdout", buf)
     assert pr_main() == 0
-    out = buf.getvalue()
+    out = capsys.readouterr().out
     assert "Test" in out
     assert "PASS" in out
 
 
-def test_pr_comment_failed_overall(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pr_comment_failed_overall(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """FAILED shown when passed is false."""
     (tmp_path / "gates.json").write_text(
         json.dumps({"passed": False, "rows": []}),
         encoding="utf-8",
     )
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
-    import io
-    import sys
-
-    buf = io.StringIO()
-    monkeypatch.setattr(sys, "stdout", buf)
     assert pr_main() == 0
-    assert "FAILED" in buf.getvalue()
+    assert "FAILED" in capsys.readouterr().out
+
+
+def test_pr_comment_coerces_malformed_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Non-list ``rows`` does not crash; overall summary is failed."""
+    (tmp_path / "gates.json").write_text(
+        json.dumps({"passed": True, "rows": "bad"}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
+    assert pr_main() == 0
+    assert "FAILED" in capsys.readouterr().out

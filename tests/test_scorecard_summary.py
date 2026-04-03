@@ -57,7 +57,7 @@ def test_overall_prefers_check_mean_over_declared_aggregate() -> None:
         "checks": [{"name": "X", "score": 10, "reason": "ok"}],
     }
     md = render_markdown(data)
-    assert "10.0" in md or "| X | 10 |" in md
+    assert "10.0" in md or "| X" in md
 
 
 def test_main_cli_ok(monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -130,7 +130,7 @@ def test_negative_score_shows_na() -> None:
             "checks": [{"name": "Skipped", "score": -1, "reason": "n/a"}],
         }
     )
-    assert "| Skipped | n/a |" in md
+    assert "Skipped" in md and "n/a" in md
 
 
 def test_action_needed_from_low_declared_aggregate_without_check_scores() -> None:
@@ -213,7 +213,7 @@ def test_sarif_to_payload_and_render() -> None:
     md = render_markdown(payload)
     assert "github.com/o/r" in md
     assert "Check X" in md
-    assert "| Check X | 10 |" in md
+    assert "Check X" in md and "10" in md and "+---" in md
     assert "Click Remediation" not in md
     assert "no issues" in md
 

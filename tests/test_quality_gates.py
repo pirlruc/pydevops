@@ -41,6 +41,7 @@ def tmp_out(tmp_path: Path) -> Path:
     (d / "grype.json").write_text(json.dumps({"matches": []}), encoding="utf-8")
     (d / "gitleaks.json").write_text("[]", encoding="utf-8")
     (d / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    (d / "pytest_exit_code.txt").write_text("0\n", encoding="utf-8")
     return d
 
 
@@ -66,6 +67,15 @@ def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
     assert passed
 
 
+def test_high_fails_missing_pytest_exit(tmp_out: Path) -> None:
+    """High tier requires pytest_exit_code.txt from the test phase."""
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    (tmp_out / "pytest_exit_code.txt").unlink()
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any(r.get("gate") == "Pytest exit code" for r in rows)
+
+
 def test_high_strictness_normalized_from_lowercase(tmp_out: Path) -> None:
     """STRICTNESS_LEVEL casing must not bypass High rules."""
     (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
@@ -78,6 +88,22 @@ def test_pylint_gate_fails_low_score(tmp_out: Path) -> None:
     (tmp_out / "pylint_score.txt").write_text("rated at 5.0/10", encoding="utf-8")
     passed, _rows = qg.evaluate(tmp_out, "Medium")
     assert not passed
+
+
+def test_pytest_nonzero_exit_fails(tmp_out: Path) -> None:
+    """Recorded pytest exit code non-zero fails the gate."""
+    (tmp_out / "pytest_exit_code.txt").write_text("1\n", encoding="utf-8")
+    passed, rows = qg.evaluate(tmp_out, "Low")
+    assert not passed
+    assert any(r.get("gate") == "Pytest exit code" for r in rows)
+
+
+def test_grype_non_object_json_fails(tmp_out: Path) -> None:
+    """Grype JSON root must be an object so counts are trustworthy."""
+    (tmp_out / "grype.json").write_text("[]", encoding="utf-8")
+    passed, rows = qg.evaluate(tmp_out, "Medium")
+    assert not passed
+    assert any("Grype report" in str(r.get("gate", "")) for r in rows)
 
 
 def test_cyclomatic_high_limit(tmp_out: Path) -> None:

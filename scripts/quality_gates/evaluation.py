@@ -18,6 +18,7 @@ from scripts.quality_gates.gates_coverage import (
     gate_coverage_branch,
     gate_coverage_line,
     gate_pylint,
+    gate_pytest_exit,
 )
 from scripts.quality_gates.gates_docstrings import (
     gate_docstring_coverage,
@@ -33,6 +34,7 @@ from scripts.quality_gates.readers_py_coverage import (
     load_coverage_totals,
     pylint_issue_count,
     pylint_score,
+    pytest_exit_code,
 )
 from scripts.quality_gates.readers_radon import radon_cc_max, radon_mi_min
 from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct, ruff_issue_count
@@ -60,6 +62,10 @@ def collect_gate_results(  # pylint: disable=too-many-locals
     failures.extend(f)
 
     r, f = gate_pylint(pylint_score(root), t, sn)
+    rows.extend(r)
+    failures.extend(f)
+
+    r, f = gate_pytest_exit(pytest_exit_code(root), sn)
     rows.extend(r)
     failures.extend(f)
 

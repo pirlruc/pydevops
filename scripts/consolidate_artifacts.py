@@ -9,6 +9,8 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from scripts.quality_gates.jsonutil import gates_rows_and_passed
+
 
 def _md_table(rows: list[dict]) -> str:
     """Render gate rows as a Markdown table."""
@@ -58,8 +60,7 @@ def main() -> int:
     if gates_path.is_file():
         try:
             data = json.loads(gates_path.read_text(encoding="utf-8", errors="replace"))
-            rows = data.get("rows", [])
-            passed = bool(data.get("passed", True))
+            rows, passed = gates_rows_and_passed(data)
         except json.JSONDecodeError:
             rows = []
             passed = True

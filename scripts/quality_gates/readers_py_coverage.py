@@ -38,3 +38,15 @@ def pylint_issue_count(root: Path) -> int:
     if not data or not isinstance(data, list):
         return 0
     return len(data)
+
+
+def pytest_exit_code(root: Path) -> int | None:
+    """Read integer ``pytest_exit_code.txt`` from the quality output dir, if present and valid."""
+    path = root / "pytest_exit_code.txt"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8", errors="replace").strip()
+    try:
+        return int(text)
+    except ValueError:
+        return None

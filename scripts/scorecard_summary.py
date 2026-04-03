@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn OpenSSF Scorecard JSON or SARIF into a short Markdown report for CI logs and job summaries."""
+"""Scorecard JSON or SARIF → short Markdown for CI logs and GitHub job summaries."""
 
 from __future__ import annotations
 
@@ -23,11 +23,9 @@ def _checks(data: dict) -> list[dict]:
 
 
 def _overall_score(data: dict, checks: list[dict]) -> float | None:
-    """Aggregate 0–10 for the summary line: mean of checks with score ≥ 0, else declared totals.
+    """Aggregate 0–10: mean of checks with score ≥ 0, else top-level or aggregate totals.
 
-    Using the check mean first keeps the headline aligned with the table and with the
-    aggregate-based branch of :func:`_needs_action`. Top-level ``score`` / ``aggregateScore``
-    are only used when no check has a conclusive (non-negative) score.
+    Preferring the check mean aligns the headline with the table and :func:`_needs_action`.
     """
     scores = [
         float(c["score"])
@@ -68,6 +66,45 @@ def _truncate(s: str, max_len: int) -> str:
     return s[: max_len - 1] + "…"
 
 
+def _truncate_cell(s: str, max_len: int) -> str:
+    """Truncate one table cell to a column width budget."""
+    s = s.replace("\n", " ").strip()
+    if len(s) <= max_len:
+        return s
+    return s[: max_len - 1] + "…"
+
+
+def _ascii_hline(w_n: int, w_s: int, w_r: int) -> str:
+    seg = "+{0}+{1}+{2}+"
+    return seg.format("-" * (w_n + 2), "-" * (w_s + 2), "-" * (w_r + 2))
+
+
+def _ascii_row(row: tuple[str, str, str], w_n: int, w_s: int, w_r: int) -> str:
+    a, b, c = row
+    return f"| {a:<{w_n}} | {b:>{w_s}} | {c:<{w_r}} |"
+
+
+def _checks_table_block(checks: list[dict], reason_max: int, name_max: int = 44) -> list[str]:
+    """ASCII +/| bordered table for aligned columns in logs and summaries."""
+    headers = ("Check", "Score", "Reason")
+    body: list[tuple[str, str, str]] = [
+        (
+            _truncate_cell(str(c.get("name", "?")), name_max),
+            _fmt_score(c.get("score")),
+            _truncate(str(c.get("reason", "")), reason_max),
+        )
+        for c in checks
+    ]
+    w_n = max(len(headers[0]), max((len(r[0]) for r in body), default=0))
+    w_s = max(len(headers[1]), max((len(r[1]) for r in body), default=0))
+    w_r = max(len(headers[2]), max((len(r[2]) for r in body), default=0))
+    sep = _ascii_hline(w_n, w_s, w_r)
+    out = ["```text", sep, _ascii_row(headers, w_n, w_s, w_r), sep]
+    out.extend(_ascii_row(r, w_n, w_s, w_r) for r in body)
+    out.extend([sep, "```"])
+    return out
+
+
 def _needs_action(checks: list[dict], overall: float | None, threshold: float = 6.0) -> bool:
     """True if aggregate or any check is below the review threshold."""
     if overall is not None and overall < threshold:
@@ -93,6 +130,30 @@ def _rule_name(rule: dict[str, Any]) -> str:
     return str(rid) if rid else "?"
 
 
+def _sarif_result_to_check(
+    res: dict[str, Any],
+    rule_by_id: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Map one SARIF result to a check dict."""
+    rid = str(res.get("ruleId", ""))
+    msg_obj = res.get("message")
+    text = msg_obj.get("text", "") if isinstance(msg_obj, dict) else ""
+    if not isinstance(text, str):
+        text = str(text)
+    score = -1
+    reason = text.strip()
+    m = _SCORE_PREFIX.match(text)
+    if m:
+        score = int(m.group(1))
+        reason = text[m.end() :].strip()
+    for cut in ("\nClick Remediation", "\nClick remediation"):
+        if cut in reason:
+            reason = reason.split(cut, 1)[0].strip()
+    rule = rule_by_id.get(rid, {})
+    name = _rule_name(rule) if rule else rid or "?"
+    return {"name": name, "score": score, "reason": reason}
+
+
 def sarif_to_payload(sarif: dict[str, Any], repo_display: str | None) -> dict[str, Any]:
     """Build a Scorecard-like dict (repo + checks) from Scorecard SARIF 2.1.0 output."""
     runs = sarif.get("runs")
@@ -114,25 +175,7 @@ def sarif_to_payload(sarif: dict[str, Any], repo_display: str | None) -> dict[st
     for res in results:
         if not isinstance(res, dict):
             continue
-        rid = str(res.get("ruleId", ""))
-        msg_obj = res.get("message")
-        text = msg_obj.get("text", "") if isinstance(msg_obj, dict) else ""
-        if not isinstance(text, str):
-            text = str(text)
-
-        score = -1
-        reason = text.strip()
-        m = _SCORE_PREFIX.match(text)
-        if m:
-            score = int(m.group(1))
-            reason = text[m.end() :].strip()
-        # Drop common trailing SARIF boilerplate from the reason column
-        for cut in ("\nClick Remediation", "\nClick remediation"):
-            if cut in reason:
-                reason = reason.split(cut, 1)[0].strip()
-
-        rule = rule_by_id.get(rid, {})
-        checks.append({"name": _rule_name(rule) if rule else rid or "?", "score": score, "reason": reason})
+        checks.append(_sarif_result_to_check(res, rule_by_id))
 
     checks.sort(key=lambda c: str(c.get("name", "")))
     repo: str | dict[str, str] = "—"
@@ -159,28 +202,24 @@ def render_markdown(data: dict, reason_max: int = 100) -> str:
         f"- **Repository:** `{repo_name}`",
         f"- **Aggregate score (0–10, higher is better):** {_fmt_score(overall)}",
         "",
-        "| Check | Score | Reason |",
-        "| --- | ---: | --- |",
+        "### Checks",
+        "",
     ]
-    for c in checks:
-        name = str(c.get("name", "?"))
-        reason = _truncate(str(c.get("reason", "")), reason_max)
-        lines.append(f"| {name} | {_fmt_score(c.get('score'))} | {reason} |")
+    lines.extend(_checks_table_block(checks, reason_max))
+    lines.append("")
 
     action = _needs_action(checks, overall)
-    lines.extend(
-        [
-            "",
-            "### Verdict",
-            "",
+    if action:
+        verdict = (
             "**Action needed:** review checks with score below 6 or aggregate below 6, "
             "and address Scorecard documentation for those rules."
-            if action
-            else "**No immediate action required:** aggregate and per-check scores are at or above the "
-            "review threshold (6/10). Re-run periodically as the repo changes.",
-            "",
-        ]
-    )
+        )
+    else:
+        verdict = (
+            "**No immediate action required:** aggregate and per-check scores are at or above the "
+            "review threshold (6/10). Re-run periodically as the repo changes."
+        )
+    lines.extend(["", "### Verdict", "", verdict, ""])
     return "\n".join(lines)
 
 
@@ -213,10 +252,11 @@ def main() -> int:
         argv = argv[2:]
 
     if len(argv) != 1:
-        print(
-            "usage: scorecard_summary.py [--repo github.com/owner/name] <results.json|results.sarif>",
-            file=sys.stderr,
+        msg = (
+            "usage: scorecard_summary.py [--repo github.com/owner/name] "
+            "<results.json|results.sarif>"
         )
+        print(msg, file=sys.stderr)
         return 2
     path = Path(argv[0])
     if not path.is_file():

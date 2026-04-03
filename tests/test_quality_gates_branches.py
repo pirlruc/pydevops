@@ -8,6 +8,13 @@ from pathlib import Path
 import pytest
 
 from scripts import quality_gates as qg
+from scripts.quality_gates.readers_py_coverage import pytest_exit_code
+
+
+def test_pytest_exit_code_invalid_text(tmp_path: Path) -> None:
+    """Non-integer pytest_exit_code.txt is treated as missing."""
+    (tmp_path / "pytest_exit_code.txt").write_text("not-a-number\n", encoding="utf-8")
+    assert pytest_exit_code(tmp_path) is None
 
 
 def test_read_json_invalid(tmp_path: Path) -> None:
@@ -97,6 +104,12 @@ def test_grype_medium(tmp_path: Path) -> None:
     h, m = qg._grype_severities(tmp_path)
     assert h == 0
     assert m == 1
+
+
+def test_grype_non_object_root(tmp_path: Path) -> None:
+    """Valid JSON array is not a Grype document."""
+    (tmp_path / "grype.json").write_text("[]", encoding="utf-8")
+    assert qg._grype_severities(tmp_path) is None
 
 
 def test_gitleaks_non_list(tmp_path: Path) -> None:

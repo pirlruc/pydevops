@@ -20,11 +20,16 @@ on:
         type: string
         default: "[]"
       devops_repository:
-        description: "This DevOps repository (owner/name)"
+        description: >
+          Trusted DevOps repo (owner/name). Callers MUST pin a tag or SHA they trust — passing
+          an attacker-controlled repo/ref runs that checkout’s composite actions and scripts with
+          this job’s token (supply-chain risk).
         type: string
         required: true
       devops_ref:
-        description: "Tag, branch, or SHA for DevOps checkout (use SemVer tag in production)"
+        description: >
+          Git ref for DevOps checkout — use an immutable SemVer tag or full commit SHA in
+          production, not a moving branch, unless you fully trust the repo owners.
         type: string
         required: true
       working_directory:
@@ -68,6 +73,19 @@ on:
       license_deny_list:
         type: string
         default: "[]"
+      devops_repository:
+        description: >
+          Trusted DevOps repo (owner/name). Callers MUST pin a tag or SHA they trust — passing
+          an attacker-controlled repo/ref runs that checkout’s composite actions and scripts with
+          this job’s token (supply-chain risk).
+        type: string
+        default: ""
+      devops_ref:
+        description: >
+          Git ref for DevOps checkout — use an immutable SemVer tag or full commit SHA in
+          production, not a moving branch, unless you fully trust the repo owners.
+        type: string
+        default: ""
       working_directory:
         type: string
         default: "."
@@ -107,13 +125,13 @@ jobs:
           egress-policy: audit
 
       - name: Check out application full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || inputs.devops_repository }}
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || inputs.devops_ref }}
@@ -281,12 +299,12 @@ jobs:
           egress-policy: audit
 
       - name: Check out application
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event_name == 'workflow_dispatch' && github.repository || inputs.devops_repository }}
           ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || inputs.devops_ref }}

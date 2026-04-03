@@ -50,6 +50,7 @@ exclude = [".venv", "tests", ".git", ".github", "examples", "dist", "build"]
 
 [tool.pylint.main]
 max-line-length = 100
+fail-under = 9.5
 load-plugins = ["pylint.extensions.docparams"]
 
 [tool.pylint."messages control"]

@@ -8,7 +8,7 @@ from typing import Any
 from scripts.quality_gates.config import HIGH_REQUIRED_FILES, normalized_strictness_level
 from scripts.quality_gates.jsonutil import read_json
 from scripts.quality_gates.readers_cloc_docs import interrogate_coverage
-from scripts.quality_gates.readers_py_coverage import load_coverage_totals, pylint_score
+from scripts.quality_gates.readers_py_coverage import pylint_score
 
 RowList = list[dict[str, Any]]
 

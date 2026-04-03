@@ -85,3 +85,28 @@ def gate_pylint(
         "ok": ok,
     }
     return [row], [] if ok else ["pylint score"]
+
+
+def gate_pytest_exit(
+    exit_code: int | None,
+    strictness_norm: str = "Medium",
+) -> tuple[RowList, list[str]]:
+    """Require pytest exit status 0 when the test phase recorded one (always for High)."""
+    if exit_code is None:
+        if strictness_norm == "High":
+            row = {
+                "gate": "Pytest exit code",
+                "actual": "missing pytest_exit_code.txt (pytest not run or test phase skipped)",
+                "required": "0",
+                "ok": False,
+            }
+            return [row], ["pytest"]
+        return [], []
+    ok = exit_code == 0
+    row = {
+        "gate": "Pytest exit code",
+        "actual": str(exit_code),
+        "required": "0",
+        "ok": ok,
+    }
+    return [row], [] if ok else ["pytest"]

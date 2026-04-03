@@ -38,6 +38,8 @@ def jscpd_duplication_pct(root: Path) -> float | None:
     data = read_json(root / "jscpd-report.json")
     if not data:
         return None
+    if not isinstance(data, dict):
+        return None
     total = (data.get("statistics") or {}).get("total") or {}
     pct = total.get("percentage")
     return float(pct) if pct is not None else None

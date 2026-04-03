@@ -161,7 +161,11 @@ if [[ "${want_static}" == "1" ]]; then
       echo "jscpd did not produce ${OUT}/jscpd-report.json (see ${OUT}/jscpd.stderr)" >&2
     fi
   else
-    echo '{"statistics":{"total":{"percentage":0}}}' >"$OUT/jscpd-report.json"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/jscpd-report.json"
+    else
+      echo '{"statistics":{"total":{"percentage":0}}}' >"$OUT/jscpd-report.json"
+    fi
   fi
 
   # Radon
@@ -239,6 +243,7 @@ fi
 if [[ "${want_test}" == "1" ]]; then
   # Pytest + coverage (expects deps installed in app venv)
   if command -v pytest >/dev/null 2>&1; then
+    _py_rc=0
     pytest \
       --ignore="$PYTEST_IGNORE" \
       --cov=. \
@@ -247,10 +252,11 @@ if [[ "${want_test}" == "1" ]]; then
       --cov-report=html:"$OUT/htmlcov" \
       --cov-report=json:"$OUT/coverage.json" \
       -q \
-      >"$OUT/pytest.txt" 2>&1 || true
+      >"$OUT/pytest.txt" 2>&1 || _py_rc=$?
+    printf "%s\n" "$_py_rc" >"$OUT/pytest_exit_code.txt"
   else
     if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/coverage.json" "$OUT/pytest.txt"
+      rm -f "$OUT/coverage.json" "$OUT/pytest.txt" "$OUT/pytest_exit_code.txt"
     else
       echo '{"totals":{"percent_covered":0,"percent_branches_covered":0}}' >"$OUT/coverage.json"
       echo "pytest not installed" >"$OUT/pytest.txt"

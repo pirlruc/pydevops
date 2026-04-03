@@ -52,7 +52,7 @@ STRICTNESS: dict[str, Thresholds] = {
     "High": Thresholds(
         coverage_line_min=95.0,
         coverage_branch_min=95.0,
-        pylint_score_min=9.0,
+        pylint_score_min=9.5,
         cyclomatic_max=5,
         maintainability_index_min=60.0,
         duplication_max_pct=5.0,

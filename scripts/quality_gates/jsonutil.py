@@ -23,3 +23,17 @@ def parse_float_or_none(s: str) -> float | None:
         return float(s)
     except ValueError:
         return None
+
+
+def gates_rows_and_passed(data: Any) -> tuple[list[dict[str, Any]], bool]:
+    """Normalize ``gates.json`` payload: list of row dicts and overall pass flag."""
+    if not isinstance(data, dict):
+        return [], False
+    raw_rows = data.get("rows", [])
+    if isinstance(raw_rows, list):
+        rows = [r for r in raw_rows if isinstance(r, dict)]
+        passed = bool(data.get("passed", True))
+    else:
+        rows = []
+        passed = False
+    return rows, passed

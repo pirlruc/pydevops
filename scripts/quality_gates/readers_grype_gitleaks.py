@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 from scripts.quality_gates.jsonutil import read_json
 
 
@@ -27,11 +28,18 @@ def count_one_grype_match(m: dict, highs: int, mediums: int) -> tuple[int, int]:
     return highs, mediums
 
 
-def grype_severities(root: Path) -> tuple[int, int]:
-    """Count high/critical and medium vulnerabilities from grype.json."""
+def grype_severities(root: Path) -> tuple[int, int] | None:
+    """Count high/critical and medium vulnerabilities from grype.json.
+
+    Returns ``(0, 0)`` when the file is missing or JSON is invalid (same as no matches).
+    Returns ``None`` when JSON parses to a non-object (e.g. list or string), so the gate
+    can fail closed instead of raising ``AttributeError`` or under-counting.
+    """
     data = read_json(root / "grype.json")
-    if not data:
+    if data is None:
         return 0, 0
+    if not isinstance(data, dict):
+        return None
     highs = mediums = 0
     for m in data.get("matches", []):
         if not isinstance(m, dict):

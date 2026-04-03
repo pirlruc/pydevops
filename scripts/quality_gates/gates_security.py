@@ -18,13 +18,29 @@ def gate_vulnerabilities(
 ) -> tuple[RowList, list[str]]:
     """Evaluate pip-audit and Grype vulnerability aggregates."""
     pa_h, pa_m = pip_audit_vulns(root)
-    gr_h, gr_m = grype_severities(root)
+    gr_counts = grype_severities(root)
+    failures: list[str] = []
+    grype_rows: RowList = []
+    if gr_counts is None:
+        grype_rows.append(
+            {
+                "gate": "Grype report (JSON shape)",
+                "actual": "JSON root is not an object (expected Grype object with matches[])",
+                "required": "parseable object with matches[]",
+                "ok": False,
+            }
+        )
+        failures.append("grype report")
+        gr_h, gr_m = 0, 0
+    else:
+        gr_h, gr_m = gr_counts
     # Sum counts so distinct findings from pip-audit vs Grype are not under-counted (conservative).
     high_v = pa_h + gr_h
     med_v = pa_m + gr_m
     ok_h = high_v <= t.vuln_high_max
     ok_m = med_v <= t.vuln_medium_max
     rows: RowList = [
+        *grype_rows,
         {
             "gate": "Vulnerabilities (High)",
             "actual": str(high_v),
@@ -38,7 +54,6 @@ def gate_vulnerabilities(
             "ok": ok_m,
         },
     ]
-    failures: list[str] = []
     if not ok_h:
         failures.append("high vulnerabilities")
     if not ok_m:

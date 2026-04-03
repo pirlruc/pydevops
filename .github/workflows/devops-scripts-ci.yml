@@ -26,8 +26,6 @@ jobs:
   scripts:
     name: Verify scripts tests and gates
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Harden runner with audited egress
         uses: step-security/harden-runner@v2.16.1
@@ -35,7 +33,7 @@ jobs:
           egress-policy: audit
 
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 

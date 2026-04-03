@@ -7,6 +7,8 @@ import json
 import os
 from pathlib import Path
 
+from scripts.quality_gates.jsonutil import gates_rows_and_passed
+
 
 def main() -> int:
     """Print Markdown for a GitHub PR comment; stdout only."""
@@ -24,8 +26,7 @@ def main() -> int:
             "see workflow artifacts for partial outputs._",
         )
         return 0
-    rows = data.get("rows", [])
-    passed = data.get("passed", True)
+    rows, passed = gates_rows_and_passed(data)
     status = "PASSED" if passed else "FAILED"
 
     lines = [
