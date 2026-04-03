@@ -37,6 +37,7 @@ runs:
         DEVOPS: ${{ inputs.devops-checkout-path }}
       run: |
         set -euo pipefail
+        mkdir -p "$HOME/.local/bin"
         SYFT_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/syft-version.txt")
         GRYPE_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/grype-version.txt")
         tmp=$(mktemp -d)
