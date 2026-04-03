@@ -51,17 +51,33 @@ def _json_path_present(data: Any, path: tuple[str, ...]) -> bool:
     return cur is not None
 
 
+def _json_shape_error(data: Any, name: str) -> str | None:
+    """Return a shape-validation error string for ``name``, if any."""
+    expected = JSON_SHAPES.get(name)
+    if expected is None:
+        return None
+    return None if isinstance(data, expected[0]) else expected[1]
+
+
+def _first_missing_required_path(data: Any, name: str) -> str | None:
+    """Return the first missing required-path error for ``name``, if any."""
+    for req_path, message in JSON_REQUIRED_PATHS.get(name, []):
+        if not _json_path_present(data, req_path):
+            return message
+    return None
+
+
 def _json_artifact_substance_check(path: Path, name: str) -> tuple[bool, str]:
     """Validate JSON artifact shape and required nested paths when configured."""
     data = read_json(path)
     if data is None:
         return False, f"{name} is missing or invalid JSON"
-    expected = JSON_SHAPES.get(name)
-    if expected and not isinstance(data, expected[0]):
-        return False, expected[1]
-    for req_path, message in JSON_REQUIRED_PATHS.get(name, []):
-        if not _json_path_present(data, req_path):
-            return False, message
+    shape_error = _json_shape_error(data, name)
+    if shape_error is not None:
+        return False, shape_error
+    required_path_error = _first_missing_required_path(data, name)
+    if required_path_error is not None:
+        return False, required_path_error
     return True, ""
 
 
