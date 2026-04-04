@@ -63,6 +63,20 @@ def test_overall_prefers_check_mean_over_declared_aggregate() -> None:
     assert "| X" in md and "+---" in md
 
 
+def test_check_scores_json_booleans_do_not_skew_mean() -> None:
+    """JSON ``true``/``false`` must not be treated as 1.0/0.0 (``bool`` subclasses ``int``)."""
+    data = {
+        "repo": {"name": "github.com/a/b"},
+        "checks": [
+            {"name": "BadBool", "score": True, "reason": "malformed"},
+            {"name": "Ok", "score": 8, "reason": "ok"},
+        ],
+    }
+    md = render_markdown(data)
+    aggregate_lines = [ln for ln in md.splitlines() if "Aggregate score" in ln]
+    assert "8.0" in aggregate_lines[0]
+
+
 def test_main_cli_ok(monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
     from scripts import scorecard_summary
 

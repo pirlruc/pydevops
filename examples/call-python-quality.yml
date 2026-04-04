@@ -25,5 +25,4 @@ jobs:
       license_deny_list: "[]"
       working_directory: "."
       python_version: "3.13"
-    secrets:
-      inherit
+    secrets: inherit

@@ -11,7 +11,32 @@ from pathlib import Path
 from typing import Any
 
 # OpenSSF Scorecard writes SARIF messages as: messageWithScore in pkg/scorecard/sarif.go
-_SCORE_PREFIX = re.compile(r"^score is (-?\d+):\s*", re.MULTILINE)
+# ``match()`` is anchored at the start of ``text`` only; MULTILINE would not change behavior here.
+_SCORE_PREFIX = re.compile(r"^score is (-?\d+):\s*")
+
+
+def _is_real_number(v: object) -> bool:
+    """True for ``int``/``float`` values only (JSON booleans are ``bool``, a subclass of ``int``)."""
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _non_negative_score_value(v: object) -> float | None:
+    """Scorecard 0–10 style value if ``v`` is numeric and ``>= 0``; else ``None``."""
+    if not _is_real_number(v):
+        return None
+    x = float(v)
+    return x if x >= 0 else None
+
+
+def _aggregate_overall_score(data: dict) -> float | None:
+    """Score from ``aggregateScore.overall.score`` when present and non-negative."""
+    agg = data.get("aggregateScore")
+    if not isinstance(agg, dict):
+        return None
+    overall = agg.get("overall")
+    if not isinstance(overall, dict):
+        return None
+    return _non_negative_score_value(overall.get("score"))
 
 
 def _checks(data: dict) -> list[dict]:
@@ -27,29 +52,18 @@ def _overall_score(data: dict, checks: list[dict]) -> float | None:
 
     Preferring the check mean aligns the headline with the table and :func:`_needs_action`.
     """
-    scores = [
-        float(c["score"])
-        for c in checks
-        if isinstance(c.get("score"), (int, float)) and float(c["score"]) >= 0
-    ]
+    scores = [x for c in checks if (x := _non_negative_score_value(c.get("score"))) is not None]
     if scores:
         return sum(scores) / len(scores)
-    s = data.get("score")
-    if isinstance(s, (int, float)) and s >= 0:
-        return float(s)
-    agg = data.get("aggregateScore")
-    if isinstance(agg, dict):
-        overall = agg.get("overall")
-        if isinstance(overall, dict):
-            os_ = overall.get("score")
-            if isinstance(os_, (int, float)) and os_ >= 0:
-                return float(os_)
-    return None
+    top = _non_negative_score_value(data.get("score"))
+    if top is not None:
+        return top
+    return _aggregate_overall_score(data)
 
 
 def _fmt_score(v: object) -> str:
     """Format a numeric score for Markdown; non-numeric or negative → placeholder."""
-    if not isinstance(v, (int, float)):
+    if not _is_real_number(v):
         return "—"
     if v < 0:
         return "n/a"
@@ -104,8 +118,8 @@ def _needs_action(checks: list[dict], overall: float | None, threshold: float = 
     if overall is not None and overall < threshold:
         return True
     for c in checks:
-        sc = c.get("score")
-        if isinstance(sc, (int, float)) and 0 <= sc < threshold:
+        sc = _non_negative_score_value(c.get("score"))
+        if sc is not None and sc < threshold:
             return True
     return False
 

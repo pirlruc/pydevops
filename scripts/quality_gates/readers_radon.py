@@ -49,10 +49,17 @@ def radon_cc_max(root: Path) -> float | None:
     return max(maxima) if maxima else None
 
 
+def _mi_from_dict_entry(v: dict) -> float | None:
+    """``mi`` field from a Radon MI object node."""
+    if "mi" not in v:
+        return None
+    return parse_float_or_none(str(v["mi"]))
+
+
 def mi_value_from_entry(v: Any) -> float | None:
     """Parse a single radon mi file entry to a float MI, or None."""
-    if isinstance(v, dict) and "mi" in v:
-        return parse_float_or_none(str(v["mi"]))
+    if isinstance(v, dict):
+        return _mi_from_dict_entry(v)
     if isinstance(v, (int, float)) and not isinstance(v, bool):
         return float(v)
     if isinstance(v, str):

@@ -52,7 +52,7 @@ Use `git log --oneline` for the authoritative list.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
 - **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.5`** if missing.
 - **Ruff object format**: **`ruff_messages_in_files()`** in [`readers_ruff_jscpd.py`](../scripts/quality_gates/readers_ruff_jscpd.py) counts **`files[].messages`** only when **`messages`** is a **list**; **`null`** or non-list values contribute **0** (no **`TypeError`** / wrong **`len()`** on dicts).
-- **cloc / JSON metrics**: **`cloc_slocs_comments()`** uses **`coerce_non_negative_float()`** in [`jsonutil.py`](../scripts/quality_gates/jsonutil.py) for **`Python.code`** / **`Python.comment`** so **`null`**, non-numeric strings, lists, etc. yield **0.0** instead of raising. **`interrogate_coverage()`** and **`pylint_score()`** use **`parse_float_or_none()`** on regex captures. **Radon** CC/MI and **jscpd** **`percentage`** reject JSON **booleans** for numeric fields (Python **`bool`** is a **`int`** subclass — avoids **`true` → 1.0** misreads).
+- **cloc / JSON metrics**: **`cloc_slocs_comments()`** uses **`coerce_non_negative_float()`** in [`jsonutil.py`](../scripts/quality_gates/jsonutil.py) (built from **`_as_non_negative_float`**, **`_non_negative_float_from_str`**, **`_non_negative_float_from_number`**) for **`Python.code`** / **`Python.comment`** so **`null`**, non-numeric strings, lists, etc. yield **0.0** instead of raising. **`interrogate_coverage()`** and **`pylint_score()`** use **`parse_float_or_none()`** on regex captures. **Radon** CC/MI and **jscpd** **`percentage`** reject JSON **booleans** for numeric fields (Python **`bool`** is a **`int`** subclass — avoids **`true` → 1.0** misreads). **`readers_radon.mi_value_from_entry`** delegates dict-shaped nodes to **`_mi_from_dict_entry`** to keep Radon CC low.
 
 ### 3. GitHub Actions / workflows
 
@@ -80,7 +80,7 @@ Use `git log --oneline` for the authoritative list.
 
 ### 6. Tests / tooling
 
-- **`tests/test_scorecard_summary.py`**: Stronger assertion that **aggregate score line** reflects check mean when aggregateScore conflicts.
+- **`tests/test_scorecard_summary.py`**: Stronger assertion that **aggregate score line** reflects check mean when aggregateScore conflicts; **JSON boolean** check scores do not skew the headline mean.
 - **`tests/test_quality_gates.py`**: PR comment text when **`gates.json`** is invalid JSON updated to match **`pr_comment_markdown.py`** wording.
 - **`tests/test_pr_comment.py`** / **`tests/test_consolidate.py`**: Cover **`gates.json`** with **omitted `passed`** (must surface as **FAILED** in comment / consolidated report).
 - **`tests/test_readers_cloc_docs.py`**: **pydoclint** issue counting matches flake8-style violation lines only (not “0 errors” summaries); **cloc** defensive parsing.
@@ -89,7 +89,7 @@ Use `git log --oneline` for the authoritative list.
 
 ### 7. Misc scripts
 
-- **`scripts/scorecard_summary.py`**: SARIF **`tool` / `tool.driver`** validation; consolidated **`_truncate`** (removed duplicate `_truncate_cell`).
+- **`scripts/scorecard_summary.py`**: SARIF **`tool` / `tool.driver`** validation; consolidated **`_truncate`** (removed duplicate `_truncate_cell`). **Scorecard numeric fields** use **`_is_real_number`** / **`_non_negative_score_value`** so JSON **`true`/`false`** are not treated as **1.0**/**0.0** in aggregates, table formatting, or **`_needs_action`** (same **`bool`**-as-**`int`** pitfall as elsewhere).
 - **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file exists. **GFM gate tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py) (`sanitize_markdown_table_cell`: newlines/tabs → spaces, `|` → U+00A6 broken bar, truncation) so tool messages cannot break columns.
 - **`scripts/consolidate_artifacts.py`**: Uses the same cell sanitization for the consolidated **quality_report.md** gate table. If **`gates.json`** is present but **not valid JSON** (e.g. truncated write), the consolidated summary treats the run as **FAILED**, not PASSED, with an explanatory note in the report body.
 - **Bandit gate**: [`scripts/quality_gates/gates_security.py`](../scripts/quality_gates/gates_security.py) `gate_bandit` uses [`readers_bandit.py`](../scripts/quality_gates/readers_bandit.py) to count `bandit.json` `results` vs **`bandit_findings_max`** per tier (High: 0; Medium: 3; Low: 15). Wired in [`evaluation.py`](../scripts/quality_gates/evaluation.py) `collect_gate_results` so SAST findings affect **`passed`** like other gates. The gate row **`gate`** label is always **`Bandit (SAST)`**; parse/shape problems are expressed in **`actual`** / **`required`**, not a second label variant.
@@ -121,7 +121,7 @@ Use `git log --oneline` for the authoritative list.
 - **Single source of truth** for vuln counts: **`gate_vulnerabilities`**, not an extra Grype `--fail-on` in the workflow.
 - **Bandit policy** is tiered via **`bandit_findings_max`** only (count of `results[]`); adjust thresholds in **`config.py`** if product policy changes.
 - **Conventional commits** have been used in this line (e.g. `fix(ci):`, `fix(quality-gates):`, `docs(workflows):`).
-- **Cursor agents**: see [`.cursor/rules/handoff-and-commits.mdc`](../.cursor/rules/handoff-and-commits.mdc) — refresh **`docs/ai-agent-handoff.md`** on substantive changes and end with a **conventional commit** line for the user.
+- **Cursor agents**: see [`.cursor/rules/handoff-and-commits.mdc`](../.cursor/rules/handoff-and-commits.mdc) — refresh **`docs/ai-agent-handoff.md`** on substantive changes and end with a **conventional commit** line for the user. **[`.cursor/rules/radon-complexity.mdc`](../.cursor/rules/radon-complexity.mdc)** — run **`radon cc -s`** on edited **`scripts/`** files and keep cyclomatic complexity within project limits (≤ **5** per function for **`scripts/quality_gates`**).
 
 ---
 
@@ -129,7 +129,7 @@ Use `git log --oneline` for the authoritative list.
 
 1. `git status` / `git log` vs remote **`feature-ci`**.
 2. Run **`uv sync`** then **`uv run pytest`** (or CI) on **`scripts/`** and **`tests/`**.
-3. Optional: **`uv run --with radon python -m radon cc -s scripts/quality_gates`** if touching gate modules.
+3. **`uv run --with radon python -m radon cc -s`** on any **`scripts/`** files you change (required habit for agents — see **`.cursor/rules/radon-complexity.mdc`**).
 4. Scan **`.github/workflows`** and **`action.yml`** files with **actionlint + zizmor** if editing CI (see `reusable-workflows-quality.yml`).
 
 ---

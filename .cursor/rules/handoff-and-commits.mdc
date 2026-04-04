@@ -16,3 +16,5 @@ When you implement or materially change **CI workflows**, **quality gates**, **s
    Use types such as `fix`, `feat`, `docs`, `ci`, `refactor`, `test`. Scopes examples: `ci`, `quality-gates`, `scripts`, `workflows`.
 
 This project uses that format in git history; matching it keeps automation and reviewers aligned.
+
+See also **[`radon-complexity.mdc`](radon-complexity.mdc)** — run **`radon cc`** on edited **`scripts/`** files and keep cyclomatic complexity within project limits.
