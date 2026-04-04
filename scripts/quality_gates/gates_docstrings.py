@@ -14,7 +14,7 @@ def gate_docstring_coverage(
     t: Thresholds,
     strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
-    """Evaluate interrogate docstring coverage (High >= 95%)."""
+    """Evaluate interrogate docstring coverage against tier thresholds."""
     if doc_cov is None:
         if strictness_norm == "High":
             row = {

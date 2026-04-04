@@ -14,6 +14,20 @@ def _missing_metric_row(gate: str, required: str, actual: str) -> dict[str, Any]
     return {"gate": gate, "actual": actual, "required": required, "ok": False}
 
 
+def _cyclomatic_gate_label(strictness_norm: str) -> str:
+    """Human-readable gate name; High-tier nuance only when applicable."""
+    if strictness_norm == "High":
+        return "Cyclomatic complexity (max; High < 6)"
+    return "Cyclomatic complexity (max)"
+
+
+def _maintainability_gate_label(strictness_norm: str) -> str:
+    """Human-readable gate name; High-tier nuance only when applicable."""
+    if strictness_norm == "High":
+        return "Maintainability index (min; High targets >= 60)"
+    return "Maintainability index (min)"
+
+
 def gate_cyclomatic(
     cc: float | None,
     t: Thresholds,
@@ -23,7 +37,7 @@ def gate_cyclomatic(
     req = f"<= {t.cyclomatic_max:.0f}"
     if t.cyclomatic_max <= 5:
         req += ", target <= 4"
-    label = "Cyclomatic complexity (max; High < 6)"
+    label = _cyclomatic_gate_label(strictness_norm)
     if cc is None:
         if strictness_norm == "High":
             row = _missing_metric_row(label, req, "missing or unparseable radon_cc.json")
@@ -45,10 +59,11 @@ def gate_maintainability(
     strictness_norm: str = "Medium",
 ) -> tuple[RowList, list[str]]:
     """Evaluate minimum MI across files (High targets >= 60)."""
+    mi_label = _maintainability_gate_label(strictness_norm)
     if mi is None:
         if strictness_norm == "High":
             row = _missing_metric_row(
-                "Maintainability index (min; High targets >= 60)",
+                mi_label,
                 f">= {t.maintainability_index_min:.1f}",
                 "missing or unparseable radon_mi.json",
             )
@@ -56,7 +71,7 @@ def gate_maintainability(
         return [], []
     ok = mi >= t.maintainability_index_min
     row = {
-        "gate": "Maintainability index (min; High targets >= 60)",
+        "gate": mi_label,
         "actual": f"{mi:.1f}",
         "required": f">= {t.maintainability_index_min:.1f}",
         "ok": ok,

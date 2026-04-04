@@ -6,7 +6,7 @@ Workflows are split by audience; see also [`.github/workflows/README.md`](../.gi
 
 ## Application repositories (consumers)
 
-These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (with matching `pydevops_ref`).
+These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (with matching `devops_ref`).
 
 ### `python-quality.yml`
 
@@ -70,7 +70,7 @@ Gitleaks and Semgrep run **before** the full toolchain so secret and pattern iss
 
 #### Strictness tiers (`strictness_level`)
 
-Gates are evaluated in `scripts/quality_gates` from CI artifacts. **Docstring coverage** (from **Interrogate**, `interrogate.txt`) is enforced for every tier — **High requires at least 95%**.
+Gates are evaluated in `scripts/quality_gates` from CI artifacts. **Docstring coverage** (from **Interrogate**, `interrogate.txt`) is checked against tier-specific minimums when `interrogate.txt` is present. **High** strictness also fails closed if `interrogate.txt` is missing or unparseable; **Low** and **Medium** skip the docstring coverage gate when that artifact is absent.
 
 | Tier | Docstring coverage (min) | Docstring issue rate (pydoclint / KLoC comments, max) | Notes |
 | --- | --- | --- | --- |

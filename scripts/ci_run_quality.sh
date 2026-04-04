@@ -52,31 +52,6 @@ else
   done
 fi
 
-summarize() {
-  local name="$1"
-  shift
-  local log="$OUT/summary_${name}.txt"
-  {
-    echo "Command: $*"
-    echo "---"
-    "$@" 2>&1 || true
-  } | tee "$log"
-}
-
-run_ok() {
-  local name="$1"
-  shift
-  local log="$OUT/summary_${name}.txt"
-  echo "Command: $*" >"$log"
-  if "$@" >>"$log" 2>&1; then
-    echo "[exit 0]" >>"$log"
-    return 0
-  else
-    echo "[exit $?]" >>"$log"
-    return 0
-  fi
-}
-
 if [[ "${want_static}" == "1" ]]; then
   # CLOC (SLOC / comment lines for metrics)
   if command -v cloc >/dev/null 2>&1; then
