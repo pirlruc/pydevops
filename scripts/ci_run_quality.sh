@@ -10,9 +10,10 @@ mkdir -p "$OUT"
 
 cd "$APP_DIR"
 
-# High strictness: do not write non-empty placeholders for artifacts required by quality_gates.
-# For all tiers: avoid success-shaped JSON when a tool is not installed (empty arrays, 0% dup,
-# empty matches) — that would make quality_gates under-count or pass gates without a real run.
+# High strictness: omit artifact files when a required tool is missing so gates fail closed.
+# Low/Medium: some missing CLIs still write minimal placeholders ({}, [], etc.) so downstream
+# parsers get valid JSON; security tools (bandit, pip-audit, grype, syft, jscpd without npx)
+# omit files instead of success-shaped payloads. See each section below.
 _high=0
 case "$(echo "${STRICTNESS_LEVEL:-Medium}" | tr '[:upper:]' '[:lower:]')" in
   high) _high=1 ;;
@@ -127,11 +128,15 @@ if [[ "${want_static}" == "1" ]]; then
     fi
   fi
 
-  # jscpd (JS tool; version from .github/dependencies/jscpd for Dependabot npm updates)
+  # jscpd (pinned version from DevOps package.json when present; else fallback pin)
   if command -v npx >/dev/null 2>&1; then
     JSCPD_PREFIX="${DEVOPS_DIR}/.github/dependencies/jscpd"
     if [[ -f "${JSCPD_PREFIX}/package.json" ]]; then
-      npx --yes --prefix "${JSCPD_PREFIX}" jscpd . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
+      JSCPD_VER=$(
+        python3 -c "import json, re, sys; v=json.load(open(sys.argv[1]))['dependencies']['jscpd']; m=re.search(r'(\d+\.\d+\.\d+)', str(v)); print(m.group(1) if m else str(v).strip())" "${JSCPD_PREFIX}/package.json" 2>/dev/null || true
+      )
+      [[ -z "${JSCPD_VER}" ]] && JSCPD_VER="4.0.5"
+      npx --yes "jscpd@${JSCPD_VER}" . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     else
       npx --yes jscpd@4.0.5 . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     fi

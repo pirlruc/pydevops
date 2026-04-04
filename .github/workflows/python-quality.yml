@@ -210,7 +210,6 @@ jobs:
 
       - name: Fail on high severity vulnerabilities
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
           SBOM="$QUALITY_OUTPUT_DIR/sbom-cyclonedx.json"
           if [ -f "$SBOM" ] && [ -s "$SBOM" ]; then
             grype "sbom:$SBOM" --fail-on high

@@ -22,7 +22,7 @@ def main() -> int:
     except json.JSONDecodeError:
         print(
             "## Quality-as-a-Service summary\n\n"
-            "_gates.json was missing or not valid JSON (e.g. cancelled job); "
+            "_gates.json could not be parsed as JSON (e.g. truncated output or cancelled job); "
             "see workflow artifacts for partial outputs._",
         )
         return 0

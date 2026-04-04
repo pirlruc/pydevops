@@ -233,7 +233,7 @@ def test_pr_comment_malformed_gates_json(
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
     (tmp_path / "gates.json").write_text("{", encoding="utf-8")
     assert pr_comment_markdown.main() == 0
-    assert "not valid JSON" in capsys.readouterr().out
+    assert "could not be parsed as JSON" in capsys.readouterr().out
 
 
 def test_consolidate_malformed_gates_json(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
