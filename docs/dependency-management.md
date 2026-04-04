@@ -4,7 +4,9 @@
 
 | Path | Role |
 | --- | --- |
-| [`.github/dependencies/`](../.github/dependencies/) | **Dependabot-managed** pins: `requirements.txt` subtrees, `jscpd/package.json`, `uv-version.txt`, `syft-version.txt` / `grype-version.txt` (Anchore CLI pins for `qa-install-toolchain`), and `emit-uv-version.sh` (used by composite actions) |
+| [`.github/dependencies/`](../.github/dependencies/) | **Pins:** `github-actions-pins.json` (canonical `uses:` versions for workflows/composites), `quality-tools/requirements.txt` (**generated** from `pyproject.toml`), `semgrep` / `dast-python` requirements (isolated; see below), `jscpd/package.json`, `uv-version.txt`, `syft-version.txt` / `grype-version.txt`, `emit-uv-version.sh` |
+| **[`pyproject.toml`](../pyproject.toml)** | **Single source** for Ruff, Pylint, Mypy, pytest, Bandit, pip-audit, etc. (`[dependency-groups].quality-tools`). Regenerate the committed requirements file with **`bash scripts/export_pinned_requirements.sh`** (runs `uv lock` + `scripts/export_quality_tools_requirements.py`). |
+| **[`scripts/github_actions_pins.py`](../scripts/github_actions_pins.py)** | Applies or verifies `uses:` pins from `github-actions-pins.json` (`python3 scripts/github_actions_pins.py` or `--check`). CI runs `--check` in **`devops-ci.yml`**. |
 | [`.github/config/`](../.github/config/) | **Tool configuration** only (zizmor policy, Semgrep rules, Python interpreter list for EOL watch) — not package manifests |
 | [`.github/dependabot.yml`](../.github/dependabot.yml) | Dependabot configuration |
 
@@ -12,16 +14,19 @@
 
 | Ecosystem | Directory | What it updates |
 | --- | --- | --- |
-| `github-actions` | `/` | `uses:` references in `.github/workflows/**` and composite actions under `.github/actions/**` |
-| `uv` | `/` | `pyproject.toml` / `uv.lock` |
-| `pip` | `/.github/dependencies/quality-tools` | Pinned CLIs for `python-quality.yml` |
-| `pip` | `/.github/dependencies/dast-python` | Locust pin for the DAST job |
-| `pip` | `/.github/dependencies/semgrep` | Semgrep pin (pipx in workflow) |
+| `github-actions` | `/` | `uses:` references in `.github/workflows/**` and `.github/actions/**` (keep in sync with **`github-actions-pins.json`** via `scripts/github_actions_pins.py`, or Dependabot PRs may drift until you re-run the script) |
+| `uv` | `/` | **`pyproject.toml` / `uv.lock`** — quality CLI pins and this repo’s dev dependencies (`quality-tools` + `scripts` groups). After a Dependabot `uv` PR, run **`bash scripts/export_pinned_requirements.sh`** so **`.github/dependencies/quality-tools/requirements.txt`** matches `[dependency-groups].quality-tools`. |
+| `pip` | `/.github/dependencies/dast-python` | Locust pin for the DAST job (**not** in root `uv.lock`; see **Resolver note** below) |
+| `pip` | `/.github/dependencies/semgrep` | Semgrep pin for pipx in **`qa-secrets-sast`** (same isolation) |
 | `pip` | `/.github/dependencies/zizmor` | zizmor constraint for workflow QA |
-| `pip` | `/.github/dependencies/mutmut` | Mutmut constraint for the nightly job |
-| `npm` | `/.github/dependencies/jscpd` | `jscpd` used from [`scripts/ci_run_quality.sh`](../scripts/ci_run_quality.sh) via `npx --prefix` |
+| `pip` | `/.github/dependencies/mutmut` | Mutmut constraint for **`devops-scheduled.yml`** |
+| `npm` | `/.github/dependencies/jscpd` | `jscpd` used from [`scripts/ci_run_quality.sh`](../scripts/ci_run_quality.sh) via `npx` |
 
-After merging a Dependabot PR that changes a `requirements.txt` consumed by YAML, workflows already read that file; avoid duplicating the same version elsewhere.
+### Resolver note (Semgrep vs pip-audit)
+
+**Semgrep** (via PyPI) declares **`tomli~=2.0.1`**. **pip-audit 2.10+** requires **`tomli>=2.2.1`**. Those constraints cannot be satisfied in **one** shared `uv.lock`, so **Semgrep** and **Locust** stay in **separate** `requirements.txt` files under `.github/dependencies/` while **all other quality CLIs** are pinned in **`pyproject.toml`** and exported to **`quality-tools/requirements.txt`**.
+
+After merging a Dependabot PR that changes a manifest consumed by YAML, workflows already read that file; avoid duplicating the same version string in workflow `run:` blocks.
 
 ## Astral uv CLI version (single source)
 

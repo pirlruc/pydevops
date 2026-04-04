@@ -51,7 +51,7 @@ Use `git log --oneline` for the authoritative list.
 - **Syft**: If the **`syft`** CLI is absent, **`sbom-cyclonedx.json`** / **`sbom-spdx.json`** are **removed** (not `{}`), consistent with other security fallbacks. Grype only runs when **`sbom-cyclonedx.json`** exists.
 - **Low/Medium** may still use minimal placeholders for some **static** tools (documented in header comment); High omits more aggressively.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
-- **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.5`** if missing.
+- **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.8`** if missing.
 - **Ruff object format**: **`ruff_messages_in_files()`** in [`readers_ruff_jscpd.py`](../scripts/quality_gates/readers_ruff_jscpd.py) counts **`files[].messages`** only when **`messages`** is a **list**; **`null`** or non-list values contribute **0** (no **`TypeError`** / wrong **`len()`** on dicts).
 - **cloc / JSON metrics**: **`cloc_slocs_comments()`** uses **`coerce_non_negative_float()`** in [`jsonutil.py`](../scripts/quality_gates/jsonutil.py) (built from **`_as_non_negative_float`**, **`_non_negative_float_from_str`**, **`_non_negative_float_from_number`**) for **`Python.code`** / **`Python.comment`** so **`null`**, non-numeric strings, lists, etc. yield **0.0** instead of raising. **`interrogate_coverage()`** and **`pylint_score()`** use **`parse_float_or_none()`** on regex captures. **Radon** CC/MI and **jscpd** **`percentage`** reject JSON **booleans** for numeric fields (Python **`bool`** is a **`int`** subclass — avoids **`true` → 1.0** misreads). **`readers_radon.mi_value_from_entry`** delegates dict-shaped nodes to **`_mi_from_dict_entry`** to keep Radon CC low.
 
@@ -79,6 +79,7 @@ Use `git log --oneline` for the authoritative list.
 
 - [`docs/workflows.md`](workflows.md): multi-job **`python-quality.yml`** (**`devops-coordinates`**, Semgrep High policy), **`devops-ci.yml`** / **`devops-scheduled.yml`**, **`workflow_call` outputs**, **`release-github`** / **`publish-pypi`** behavior, **no duplicate Grype CLI fail-on** alongside gates.
 - [`README.md`](../README.md): versioning with optional **`devops_*`** overrides; PyPI manual dispatch + **`pypi`** environment.
+- **Version pins:** **`pyproject.toml`** `[dependency-groups].quality-tools` is the source for Ruff/Pylint/pytest/etc.; **`bash scripts/export_pinned_requirements.sh`** refreshes **`.github/dependencies/quality-tools/requirements.txt`**. **`github-actions-pins.json`** + **`scripts/github_actions_pins.py`** own **`uses:`** versions (CI **`--check`**). Semgrep and Locust stay in separate **`requirements.txt`** (tomli vs pip-audit conflict with root lock).
 
 ### 6. Tests / tooling
 
