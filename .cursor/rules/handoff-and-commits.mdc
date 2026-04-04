@@ -17,4 +17,4 @@ When you implement or materially change **CI workflows**, **quality gates**, **s
 
 This project uses that format in git history; matching it keeps automation and reviewers aligned.
 
-See also **[`radon-complexity.mdc`](radon-complexity.mdc)** — run **`radon cc`** on edited **`scripts/`** files and keep cyclomatic complexity within project limits.
+See also **[`radon-complexity.mdc`](radon-complexity.mdc)** — run **`radon cc -s`** on edited **`scripts/`** and **`tests/`** Python files; **`scripts/quality_gates/`** must stay at **CC ≤ 5** per function (no grade **B** on touched code).

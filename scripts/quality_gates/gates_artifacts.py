@@ -48,16 +48,20 @@ def high_artifact_substance_ok(root: Path, name: str) -> tuple[bool, str]:
     return _json_artifact_substance_check(path, name)
 
 
+def _presence_actual_for_high_artifact(root: Path, name: str) -> tuple[bool, str]:
+    """Whether the artifact passes presence + substance, and the row ``actual`` string."""
+    path = root / name
+    if not path.is_file():
+        return False, "missing or empty"
+    if path.stat().st_size > 0 or name in _ALLOW_EMPTY_HIGH_ARTIFACTS:
+        sub_ok, detail = high_artifact_substance_ok(root, name)
+        return (True, "present") if sub_ok else (False, detail)
+    return False, "missing or empty"
+
+
 def high_artifact_gate_row(root: Path, name: str) -> tuple[RowList, bool]:
     """One artifact presence row and whether it is OK (including substance for High)."""
-    path = root / name
-    ok = path.is_file() and (path.stat().st_size > 0 or name in _ALLOW_EMPTY_HIGH_ARTIFACTS)
-    actual = "present" if ok else "missing or empty"
-    if ok:
-        sub_ok, detail = high_artifact_substance_ok(root, name)
-        if not sub_ok:
-            ok = False
-            actual = detail
+    ok, actual = _presence_actual_for_high_artifact(root, name)
     row = {
         "gate": f"Required artifact ({name})",
         "actual": actual,

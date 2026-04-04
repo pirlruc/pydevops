@@ -121,7 +121,7 @@ Use `git log --oneline` for the authoritative list.
 - **Single source of truth** for vuln counts: **`gate_vulnerabilities`**, not an extra Grype `--fail-on` in the workflow.
 - **Bandit policy** is tiered via **`bandit_findings_max`** only (count of `results[]`); adjust thresholds in **`config.py`** if product policy changes.
 - **Conventional commits** have been used in this line (e.g. `fix(ci):`, `fix(quality-gates):`, `docs(workflows):`).
-- **Cursor agents**: see [`.cursor/rules/handoff-and-commits.mdc`](../.cursor/rules/handoff-and-commits.mdc) — refresh **`docs/ai-agent-handoff.md`** on substantive changes and end with a **conventional commit** line for the user. **[`.cursor/rules/radon-complexity.mdc`](../.cursor/rules/radon-complexity.mdc)** — run **`radon cc -s`** on edited **`scripts/`** files and keep cyclomatic complexity within project limits (≤ **5** per function for **`scripts/quality_gates`**).
+- **Cursor agents**: see [`.cursor/rules/handoff-and-commits.mdc`](../.cursor/rules/handoff-and-commits.mdc) — refresh **`docs/ai-agent-handoff.md`** on substantive changes and end with a **conventional commit** line for the user. **[`.cursor/rules/radon-complexity.mdc`](../.cursor/rules/radon-complexity.mdc)** — run **`radon cc -s`** on edited **`scripts/`** and **`tests/`** `.py` files; **`scripts/quality_gates/`** must stay **≤ 5** CC per function (**no grade B** on changed functions).
 
 ---
 
@@ -129,7 +129,7 @@ Use `git log --oneline` for the authoritative list.
 
 1. `git status` / `git log` vs remote **`feature-ci`**.
 2. Run **`uv sync`** then **`uv run pytest`** (or CI) on **`scripts/`** and **`tests/`**.
-3. **`uv run --with radon python -m radon cc -s`** on any **`scripts/`** files you change (required habit for agents — see **`.cursor/rules/radon-complexity.mdc`**).
+3. **`uv run --with radon python -m radon cc -s`** on any **`scripts/`** or **`tests/`** `.py` files you change (required habit for agents — see **`.cursor/rules/radon-complexity.mdc`**).
 4. Scan **`.github/workflows`** and **`action.yml`** files with **actionlint + zizmor** if editing CI (see `reusable-workflows-quality.yml`).
 
 ---
