@@ -32,7 +32,12 @@ Use `git log --oneline` for the authoritative list.
 - Central evaluation: **`python -m scripts.quality_gates`** (reads `QUALITY_OUTPUT_DIR`, `STRICTNESS_LEVEL`), writes **`gates.json`**.
 - **Strictness tiers** (`Low` / `Medium` / `High`) map to **`Thresholds`** in [`scripts/quality_gates/config.py`](../scripts/quality_gates/config.py) (coverage, Pylint, Radon CC/MI, duplication, vulns, **Bandit finding counts**, docstrings, etc.).
 - **High** tier additionally requires non-empty artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if tools skipped).
-- Parsers were **hardened** to fail closed on malformed JSON (coverage, radon, pip-audit, grype, cloc, gates.json `passed` flag, SARIF tool/driver shapes in `scorecard_summary.py`, etc.).
+- Parsers were **hardened** to fail closed on malformed JSON (coverage, radon, pip-audit, grype, cloc, SARIF tool/driver shapes in `scorecard_summary.py`, etc.).
+- **`scripts/quality_gates/jsonutil.py` — `gates_rows_and_passed()`**: If the root is a dict and `rows` is a list, **`passed` defaults to `False` when the key is missing** (legacy / partial `gates.json` must not summarize as PASSED). Used by **`pr_comment_markdown.py`** and **`consolidate_artifacts.py`** (alongside invalid-JSON handling there).
+- **Vulnerabilities**: `pip_audit_vulns()` / `grype_severities()` return **`None`** when the report is missing, invalid JSON, or wrong top-level type; **`gate_vulnerabilities`** adds explicit failing rows (report shape / missing file) instead of treating as zero findings. **`HIGH_REQUIRED_FILES`** includes **`pip_audit.json`** and **`grype.json`** so High tier cannot skip those scans silently.
+- **Pytest**: **`pytest_exit_code.txt`** is written by **`ci_run_quality.sh`**; **`gate_pytest_exit`** fails on non-zero (and High requires the artifact).
+- **Radon CC**: **`radon_cc_max`** must track a **`found`** flag for valid complexity values — do not use `max_cc if max_cc else None` (**`0.0`** is a valid maximum).
+- **jscpd**: **`jscpd_duplication_pct()`** parses `percentage` safely (type / string); **`None`** on bad values so the duplication gate fails in a controlled way.
 - **Cyclomatic complexity / maintainability** targets for *this repo’s* `scripts/quality_gates` were brought in line with CI (Radon CC ≤ 5, MI floor, Interrogate docstring coverage).
 - **`gates_complexity.py`**: Gate **labels** for cyclomatic / maintainability use **High-specific wording only when `strictness_norm == "High"`** so Low/Medium reports are not misleading.
 - **`artifact_rules.py`**: Extracted static JSON shape / path rules for High-tier artifact validation; **`gates_artifacts.py`** consumes them.
@@ -42,16 +47,21 @@ Use `git log --oneline` for the authoritative list.
 - Phases: **`QUALITY_PHASES`** = `static` | `security` | `test` | `all`.
 - **Output directory**: `cd "$APP_DIR"` first; then **`OUT`** from `QUALITY_OUTPUT_DIR` — **relative paths are resolved under the app root** so `mkdir` and writes align.
 - **No fake “success-shaped” outputs** for missing **security** tools (bandit, pip-audit, grype, syft, jscpd when `npx` missing): files are **omitted** instead of empty JSON implying zero issues.
+- **Syft**: If the **`syft`** CLI is absent, **`sbom-cyclonedx.json`** / **`sbom-spdx.json`** are **removed** (not `{}`), consistent with other security fallbacks. Grype only runs when **`sbom-cyclonedx.json`** exists.
 - **Low/Medium** may still use minimal placeholders for some **static** tools (documented in header comment); High omits more aggressively.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
-- **jscpd**: Version pinned by reading **`dependencies` `package.json`** and running **`npx --yes "jscpd@${VER}"`** (deterministic; not only `--prefix` without `node_modules`).
+- **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.5`** if missing.
 
 ### 3. GitHub Actions / workflows
 
 - **`python-quality.yml`**: Reusable **`workflow_call`** pipeline for **app** repos (checkout DevOps under `.devops`, run composites, evaluate gates).
   - **Removed** a standalone **`grype ... --fail-on high`** step so **vulnerability policy is single-sourced** in **`scripts.quality_gates`** (`gate_vulnerabilities` uses pip-audit + Grype JSON vs `Thresholds`). Documented in [`docs/workflows.md`](workflows.md).
   - **`devops_ref`** (not `pydevops_ref`) matches workflow inputs.
-- **`devops-scripts-ci.yml`**: This repo’s script tests; **template-injection** mitigation: step outcomes passed via **`env`** instead of `${{ }}` inside shell strings.
+  - **`workflow_dispatch`** is limited to **10 inputs** on GitHub. Inputs that exist only under **`workflow_call`** (e.g. **`app_install_command`**) may be omitted from dispatch; the composite can still use **`${{ inputs.app_install_command || '' }}`** — missing keys evaluate to empty. **Do not** “fix” this by reading **`github.event.inputs.app_install_command`** unless that input is declared on dispatch: **actionlint** rejects undefined properties on the typed `github.event.inputs` object.
+  - **`docstring_format: Pep257`**: Ruff uses **`convention = "pep257"`**; **pydoclint** maps to **`--style=sphinx`** (pydoclint has no pep257 style — avoids conflicting with Google-style pydoclint vs Ruff).
+  - Inputs **`devops_repository`** / **`devops_ref`**: documented as **supply-chain sensitive** (trusted tag/SHA); caller-controlled checkout runs composites with job token — see workflow descriptions and [`docs/workflows.md`](workflows.md).
+- **`devops-scripts-ci.yml`**: This repo’s script tests; **template-injection** mitigation: step outcomes passed via **`env`** instead of `${{ }}` inside shell strings. Quality steps use **`continue-on-error: true`** so **all checks run**, then a **final** step fails the job if any outcome was not `success`. **Interrogate** targets **`scripts`** with **`--fail-under 95`** to match stated docstring coverage policy.
+- **`reusable-workflows-quality.yml` — zizmor**: Build a bash array of paths that **exist** (e.g. **`.github/workflows`**, **`.github/actions`**, **`.github/dependabot.yml`**, **`examples`**), then run **`zizmor`** **once** with that list (or skip if empty). Avoid passing only a directory that yields **no auditable files** — zizmor exits with **“no inputs collected”** (exit code 3).
 - **`qa-install-toolchain`**: **Syft / Grype** installed to **`/usr/local/bin`** with `sudo tar` (avoids **`GITHUB_PATH`** writes flagged by zizmor; tools still on default PATH).
 - **`setup-uv-python`** used where Python **3.13** must exist before **`uv sync`** (matches `pyproject.toml` `requires-python`).
 
@@ -69,12 +79,13 @@ Use `git log --oneline` for the authoritative list.
 
 - **`tests/test_scorecard_summary.py`**: Stronger assertion that **aggregate score line** reflects check mean when aggregateScore conflicts.
 - **`tests/test_quality_gates.py`**: PR comment text when **`gates.json`** is invalid JSON updated to match **`pr_comment_markdown.py`** wording.
+- **`tests/test_pr_comment.py`** / **`tests/test_consolidate.py`**: Cover **`gates.json`** with **omitted `passed`** (must surface as **FAILED** in comment / consolidated report).
 
 ### 7. Misc scripts
 
 - **`scripts/scorecard_summary.py`**: SARIF **`tool` / `tool.driver`** validation; consolidated **`_truncate`** (removed duplicate `_truncate_cell`).
 - **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file exists. **GFM gate tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py) (`sanitize_markdown_table_cell`: newlines/tabs → spaces, `|` → U+00A6 broken bar, truncation) so tool messages cannot break columns.
-- **`scripts/consolidate_artifacts.py`**: Uses the same cell sanitization for the consolidated **quality_report.md** gate table.
+- **`scripts/consolidate_artifacts.py`**: Uses the same cell sanitization for the consolidated **quality_report.md** gate table. If **`gates.json`** is present but **not valid JSON** (e.g. truncated write), the consolidated summary treats the run as **FAILED**, not PASSED, with an explanatory note in the report body.
 - **Bandit gate**: [`scripts/quality_gates/gates_security.py`](../scripts/quality_gates/gates_security.py) `gate_bandit` uses [`readers_bandit.py`](../scripts/quality_gates/readers_bandit.py) to count `bandit.json` `results` vs **`bandit_findings_max`** per tier (High: 0; Medium: 3; Low: 15). Wired in [`evaluation.py`](../scripts/quality_gates/evaluation.py) `collect_gate_results` so SAST findings affect **`passed`** like other gates.
 
 ---
@@ -84,6 +95,7 @@ Use `git log --oneline` for the authoritative list.
 | Area | Path(s) |
 | --- | --- |
 | Gate thresholds & High artifacts | `scripts/quality_gates/config.py` |
+| `gates.json` normalization | `scripts/quality_gates/jsonutil.py` |
 | Gate orchestration | `scripts/quality_gates/evaluation.py`, `engine.py` |
 | CI bundle | `scripts/ci_run_quality.sh` |
 | Reusable app workflow | `.github/workflows/python-quality.yml` |
@@ -97,6 +109,7 @@ Use `git log --oneline` for the authoritative list.
 
 - **Focused diffs** — avoid unrelated refactors when fixing CI/gates.
 - **Fail-closed** for High-tier required artifacts and security parsers where applicable.
+- **Human-facing `gates.json`**: Prefer explicit **`passed: true|false`**. Parsers that consume **`gates_rows_and_passed()`** treat a **missing `passed`** as **failure**.
 - **Single source of truth** for vuln counts: **`gate_vulnerabilities`**, not an extra Grype `--fail-on` in the workflow.
 - **Bandit policy** is tiered via **`bandit_findings_max`** only (count of `results[]`); adjust thresholds in **`config.py`** if product policy changes.
 - **Conventional commits** have been used in this line (e.g. `fix(ci):`, `fix(quality-gates):`, `docs(workflows):`).
