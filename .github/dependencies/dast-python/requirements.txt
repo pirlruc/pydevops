@@ -1,0 +1,2 @@
+# Locust for python-quality DAST job. Dependabot: pip, /.github/dependencies/dast-python
+locust==2.32.6

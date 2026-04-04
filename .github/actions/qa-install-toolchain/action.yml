@@ -1,0 +1,96 @@
+name: Prepare host for quality phases
+description: >
+  Sets up the runner for Gatekeeper, Shield, and test phases: JavaScript runtime for
+  duplication detection, line counts, SBOM and vulnerability scanners, pinned dependency
+  manager and CPython, DevOps script sync, and pinned CLIs from quality-tools. Uses only
+  public actions or shell steps so it works under a .devops checkout.
+
+inputs:
+  workspace:
+    description: Application repo root (github.workspace)
+    required: true
+  devops-checkout-path:
+    description: Absolute path to DevOps clone
+    required: true
+  working-directory:
+    description: App subdirectory for Python install
+    required: true
+  python-version:
+    description: CPython version for uv
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install runtime for duplication checks
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+
+    - name: Install counting and JSON utilities
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cloc jq
+
+    - name: Install SBOM scanner binaries pinned
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$HOME/.local/bin"
+        SYFT_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/syft-version.txt")
+        GRYPE_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/grype-version.txt")
+        tmp=$(mktemp -d)
+        trap 'rm -rf "$tmp"' EXIT
+        curl -sSL "https://github.com/anchore/syft/releases/download/v${SYFT_VER}/syft_${SYFT_VER}_linux_amd64.tar.gz" -o "$tmp/syft.tgz"
+        sudo tar -xzf "$tmp/syft.tgz" -C /usr/local/bin syft
+        curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VER}/grype_${GRYPE_VER}_linux_amd64.tar.gz" -o "$tmp/grype.tgz"
+        sudo tar -xzf "$tmp/grype.tgz" -C /usr/local/bin grype
+
+    - id: uv_version
+      name: Read pinned installer version file
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: bash "$DEVOPS/.github/dependencies/emit-uv-version.sh"
+
+    - name: Install pinned dependency tooling
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ steps.uv_version.outputs.version }}
+
+    - name: Install requested Python interpreter
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        WD: ${{ inputs.working-directory }}
+        PY: ${{ inputs.python-version }}
+      run: |
+        set -euo pipefail
+        cd "$WS/$WD"
+        uv python install "$PY"
+
+    - name: Sync DevOps workspace dependencies
+      shell: bash
+      env:
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        cd "$DEVOPS"
+        uv sync
+
+    - name: Install pinned quality helper CLIs
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        DEVOPS: ${{ inputs.devops-checkout-path }}
+      run: |
+        set -euo pipefail
+        REQ="$DEVOPS/.github/dependencies/quality-tools/requirements.txt"
+        while IFS= read -r line || [[ -n "${line}" ]]; do
+          line="${line#"${line%%[![:space:]]*}"}"
+          line="${line%"${line##*[![:space:]]}"}"
+          [[ -z "${line}" ]] && continue
+          [[ "${line}" =~ ^# ]] && continue
+          uv tool install "${line}"
+        done < "$REQ"

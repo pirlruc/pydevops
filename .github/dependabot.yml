@@ -1,0 +1,89 @@
+# Dependency updates. Manifests live under .github/dependencies/ (see docs/dependency-management.md).
+# Python interpreter EOL issues are opened by python-eol-watch.yml (not Dependabot).
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "pip"
+    directory: "/.github/dependencies/quality-tools"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: "pip"
+    directory: "/.github/dependencies/dast-python"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "pip"
+    directory: "/.github/dependencies/semgrep"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "pip"
+    directory: "/.github/dependencies/zizmor"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "pip"
+    directory: "/.github/dependencies/mutmut"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/.github/dependencies/jscpd"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5

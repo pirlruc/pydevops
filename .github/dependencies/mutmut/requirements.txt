@@ -1,0 +1,2 @@
+# Mutmut for mutmut-nightly.yml. Dependabot: pip, /.github/dependencies/mutmut
+mutmut>=3.0,<4

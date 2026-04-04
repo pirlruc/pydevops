@@ -1,0 +1,4 @@
+{
+  "interpreter_versions": ["3.13"],
+  "documentation": "Keep in sync with pyproject.toml [project].requires-python and python-quality.yml default python_version. The python-eol-watch workflow uses this list with endoflife.date."
+}

@@ -1,0 +1,96 @@
+name: Install application and lint sources
+description: >
+  Installs application dependencies when the workflow says to, writes docstring lint
+  configuration for the chosen convention, and runs check plus format verification.
+  Writes ruff.json and ruff_format.txt into the quality output directory.
+
+inputs:
+  workspace:
+    required: true
+  working-directory:
+    required: true
+  quality-output-dir:
+    required: true
+  runner-temp:
+    description: e.g. runner.temp
+    required: true
+  docstring-format:
+    required: true
+  github-event-name:
+    required: true
+  app-install-command:
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install app dependencies if needed
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        WD: ${{ inputs.working-directory }}
+        INSTALL_CMD: ${{ inputs.app-install-command }}
+        EVENT: ${{ inputs.github-event-name }}
+      run: |
+        set -euo pipefail
+        cd "$WS/$WD"
+        run_install() {
+          # Login shell + one parse (avoid eval); input must be trusted workflow config
+          bash -lc "$INSTALL_CMD"
+        }
+        if [ "$EVENT" = "workflow_dispatch" ]; then
+          if [ -n "$INSTALL_CMD" ]; then
+            run_install
+          elif [ -f pyproject.toml ]; then uv sync --all-groups --all-extras
+          elif [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+        elif [ -n "$INSTALL_CMD" ]; then
+          run_install
+        fi
+
+    - name: Write docstring lint configuration
+      shell: bash
+      env:
+        INPUT_DOCSTRING_FORMAT: ${{ inputs.docstring-format }}
+        TMP: ${{ inputs.runner-temp }}
+      run: |
+        set -euo pipefail
+        case "$INPUT_DOCSTRING_FORMAT" in
+          Google|google) CONV=google ;;
+          Numpy|numpy) CONV=numpy ;;
+          Pep257|pep257) CONV=pep257 ;;
+          *) CONV=google ;;
+        esac
+        cat > "$TMP/ruff-qaas.toml" <<EOF
+        [lint]
+        select = ["E", "F", "D"]
+        [lint.pydocstyle]
+        convention = "${CONV}"
+        EOF
+
+    - name: Export docstring style for later steps
+      shell: bash
+      env:
+        INPUT_DOCSTRING_FORMAT: ${{ inputs.docstring-format }}
+      run: |
+        set -euo pipefail
+        case "$INPUT_DOCSTRING_FORMAT" in
+          Google|google) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
+          Numpy|numpy) echo "PYDOCLINT_FLAGS=--style=numpy" >> "$GITHUB_ENV" ;;
+          Pep257|pep257) echo "PYDOCLINT_FLAGS=--style=sphinx" >> "$GITHUB_ENV" ;;
+          *) echo "PYDOCLINT_FLAGS=--style=google" >> "$GITHUB_ENV" ;;
+        esac
+
+    - name: Run check and format verification
+      shell: bash
+      env:
+        WS: ${{ inputs.workspace }}
+        WD: ${{ inputs.working-directory }}
+        OUT: ${{ inputs.quality-output-dir }}
+        TMP: ${{ inputs.runner-temp }}
+      run: |
+        set -euo pipefail
+        export PATH="$HOME/.local/bin:$PATH"
+        cd "$WS/$WD"
+        ruff check . --exclude .devops --config "$TMP/ruff-qaas.toml" --output-format=json > "$OUT/ruff.json" || true
+        ruff format --check . --exclude .devops > "$OUT/ruff_format.txt" 2>&1 || true

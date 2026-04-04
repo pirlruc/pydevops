@@ -1,0 +1,39 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Build and publish release artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out release tag
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install tooling without local cache
+        uses: ./.github/actions/install-uv
+        with:
+          enable-cache: "false"
+
+      - name: Build wheel and source distribution
+        run: uv build
+
+      - name: Publish with trusted registry OIDC
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

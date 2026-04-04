@@ -1,0 +1,2 @@
+# zizmor for reusable-workflows-quality.yml. Dependabot: pip, /.github/dependencies/zizmor
+zizmor>=1.2,<2

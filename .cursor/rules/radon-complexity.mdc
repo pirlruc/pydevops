@@ -1,0 +1,16 @@
+---
+description: Enforce Radon cyclomatic complexity on Python changes under scripts/ and tests/
+alwaysApply: true
+---
+
+# Cyclomatic complexity (Radon)
+
+When you add or edit **Python** (`.py`) files under **`scripts/`** or **`tests/`**, before finishing the task:
+
+1. Run **`uv run --with radon python -m radon cc -s <each-edited-.py-file>`** (or **`radon cc -s scripts/quality_gates`** if you only touched that package).
+2. **Gate code** (`**scripts/quality_gates/**`): Every function must have **cyclomatic complexity ≤ 5** and preferably **grade A** on `radon cc -s`. **Do not leave grade B** (or **C**) on any function you introduced or modified — **extract helpers** until each function is **A** (see **`jsonutil`**, **`gates_artifacts._presence_actual_for_high_artifact`**, **`readers_radon.mi_value_from_entry`**).
+3. Other **`scripts/`** modules: keep complexity reasonable; refactor if radon reports **B** or higher on new/changed functions.
+
+Malformed JSON often uses **booleans** where numbers are expected — **`bool`** is a **`int`** subclass in Python, so use **`isinstance(x, (int, float)) and not isinstance(x, bool)`** or shared helpers when reading numeric fields from artifacts.
+
+Reference: thresholds in **`scripts/quality_gates/config.py`** and CI Radon checks for this repo’s **`scripts/quality_gates`** package.

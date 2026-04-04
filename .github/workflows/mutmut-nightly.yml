@@ -1,0 +1,53 @@
+name: Mutation testing (Mutmut)
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  mutmut:
+    name: Scheduled mutation testing run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install pinned package tooling
+        uses: ./.github/actions/install-uv
+
+      - name: Install mutation testing runner
+        run: |
+          MUT=$(grep -v '^#' .github/dependencies/mutmut/requirements.txt | head -1 | tr -d ' \n\r')
+          uv tool install "${MUT}"
+
+      - name: Sync project and test dependencies
+        run: |
+          if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; fi
+
+      - name: Run mutation testing suite
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          mutmut run || true
+
+      - name: Upload mutation results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutmut-results
+          path: |
+            .mutmut-cache
+            .mutmut
+            mutmut-results*

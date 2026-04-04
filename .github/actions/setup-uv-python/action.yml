@@ -1,0 +1,35 @@
+name: Pinned tooling and Python setup
+description: >
+  Installs the pinned dependency manager from uv-version.txt, then provisions the
+  requested CPython version in working-directory.
+
+inputs:
+  python-version:
+    description: Python version for uv to provision
+    required: true
+  working-directory:
+    description: Directory passed to subsequent steps (caller sets defaults)
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - id: uv_version
+      name: Read pinned installer version file
+      shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/../../dependencies/emit-uv-version.sh"
+
+    - name: Install pinned dependency tooling
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: ${{ steps.uv_version.outputs.version }}
+
+    - name: Install requested Python interpreter
+      shell: bash
+      env:
+        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: |
+        cd "$INPUT_WORKING_DIRECTORY"
+        uv python install "$INPUT_PYTHON_VERSION"

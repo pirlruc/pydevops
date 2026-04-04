@@ -1,0 +1,74 @@
+# --- Python / uv ---
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+dist/
+build/
+wheels/
+*.whl
+
+# --- Test & coverage ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+pytestdebug.log
+
+# --- This repo’s CI / quality outputs (local runs) ---
+quality-output/
+.mutmut-cache/
+.mutmut/
+mutmut-results*
+report_html.html
+*.sarif
+jscpd-report.json
+
+# --- Node (e.g. jscpd / tooling) ---
+node_modules/
+
+# --- Logs & temp ---
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+
+# --- OS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Editors / local IDE (keep shared .vscode only if your team commits it) ---
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Downloaded CI linters (local) ---
+actionlint
+/actionlint
+
+# --- Misc ---
+.cache/

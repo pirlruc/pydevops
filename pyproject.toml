@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "devops-quality-tooling"
+version = "0.1.0"
+description = "Scripts and tooling for Quality-as-a-Service reusable workflows"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+scripts = [
+    "radon>=6.0,<7",
+]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-cov>=6.0,<7",
+    "pylint>=3.3,<4",
+    "interrogate>=1.7,<2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devops_quality"]
+
+[tool.uv]
+default-groups = ["scripts", "dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--cov=scripts",
+    "--cov=src/devops_quality",
+    "--cov-report=term-missing",
+    "--cov-fail-under=95",
+]
+
+[tool.coverage.run]
+source = ["scripts", "src/devops_quality"]
+omit = ["tests/*"]
+
+[tool.interrogate]
+fail-under = 95
+ignore-init-method = true
+ignore-init-module = false
+verbose = 1
+exclude = [".venv", "tests", ".git", ".github", "examples", "dist", "build"]
+
+[tool.pylint.main]
+max-line-length = 100
+fail-under = 9.5
+load-plugins = ["pylint.extensions.docparams"]
+
+[tool.pylint."messages control"]
+disable = [
+    "import-error",
+    "no-name-in-module",
+]
+
+[tool.pylint.design]
+max-args = 8

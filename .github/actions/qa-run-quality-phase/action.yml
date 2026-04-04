@@ -1,0 +1,38 @@
+name: Run single quality bundle phase
+description: >
+  Runs scripts/ci_run_quality.sh with QUALITY_PHASES set to static, security, or test
+  (Gatekeeper metrics, supply chain slice, or tests and coverage).
+
+inputs:
+  phase:
+    description: static, security, or test
+    required: true
+  workspace:
+    required: true
+  working-directory:
+    required: true
+  devops-checkout-path:
+    required: true
+  quality-output-dir:
+    required: true
+  strictness-level:
+    description: Low, Medium, or High — passed to ci_run_quality.sh for High-tier artifact behavior
+    required: false
+    default: "Medium"
+
+runs:
+  using: composite
+  steps:
+    - name: Run ${{ inputs.phase }} phase of bundle
+      shell: bash
+      env:
+        QUALITY_PHASES: ${{ inputs.phase }}
+        QUALITY_OUTPUT_DIR: ${{ inputs.quality-output-dir }}
+        DEVOPS_DIR: ${{ inputs.devops-checkout-path }}
+        APP_DIR: ${{ inputs.workspace }}/${{ inputs.working-directory }}
+        STRICTNESS_LEVEL: ${{ inputs.strictness-level }}
+      run: |
+        set -euo pipefail
+        export PATH="$HOME/.local/bin:$PATH"
+        export SKIP_RUFF_IN_BUNDLE=1
+        bash "$DEVOPS_DIR/scripts/ci_run_quality.sh"
