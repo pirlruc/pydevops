@@ -114,6 +114,24 @@ def test_grype_high(tmp_path: Path) -> None:
     )
     h, m = qg._grype_severities(tmp_path)
     assert h == 1
+
+
+def test_grype_match_non_dict_vulnerability_skipped(tmp_path: Path) -> None:
+    """Non-dict ``vulnerability`` must not crash; valid matches still count."""
+    (tmp_path / "grype.json").write_text(
+        json.dumps(
+            {
+                "matches": [
+                    {"vulnerability": "High"},
+                    {"vulnerability": {"severity": "Critical"}},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    h, m = qg._grype_severities(tmp_path)
+    assert h == 1
+    assert m == 0
     assert m == 0
 
 

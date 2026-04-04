@@ -19,7 +19,10 @@ def grype_match_bucket(sev: str) -> str:
 
 def count_one_grype_match(m: dict, highs: int, mediums: int) -> tuple[int, int]:
     """Update counts from one Grype match object."""
-    raw = (m.get("vulnerability") or {}).get("severity", "") or ""
+    vuln = m.get("vulnerability")
+    if not isinstance(vuln, dict):
+        vuln = {}
+    raw = vuln.get("severity", "") or ""
     bucket = grype_match_bucket(str(raw))
     if bucket == "high":
         return highs + 1, mediums

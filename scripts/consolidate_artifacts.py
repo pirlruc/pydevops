@@ -66,7 +66,7 @@ def main() -> int:
             rows = []
             passed = False
             gates_parse_note = (
-                "_gates.json was not valid JSON (e.g. partial write); "
+                "_`gates.json` was not valid JSON (e.g. partial write); "
                 "marking overall result as failed for this report._\n\n"
             )
 
