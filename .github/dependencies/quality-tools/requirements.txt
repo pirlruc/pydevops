@@ -2,7 +2,7 @@
 ruff==0.9.10
 pylint==3.3.4
 mypy==1.15.0
-pydoclint==0.5.14
+pydoclint==0.8.3
 interrogate==1.7.0
 bandit==1.8.0
 deptry==0.22.0
