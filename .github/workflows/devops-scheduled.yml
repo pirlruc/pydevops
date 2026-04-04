@@ -1,0 +1,301 @@
+# Weekly maintenance: workflow lint, mutation testing (with score gate), Python EOL watch.
+# (Previously split across reusable-workflows-quality, mutmut-nightly, python-eol-watch.)
+
+name: DevOps scheduled
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - ".github/config/python-support-versions.json"
+      - ".github/workflows/devops-scheduled.yml"
+
+permissions: {}
+
+jobs:
+  scheduled-workflow-lint:
+    name: "Scheduled — workflow lint (actionlint + zizmor)"
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Download and install workflow linter
+        env:
+          ACTIONLINT_VERSION: 1.7.7
+        run: |
+          set -euo pipefail
+          curl -sSL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash" | bash -s -- "${ACTIONLINT_VERSION}"
+          sudo mv actionlint /usr/local/bin/
+
+      - id: actionlint
+        name: Lint workflow and action files
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort | sed 's/^/  /'
+          find .github/actions -type f \( -name 'action.yml' -o -name 'action.yaml' \) 2>/dev/null | sort | sed 's/^/  /' || true
+          actionlint -color
+
+      - name: Install workflow scanner from pins
+        run: |
+          python3 -m pip install --user -r "${{ github.workspace }}/.github/dependencies/zizmor/requirements.txt"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - id: zizmor
+        name: Scan workflows for unsafe patterns
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          inputs=()
+          for p in .github/workflows .github/actions .github/dependabot.yml examples; do
+            if [ -e "$p" ]; then
+              inputs+=("$p")
+            fi
+          done
+          if [ "${#inputs[@]}" -eq 0 ]; then
+            echo "No zizmor inputs found; skipping."
+            exit 0
+          fi
+          zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}"
+
+      - name: Gate — scheduled workflow lint job
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.actionlint.outcome }}" != "success" ] || [ "${{ steps.zizmor.outcome }}" != "success" ]; then
+            echo "::error::actionlint and/or zizmor did not succeed."
+            exit 1
+          fi
+          echo "Scheduled workflow lint job passed."
+
+  scheduled-openssf-scorecard:
+    name: "Scheduled — OpenSSF Scorecard"
+    if: github.event_name != 'push' && github.event.repository.fork == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - id: scorecard
+        name: Run repository security scorecard
+        continue-on-error: true
+        uses: ossf/scorecard-action@v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Summarize scorecard for job log
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python3 scripts/scorecard_summary.py --repo "github.com/${{ github.repository }}" results.sarif \
+            | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+      - name: Gate — Scorecard job
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.scorecard.outcome }}" != "success" ]; then
+            echo "::error::OpenSSF Scorecard step did not succeed."
+            exit 1
+          fi
+          echo "Scorecard job passed."
+
+  scheduled-mutmut:
+    name: "Scheduled — mutation testing (Mutmut)"
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install pinned package tooling
+        uses: ./.github/actions/install-uv
+
+      - name: Install mutation testing runner
+        run: |
+          MUT=$(grep -v '^#' .github/dependencies/mutmut/requirements.txt | head -1 | tr -d ' \n\r')
+          uv tool install "${MUT}"
+
+      - name: Sync project and test dependencies
+        run: |
+          if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; fi
+
+      - name: Run mutation testing suite
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mutmut run
+
+      - name: Export Mutmut CI stats
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/bin:$PATH"
+          mutmut export-cicd-stats
+
+      - name: Gate — mutation score (min 85%)
+        env:
+          MUTMUT_MIN_SCORE: "85"
+        run: python3 scripts/mutmut_score_gate.py
+
+      - name: Upload mutation results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutmut-results
+          path: |
+            .mutmut-cache
+            .mutmut
+            mutmut-results*
+            mutants
+
+  scheduled-eol:
+    name: "Scheduled — Python EOL watch"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out policy configuration
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - id: eol
+        name: Open or skip EOL tracking issues
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const policy = JSON.parse(
+              fs.readFileSync('.github/config/python-support-versions.json', 'utf8'),
+            );
+            const versions = policy.interpreter_versions;
+            if (!Array.isArray(versions) || versions.length === 0) {
+              core.setFailed('interpreter_versions missing in python-support-versions.json');
+              return;
+            }
+
+            const res = await fetch('https://endoflife.date/api/python.json');
+            if (!res.ok) {
+              core.setFailed(`endoflife.date HTTP ${res.status}`);
+              return;
+            }
+            /** @type {Array<{cycle:string,eol:string|boolean,support?:string|boolean}>} */
+            const table = await res.json();
+            const today = new Date();
+            const msPerDay = 86400000;
+
+            const { owner, repo } = context.repo;
+            const listOpen = async (titlePrefix) => {
+              const { data } = await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              return data.filter((i) => i.title.startsWith(titlePrefix));
+            };
+
+            const pastIssues = await listOpen('[Python EOL]');
+            const warnIssues = await listOpen('[Python EOL warning]');
+
+            for (const v of versions) {
+              const row = table.find((x) => x.cycle === v);
+              if (!row) {
+                core.warning(`No endoflife.date entry for Python ${v}`);
+                continue;
+              }
+              if (row.eol === false) {
+                continue;
+              }
+              const eol = new Date(row.eol);
+              if (Number.isNaN(eol.getTime())) {
+                core.warning(`Bad EOL date for Python ${v}: ${row.eol}`);
+                continue;
+              }
+
+              const daysToEol = Math.ceil((eol.getTime() - today.getTime()) / msPerDay);
+
+              if (today > eol) {
+                const title = `[Python EOL] Interpreter ${v} is past end-of-life (${row.eol})`;
+                if (pastIssues.some((i) => i.title === title)) {
+                  continue;
+                }
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body:
+                    `Python **${v}** is past its published EOL date (**${row.eol}**) per [endoflife.date](https://endoflife.date/python).\n\n` +
+                    `**Next steps:** raise \`requires-python\` in \`pyproject.toml\`, bump defaults in \`python-quality.yml\` and \`.github/config/python-support-versions.json\`, run \`uv lock\`, and adjust caller workflows.\n\n` +
+                    '_This issue was opened by `devops-scheduled.yml`._',
+                });
+                core.info(`Created EOL issue for Python ${v}`);
+                continue;
+              }
+
+              if (daysToEol <= 90 && daysToEol >= 0) {
+                const title = `[Python EOL warning] Interpreter ${v} reaches EOL on ${row.eol}`;
+                if (warnIssues.some((i) => i.title === title)) {
+                  continue;
+                }
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body:
+                    `Python **${v}** reaches community EOL on **${row.eol}** (about **${daysToEol}** days from now) per [endoflife.date](https://endoflife.date/python).\n\n` +
+                    `Plan an upgrade of \`requires-python\`, workflow defaults, and \`.github/config/python-support-versions.json\` before that date.\n\n` +
+                    '_This issue was opened by `devops-scheduled.yml`._',
+                });
+                core.info(`Created EOL warning issue for Python ${v}`);
+              }
+            }
+
+      - name: Gate — EOL watch job
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.eol.outcome }}" != "success" ]; then
+            echo "::error::Python EOL watch step did not succeed."
+            exit 1
+          fi
+          echo "EOL watch job passed."

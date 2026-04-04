@@ -8,7 +8,7 @@ This document summarizes **what has been implemented and refined** on the `featu
 
 ## Branch / state (as of last update)
 
-- Branch: **`feature-ci`** (often **ahead of `origin/feature-ci` by local commits** — verify with `git status` before assuming parity with remote).
+- Branch: **`feature-restructure`** (verify with `git status` / remote before assuming parity).
 - Recent commit messages (newest first; illustrative snapshot):
 
   - `fix(scripts): anchor quality output dir after cd; dedupe scorecard truncation helper`
@@ -57,16 +57,16 @@ Use `git log --oneline` for the authoritative list.
 
 ### 3. GitHub Actions / workflows
 
-- **`python-quality.yml`**: Reusable **`workflow_call`** for **app** repos — **multi-job** gated pipeline: **`quality-shield`** → **`quality-static`** + **`quality-supply-chain`** (parallel) → **`quality-test`** → **`quality-report`** (`if: always()`, merge artifacts, license + full **`scripts.quality_gates`**, consolidate, bundle; final step fails job if license/gates failed after uploads) → **`pr-quality-comment`** → optional **`quality-dast`** → **`release-github`** (only on **`refs/tags/v*.*.*`**, **`environment: production`**, requires **`gates_passed`**, supply + test + report success, DAST success or skipped). **`workflow_call` outputs** include **`gates_passed`**. **`~/.cache/uv`** restored via **`actions/cache`** on static/supply/test jobs.
-  - **Dynamic ref**: Callers still use a **literal** `uses: pirlruc/pydevops/.github/workflows/python-quality.yml@…`; **`devops_ref`** input drives **`actions/checkout`** of `.devops`. **`devops_repository`** defaults to **`pirlruc/pydevops`** (optional on **`workflow_call`**).
+- **`python-quality.yml`**: Reusable **`workflow_call`** for **app** repos — **multi-job** gated pipeline. First job **`devops-coordinates`** parses **`github.workflow_ref`** (`owner/repo/.github/workflows/file.yml@ref` → repository + ref) so **`.devops`** checkout matches the pinned reusable workflow unless **`devops_repository`** / **`devops_ref`** inputs are non-empty (overrides). Fallback when parsing fails: **`github.repository`** / **`github.ref_name`**. Downstream jobs **`needs: devops-coordinates`** (and their prior deps) for checkout of `.devops`.
+  - Pipeline shape: **`quality-shield`** → **`quality-static`** + **`quality-supply-chain`** (parallel) → **`quality-test`** → **`quality-report`** (`if: always()`, merge artifacts, license + full **`scripts.quality_gates`**, consolidate, bundle; final step fails job if license/gates failed after uploads) → **`pr-quality-comment`** → optional **`quality-dast`** → **`release-github`** (only on **`refs/tags/v*.*.*`**, **`environment: production`**, requires **`gates_passed`**, supply + test + report success, DAST success or skipped). **`workflow_call` outputs** include **`gates_passed`**. **`~/.cache/uv`** restored via **`actions/cache`** on static/supply/test jobs.
+  - Callers still use a **literal** `uses: …/python-quality.yml@vX.Y.Z`; dynamic **`uses:`** is not supported by GitHub.
   - **Removed** standalone **`grype --fail-on`**; vuln caps remain in **`gate_vulnerabilities`**. Documented in [`docs/workflows.md`](workflows.md).
-  - **`workflow_dispatch` DevOps checkout**: Empty **`devops_repository`** / **`devops_ref`** fall back to **`github.repository`** / **`github.ref_name`**. **`workflow_call`** requires **`devops_ref`**; **`devops_repository`** may be omitted (defaults to **`pirlruc/pydevops`**).
   - **`workflow_dispatch`** input limit (**10**): **`app_install_command`** exists only on **`workflow_call`**; use **`${{ inputs.app_install_command || '' }}`**. Do not read undefined **`github.event.inputs`** for undeclared dispatch keys (**actionlint**).
   - **`docstring_format: Pep257`**: Ruff **`convention = "pep257"`**; pydoclint **`--style=sphinx`**.
   - **Tag releases**: Callers must run the reusable workflow on **tag pushes** (e.g. `on.push.tags`) for **`release-github`** to execute.
 - **`publish-pypi.yml`**: **`workflow_dispatch` only**; job uses **`environment: pypi`** (manual PyPI publish with OIDC).
-- **`devops-scripts-ci.yml`**: This repo’s script tests; **template-injection** mitigation: step outcomes passed via **`env`** instead of `${{ }}` inside shell strings. Quality steps use **`continue-on-error: true`** so **all checks run**, then a **final** step fails the job if any outcome was not `success`. **Interrogate** targets **`scripts`** with **`--fail-under 95`** to match stated docstring coverage policy.
-- **`reusable-workflows-quality.yml` — zizmor**: Build a bash array of paths that **exist** (e.g. **`.github/workflows`**, **`.github/actions`**, **`.github/dependabot.yml`**, **`examples`**), then run **`zizmor`** **once** with that list (or skip if empty). Avoid passing only a directory that yields **no auditable files** — zizmor exits with **“no inputs collected”** (exit code 3).
+- **`devops-ci.yml`** (this repo only): Consolidated CI replacing **`reusable-workflows-quality`**, **`devops-scripts-ci`**, **`dependency-review`**. Path-filtered jobs via **`dorny/paths-filter`**; **`workflow_dispatch`** enables all groups. **`ci-workflow-lint`**: **actionlint** with **`continue-on-error: true`**, then **zizmor**, then a **gate** step (`if: always()`). Same pattern (soft step + gate) for **Scorecard** and **dependency review** where applicable. Five parallel script jobs (pytest, pylint, interrogate, Radon CC, Radon MI): each repeats checkout/cache/sync + tool + gate (**redundant structure by design**). **Template-injection** mitigation: step outcomes via **`env`**, not `${{ }}` inside shell strings. **Interrogate** **`--fail-under 95`** on **`scripts`**.
+- **`devops-scheduled.yml`** (this repo only): Weekly **Monday 06:00 UTC** + **`workflow_dispatch`**; merges former **lint**, **Scorecard**, **Mutmut**, **EOL** workflows. On **push** that only touches EOL policy / this workflow, **only** the EOL job runs (`if: github.event_name != 'push'` on lint/mutmut/scorecard). **Mutmut**: strict **`mutmut run`**, **`export-cicd-stats`**, then **`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`** (fails workflow below 85%). **Zizmor**: build a bash array of paths that **exist** (workflows, actions, dependabot, examples), run **once**; avoid empty input sets (zizmor exit 3 “no inputs collected”).
 - **`qa-install-toolchain`**: **Syft / Grype** installed to **`/usr/local/bin`** with `sudo tar` (avoids **`GITHUB_PATH`** writes flagged by zizmor; tools still on default PATH).
 - **`setup-uv-python`** used where Python **3.13** must exist before **`uv sync`** (matches `pyproject.toml` `requires-python`).
 
@@ -77,8 +77,8 @@ Use `git log --oneline` for the authoritative list.
 
 ### 5. Documentation
 
-- [`docs/workflows.md`](workflows.md): multi-job **`python-quality.yml`**, Semgrep High policy, **`workflow_call` outputs**, **`release-github`** / **`publish-pypi`** behavior, **no duplicate Grype CLI fail-on** alongside gates.
-- [`README.md`](../README.md): PyPI manual dispatch + **`pypi`** environment.
+- [`docs/workflows.md`](workflows.md): multi-job **`python-quality.yml`** (**`devops-coordinates`**, Semgrep High policy), **`devops-ci.yml`** / **`devops-scheduled.yml`**, **`workflow_call` outputs**, **`release-github`** / **`publish-pypi`** behavior, **no duplicate Grype CLI fail-on** alongside gates.
+- [`README.md`](../README.md): versioning with optional **`devops_*`** overrides; PyPI manual dispatch + **`pypi`** environment.
 
 ### 6. Tests / tooling
 
@@ -88,6 +88,7 @@ Use `git log --oneline` for the authoritative list.
 - **`tests/test_readers_cloc_docs.py`**: **pydoclint** issue counting matches flake8-style violation lines only (not “0 errors” summaries); **cloc** defensive parsing.
 - **`tests/test_jsonutil.py`**: **`coerce_non_negative_float`** edge cases.
 - **`tests/test_license_gate_extra.py`**: **`LICENSE_DENY_LIST`** entries must be **JSON strings**; **`null`** / numbers are skipped.
+- **`tests/test_mutmut_score_gate.py`**: **`MUTMUT_MIN_SCORE`** threshold, missing stats file, zero-denominator cases for **`scripts/mutmut_score_gate.py`**.
 
 ### 7. Misc scripts
 
@@ -130,10 +131,10 @@ Use `git log --oneline` for the authoritative list.
 
 ## Suggested verification for the next agent
 
-1. `git status` / `git log` vs remote **`feature-ci`**.
+1. `git status` / `git log` vs remote (e.g. **`feature-restructure`**).
 2. Run **`uv sync`** then **`uv run pytest`** (or CI) on **`scripts/`** and **`tests/`**.
 3. **`uv run --with radon python -m radon cc -s`** on any **`scripts/`** or **`tests/`** `.py` files you change (required habit for agents — see **`.cursor/rules/radon-complexity.mdc`**).
-4. Scan **`.github/workflows`** and **`action.yml`** files with **actionlint + zizmor** if editing CI (see `reusable-workflows-quality.yml`).
+4. Scan **`.github/workflows`** and **`action.yml`** files with **actionlint + zizmor** if editing CI (see **`devops-ci.yml`** / **`devops-scheduled.yml`** jobs that run those tools).
 
 ---
 

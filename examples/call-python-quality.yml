@@ -17,8 +17,7 @@ jobs:
   python-quality:
     uses: pirlruc/pydevops/.github/workflows/python-quality.yml@v1.0.0
     with:
-      # devops_repository defaults to pirlruc/pydevops; set devops_ref to match trusted scripts/composites.
-      devops_ref: v1.0.0
+      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @v1.0.0 above).
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false

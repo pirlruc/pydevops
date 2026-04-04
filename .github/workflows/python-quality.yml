@@ -23,17 +23,18 @@ on:
         default: "[]"
       devops_repository:
         description: >
-          DevOps repo (owner/name). Defaults to pirlruc/pydevops. Callers SHOULD pin devops_ref
-          to a tag or SHA they trust.
+          Optional override for DevOps owner/name. Empty: parse from github.workflow_ref
+          (same repo/ref as the reusable workflow definition) or fall back to github.repository.
         type: string
-        default: "pirlruc/pydevops"
+        default: ""
         required: false
       devops_ref:
         description: >
-          Git ref for DevOps checkout — use an immutable SemVer tag or full commit SHA in
-          production, not a moving branch, unless you fully trust the repo owners.
+          Optional override for DevOps git ref. Empty: parse from github.workflow_ref or use
+          github.ref_name. Prefer an immutable tag or SHA in production.
         type: string
-        required: true
+        default: ""
+        required: false
       working_directory:
         description: "App subdirectory containing pyproject / package"
         type: string
@@ -110,8 +111,51 @@ env:
   QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
 
 jobs:
+  devops-coordinates:
+    name: Resolve DevOps checkout (workflow ref or inputs)
+    runs-on: ubuntu-latest
+    outputs:
+      repository: ${{ steps.calc.outputs.repository }}
+      ref: ${{ steps.calc.outputs.ref }}
+    steps:
+      - id: calc
+        shell: bash
+        env:
+          INPUT_DEVOPS_REPO: ${{ inputs.devops_repository }}
+          INPUT_DEVOPS_REF: ${{ inputs.devops_ref }}
+          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          repo="${INPUT_DEVOPS_REPO:-}"
+          ref="${INPUT_DEVOPS_REF:-}"
+          wf="${GITHUB_WORKFLOW_REF:-}"
+          auto_repo=""
+          auto_ref=""
+          if [[ -n "${wf}" && "${wf}" == *"@"* ]]; then
+            base="${wf%@*}"
+            auto_ref="${wf##*@}"
+            auto_repo="${base%/.github/*}"
+          fi
+          if [ -z "${repo}" ]; then
+            repo="${auto_repo:-}"
+          fi
+          if [ -z "${ref}" ]; then
+            ref="${auto_ref:-}"
+          fi
+          if [ -z "${repo}" ]; then
+            repo="${GITHUB_REPOSITORY}"
+          fi
+          if [ -z "${ref}" ]; then
+            ref="${GITHUB_REF_NAME}"
+          fi
+          echo "repository=${repo}" >> "${GITHUB_OUTPUT}"
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+
   quality-shield:
     name: "Job 1 — Shield (secrets + Semgrep SARIF)"
+    needs: devops-coordinates
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -132,8 +176,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -168,7 +212,7 @@ jobs:
 
   quality-static:
     name: "Job 2 — Static analysis (Gatekeeper)"
-    needs: quality-shield
+    needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -188,8 +232,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -242,7 +286,7 @@ jobs:
 
   quality-supply-chain:
     name: "Job 3 — Supply chain & SBOM"
-    needs: quality-shield
+    needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -262,8 +306,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -316,7 +360,7 @@ jobs:
 
   quality-test:
     name: "Job 4 — Tests & coverage"
-    needs: quality-static
+    needs: [devops-coordinates, quality-static]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -336,8 +380,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -390,7 +434,7 @@ jobs:
 
   quality-report:
     name: "Job 5 — Reporting & artifacts"
-    needs: [quality-static, quality-supply-chain, quality-test]
+    needs: [devops-coordinates, quality-static, quality-supply-chain, quality-test]
     if: always()
     runs-on: ubuntu-latest
     outputs:
@@ -413,8 +457,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -570,7 +614,7 @@ jobs:
   quality-dast:
     name: "Dynamic analysis (ZAP + Locust)"
     if: ${{ inputs.enable_dast == true }}
-    needs: quality-test
+    needs: [devops-coordinates, quality-test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -589,8 +633,8 @@ jobs:
       - name: Check out DevOps into workspace
         uses: actions/checkout@v5
         with:
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 

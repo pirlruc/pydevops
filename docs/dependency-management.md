@@ -36,18 +36,18 @@ Bump **only** `uv-version.txt` (and merge) to roll the CLI forward. Dependabot d
 
 - **Syft** / **Grype** release versions in `syft-version.txt` and `grype-version.txt` (bump when you want new scanner behavior; composite installs pinned GitHub release tarballs).
 - **Gitleaks** install URL / version in `qa-secrets-sast` / `python-quality.yml`.
-- **actionlint** download version in `reusable-workflows-quality.yml` (`ACTIONLINT_VERSION`).
+- **actionlint** download version in `devops-ci.yml` and `devops-scheduled.yml` (`ACTIONLINT_VERSION`).
 - Numeric **`with:`** inputs on third-party actions other than what composites centralize.
 
 ## Python interpreter policy
 
 - **`pyproject.toml`** — `requires-python` is the minimum CPython for this repo’s code.
-- **`.github/config/python-support-versions.json`** — minor versions monitored for **EOL** by `python-eol-watch.yml`; keep aligned with `requires-python` and the default `python_version` on `python-quality.yml`.
+- **`.github/config/python-support-versions.json`** — minor versions monitored for **EOL** by `devops-scheduled.yml`; keep aligned with `requires-python` and the default `python_version` on `python-quality.yml`.
 
 ## EOL notifications (not Dependabot)
 
-**Dependabot does not open alerts when a Python release branch reaches end-of-life.** For that, this repo runs [**`python-eol-watch.yml`**](../.github/workflows/python-eol-watch.yml), which compares [endoflife.date](https://endoflife.date/) to `.github/config/python-support-versions.json` and may open **`[Python EOL]`** or **`[Python EOL warning]`** issues.
+**Dependabot does not open alerts when a Python release branch reaches end-of-life.** For that, this repo runs [**`devops-scheduled.yml`**](../.github/workflows/devops-scheduled.yml), which compares [endoflife.date](https://endoflife.date/) to `.github/config/python-support-versions.json` and may open **`[Python EOL]`** or **`[Python EOL warning]`** issues.
 
 ## Dependency review
 
-Pull requests that change lockfiles or manifests may run [`.github/workflows/dependency-review.yml`](../.github/workflows/dependency-review.yml).
+Pull requests that change lockfiles or manifests may run the **dependency review** job in [`.github/workflows/devops-ci.yml`](../.github/workflows/devops-ci.yml).

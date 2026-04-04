@@ -6,7 +6,7 @@ Workflows are split by audience; see also [`.github/workflows/README.md`](../.gi
 
 ## Application repositories (consumers)
 
-These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (pin the workflow definition to a tag or SHA you trust). Pass **`devops_ref`** so the **checkout** of this repo under `.devops` matches the scripts and composites you want at runtime (often the same tag as `uses:`).
+These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (pin the workflow definition to a tag or SHA you trust). **`devops_repository`** and **`devops_ref`** are optional: when empty, the workflow parses **`github.workflow_ref`** so the **`.devops`** checkout matches the same repo and ref as the reusable workflow file (override when you need a fork or a different scripts ref than the workflow YAML pin).
 
 ### `python-quality.yml`
 
@@ -14,7 +14,7 @@ These workflows are intended to be referenced from **your app** repo via `uses: 
 
 #### GitHub limitation (dynamic `uses:` vs dynamic checkout)
 
-GitHub does **not** allow the **`uses:`** line of a **reusable workflow** call to be a full expression like `${{ inputs.foo }}/.github/workflows/bar.yml@${{ inputs.ref }}`. Callers therefore pin a **literal** `uses: pirlruc/pydevops/.github/workflows/python-quality.yml@vX.Y.Z`. The **dynamic ref** you need day to day is the **`devops_ref` input**, which controls **`actions/checkout`** of the DevOps repo into `.devops` inside each job. The repo is **`pirlruc/pydevops` by default** (`devops_repository` defaults there); override only if you fork.
+GitHub does **not** allow the **`uses:`** line of a **reusable workflow** call to be a full expression like `${{ inputs.foo }}/.github/workflows/bar.yml@${{ inputs.ref }}`. Callers pin a **literal** `uses: pirlruc/pydevops/.github/workflows/python-quality.yml@vX.Y.Z`. The **`devops-coordinates`** job derives **`.devops`** **repository** and **ref** from **`github.workflow_ref`** when inputs are empty; optional **`devops_repository`** / **`devops_ref`** override that for forks or pin drift.
 
 #### How the pipeline is structured (jobs and composites)
 
@@ -22,6 +22,7 @@ Jobs run on **separate runners**; phase outputs are merged in the reporting job 
 
 | Job | Role | Composites / tools (high level) |
 | --- | --- | --- |
+| **devops-coordinates** | Resolve **`.devops`** checkout | Parses **`github.workflow_ref`** (or optional inputs); no app checkout |
 | **quality-shield** | Shield — stop leaks early | `qa-secrets-sast`: **Gitleaks** (fail on finding), **Semgrep** SARIF (`continue-on-error` on scan); **High**: `python -m scripts.quality_gates --semgrep-shield-only` (0 SARIF **error**-level results, ≤ 5 **warning**-level) |
 | **quality-static** | Gatekeeper — static | `qa-install-toolchain`, `qa-app-install-and-ruff`, `qa-run-quality-phase` (`static`) |
 | **quality-supply-chain** | SBOM / vuln / deps (parallel with static after shield) | Same toolchain + install, `qa-run-quality-phase` (`security`) |
@@ -33,7 +34,7 @@ Jobs run on **separate runners**; phase outputs are merged in the reporting job 
 
 The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** per composite call (`static`, `security`, or `test`).
 
-**Mutation testing (Mutmut)** stays in `mutmut-nightly.yml`, not in this pipeline.
+**Mutation testing (Mutmut)** for **this** DevOps repo runs in [`devops-scheduled.yml`](../.github/workflows/devops-scheduled.yml), not in the app `python-quality` pipeline.
 
 **Triggers**
 
@@ -52,12 +53,14 @@ To produce **GitHub Releases** from **`release-github`**, the **calling** workfl
 
 | Job | `contents` | `actions` | `security-events` | `pull-requests` |
 | --- | --- | --- | --- | --- |
+| `devops-coordinates` | *(default)* | — | — | — |
 | `quality-shield` | read | write | write | — |
 | `quality-static`, `quality-supply-chain`, `quality-test`, `quality-report` | read | write | — | — |
 | `pr-quality-comment` | read | read | — | write |
 | `quality-dast` | read | write | — | — |
 | `release-github` | write | — | — | — |
 
+- **`devops-coordinates`** — no explicit `permissions` block; only parses `github.workflow_ref` / inputs (no checkout in that job).
 - **`actions: write`** — upload/download workflow artifacts.
 - **`security-events: write`** — upload SARIF (Gitleaks, Semgrep) on the shield job when code scanning is available.
 - **`pull-requests: write`** — post the summary comment (same-repo PRs only; fork PRs skip).
@@ -66,8 +69,8 @@ To produce **GitHub Releases** from **`release-github`**, the **calling** workfl
 
 | Input | Type | Required | Default | Notes |
 | --- | --- | --- | --- | --- |
-| `devops_repository` | string | no | `pirlruc/pydevops` | DevOps `owner/name` for `.devops` checkout |
-| `devops_ref` | string | yes | — | Tag, branch, or SHA for `.devops` checkout (prefer SemVer tag, e.g. `v1.0.0`) |
+| `devops_repository` | string | no | *(empty)* | Optional override for DevOps `owner/name`. Empty: derive from `github.workflow_ref` or `github.repository`. |
+| `devops_ref` | string | no | *(empty)* | Optional override for DevOps ref. Empty: derive from `github.workflow_ref` or `github.ref_name`. |
 | `strictness_level` | string | no | `Medium` | `Low` \| `Medium` \| `High` — see **Strictness tiers** below |
 | `docstring_format` | string | no | `Google` | `Google` \| `Numpy` \| `Pep257` — Ruff pydocstyle convention matches the name; **Pep257** uses pydoclint `--style=sphinx` (pydoclint has no pep257 mode; Google/NumPy section layouts conflict with pep257-focused Ruff) |
 | `enable_dast` | boolean | no | `false` | Runs ZAP + Locust job after quality |
@@ -126,64 +129,23 @@ The reusable workflow’s jobs then add only the scopes listed above. If your or
 
 The following workflows are **not** meant as the primary `uses:` target for application quality pipelines. They maintain **this** repo’s workflows, scripts, and supply-chain signals.
 
-### `reusable-workflows-quality.yml`
+### `devops-ci.yml`
 
-**Purpose:** Validates workflow and composite-action definitions with **actionlint**, **zizmor** (config: `.github/config/zizmor.yml`), **OpenSSF Scorecard** (SARIF publish), and **StepSecurity Harden-Runner**.
+**Purpose:** Single entry workflow for most pushes/PRs on this repo: **path-filtered jobs** (via `dorny/paths-filter`) for **actionlint** + **zizmor** (actionlint uses **`continue-on-error: true`** so zizmor still runs; each job ends with a **gate** step), **OpenSSF Scorecard**, **dependency review** (pull requests only), and **five parallel script jobs** (`pytest`, `pylint`, `interrogate`, Radon CC, Radon MI) each with its own **gate** step.
 
-**Triggers:** Pull requests and pushes that touch `.github/`, `examples/`, or `docs/`; **`workflow_dispatch`**; weekly schedule (Monday 06:00 UTC).
+**Triggers:** Pull request and push to `main`/`master` with a **union** of paths (scripts, tests, lockfiles, `.github/`, `examples/`, `docs/`, etc.); **`workflow_dispatch`** runs all path groups.
 
-**`GITHUB_TOKEN` scopes**
-
-| Job | `contents` | `security-events` | `id-token` |
-| --- | --- | --- | --- |
-| `actionlint-zizmor` | read | — | — |
-| `openssf-scorecard` | read | write | write |
-
-Scorecard runs only when `github.event.repository.fork == false`.
-
-**Secrets:** None.
+**`GITHUB_TOKEN` scopes:** Vary by job (`contents`, `pull-requests`, `security-events`, `id-token` as needed).
 
 ---
 
-### `devops-scripts-ci.yml`
+### `devops-scheduled.yml`
 
-**Purpose:** `pytest` (with coverage floor), `pylint` on `scripts/`, `interrogate` on `scripts/`, and Radon checks on `scripts/quality_gates/`.
+**Purpose:** Weekly **Monday 06:00 UTC** maintenance (and **`workflow_dispatch`**): **workflow lint** (actionlint + zizmor + gate), **OpenSSF Scorecard** + gate, **Mutmut** (`mutmut run` → `export-cicd-stats` → **`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`**) + artifact upload, **Python EOL watch** (issues) + gate.
 
-**Triggers:** Push and pull requests affecting `scripts/`, `tests/`, `pyproject.toml`, or `uv.lock`.
+**Push** to `main`/`master` that only changes [`.github/config/python-support-versions.json`](../.github/config/python-support-versions.json) or this workflow runs **only** the **EOL** job (lint / mutmut / scorecard jobs are skipped on `push` so policy edits do not run mutation testing).
 
-**`GITHUB_TOKEN` scopes:** `contents: read` only.
-
----
-
-### `dependency-review.yml`
-
-**Purpose:** GitHub [Dependency review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review) on PRs that change common lockfiles or dependency manifests.
-
-**`GITHUB_TOKEN` scopes:** `contents: read`, `pull-requests: write`.
-
----
-
-### `python-eol-watch.yml`
-
-**Purpose:** Opens **GitHub Issues** when a Python version listed in [`.github/config/python-support-versions.json`](../.github/config/python-support-versions.json) is **past EOL** or within **90 days** of EOL, using the [endoflife.date](https://endoflife.date/) API. This complements **Dependabot**, which does not alert on CPython end-of-life.
-
-**Triggers:** Weekly schedule (Monday 07:30 UTC), `workflow_dispatch`, and pushes to `main`/`master` that change the policy file or this workflow.
-
-**`GITHUB_TOKEN` scopes:** `contents: read`, `issues: write`.
-
-**Docs:** [dependency-management.md](./dependency-management.md).
-
----
-
-### `mutmut-nightly.yml`
-
-**Purpose:** Optional scheduled / manual mutation testing with Mutmut (pin: `.github/dependencies/mutmut/requirements.txt`).
-
-**Triggers:** Weekly cron (Monday 03:00 UTC) and `workflow_dispatch`.
-
-**`GITHUB_TOKEN` scopes:** `contents: read`, `actions: write`.
-
-**Secrets:** None required.
+**`GITHUB_TOKEN` scopes:** Per job (`contents`, `actions`, `issues`, `security-events`, `id-token`).
 
 ---
 

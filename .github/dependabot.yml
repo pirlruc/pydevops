@@ -1,5 +1,5 @@
 # Dependency updates. Manifests live under .github/dependencies/ (see docs/dependency-management.md).
-# Python interpreter EOL issues are opened by python-eol-watch.yml (not Dependabot).
+# Python interpreter EOL issues are opened by devops-scheduled.yml (not Dependabot).
 
 version: 2
 updates:
