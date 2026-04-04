@@ -8,12 +8,12 @@ from typing import Any
 
 
 def read_json(path: Path) -> Any:
-    """Load JSON from path or return None if missing or invalid."""
+    """Load JSON from path or return None if missing, unreadable, or not valid JSON."""
     if not path.is_file():
         return None
     try:
         return json.loads(path.read_text(encoding="utf-8", errors="replace"))
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, OSError, UnicodeError):
         return None
 
 

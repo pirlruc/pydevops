@@ -103,7 +103,7 @@ Use `git log --oneline` for the authoritative list.
 | Area | Path(s) |
 | --- | --- |
 | Gate thresholds & High artifacts | `scripts/quality_gates/config.py` |
-| `gates.json` normalization | `scripts/quality_gates/jsonutil.py` |
+| `gates.json` normalization | `scripts/quality_gates/jsonutil.py` (`read_json` returns `None` on missing file, invalid JSON, **OSError**, or **UnicodeError**) |
 | Gate orchestration | `scripts/quality_gates/evaluation.py`, `engine.py` |
 | CI bundle | `scripts/ci_run_quality.sh` |
 | Reusable app workflow | `.github/workflows/python-quality.yml` |
