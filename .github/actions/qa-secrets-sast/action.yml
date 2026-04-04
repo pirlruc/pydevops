@@ -70,7 +70,8 @@ runs:
         pipx ensurepath
         pipx install "$SPEC"
 
-    - name: Run two pass pattern enforcement scan
+    - name: Run Semgrep (SARIF; policy enforced later via quality gates)
+      continue-on-error: true
       shell: bash
       env:
         OUT: ${{ inputs.quality-output-dir }}
@@ -84,11 +85,7 @@ runs:
         semgrep scan --config p/python \
           --config "$DEVOPS/.github/config/semgrep/python-custom.yml" \
           --exclude .devops \
-          --sarif --output "$OUT/semgrep.sarif" . || true
-        semgrep scan --config p/python \
-          --config "$DEVOPS/.github/config/semgrep/python-custom.yml" \
-          --exclude .devops \
-          --error
+          --sarif --output "$OUT/semgrep.sarif" .
 
     - name: Upload pattern scan SARIF results
       if: always()

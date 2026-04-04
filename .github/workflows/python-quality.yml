@@ -1,5 +1,9 @@
 name: Python Quality (Reusable)
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
+
 on:
   workflow_call:
     inputs:
@@ -23,17 +27,18 @@ on:
         default: "[]"
       devops_repository:
         description: >
-          Trusted DevOps repo (owner/name). Callers MUST pin a tag or SHA they trust — passing
-          an attacker-controlled repo/ref runs that checkout’s composite actions and scripts with
-          this job’s token (supply-chain risk).
+          Optional override for DevOps owner/name. Empty: parse from github.workflow_ref
+          (same repo/ref as the reusable workflow definition) or fall back to github.repository.
         type: string
-        required: true
+        default: ""
+        required: false
       devops_ref:
         description: >
-          Git ref for DevOps checkout — use an immutable SemVer tag or full commit SHA in
-          production, not a moving branch, unless you fully trust the repo owners.
+          Optional override for DevOps git ref. Empty: parse from github.workflow_ref or use
+          github.ref_name. Prefer an immutable tag or SHA in production.
         type: string
-        required: true
+        default: ""
+        required: false
       working_directory:
         description: "App subdirectory containing pyproject / package"
         type: string
@@ -58,6 +63,10 @@ on:
       caller_pat:
         description: "Optional PAT from caller for PR comments / forks"
         required: false
+    outputs:
+      gates_passed:
+        description: "True when license and full quality gate enforcement succeeded"
+        value: ${{ jobs.quality-report.outputs.gates_passed }}
 
   workflow_dispatch:
     inputs:
@@ -79,15 +88,15 @@ on:
         default: "[]"
       devops_repository:
         description: >
-          Trusted DevOps repo (owner/name). Callers MUST pin a tag or SHA they trust — passing
-          an attacker-controlled repo/ref runs that checkout’s composite actions and scripts with
-          this job’s token (supply-chain risk).
+          Optional DevOps owner/name. Empty: same resolution as workflow_call — parse from
+          github.workflow_ref (repo that defines this reusable workflow) or fall back to
+          github.repository.
         type: string
         default: ""
       devops_ref:
         description: >
-          Git ref for DevOps checkout — use an immutable SemVer tag or full commit SHA in
-          production, not a moving branch, unless you fully trust the repo owners.
+          Optional DevOps git ref. Empty: parse from github.workflow_ref or use github.ref_name
+          (same as workflow_call). Prefer an immutable tag or SHA in production.
         type: string
         default: ""
       working_directory:
@@ -103,16 +112,54 @@ on:
         type: string
         default: "http://localhost:8080"
 
-# Least privilege: each job declares only the token scopes it needs. Callers should use
-# `permissions: {}` at workflow level and `secrets: inherit` only when required.
 permissions: {}
 
-env:
-  QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
-
 jobs:
-  python-quality:
-    name: Run full Python quality pipeline
+  devops-coordinates:
+    name: Resolve DevOps checkout (workflow ref or inputs)
+    runs-on: ubuntu-latest
+    outputs:
+      repository: ${{ steps.calc.outputs.repository }}
+      ref: ${{ steps.calc.outputs.ref }}
+    steps:
+      - id: calc
+        shell: bash
+        env:
+          INPUT_DEVOPS_REPO: ${{ inputs.devops_repository }}
+          INPUT_DEVOPS_REF: ${{ inputs.devops_ref }}
+          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          repo="${INPUT_DEVOPS_REPO:-}"
+          ref="${INPUT_DEVOPS_REF:-}"
+          wf="${GITHUB_WORKFLOW_REF:-}"
+          auto_repo=""
+          auto_ref=""
+          if [[ -n "${wf}" && "${wf}" == *"@"* ]]; then
+            base="${wf%@*}"
+            auto_ref="${wf##*@}"
+            auto_repo="${base%/.github/*}"
+          fi
+          if [ -z "${repo}" ]; then
+            repo="${auto_repo:-}"
+          fi
+          if [ -z "${ref}" ]; then
+            ref="${auto_ref:-}"
+          fi
+          if [ -z "${repo}" ]; then
+            repo="${GITHUB_REPOSITORY}"
+          fi
+          if [ -z "${ref}" ]; then
+            ref="${GITHUB_REF_NAME}"
+          fi
+          echo "repository=${repo}" >> "${GITHUB_OUTPUT}"
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+
+  quality-shield:
+    name: "Job 1 — Shield (secrets + Semgrep SARIF)"
+    needs: devops-coordinates
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -125,25 +172,22 @@ jobs:
           egress-policy: audit
 
       - name: Check out application full history
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
-          # workflow_dispatch: use inputs when set so manual runs can pin another DevOps tag/SHA;
-          # empty inputs fall back to this repo/ref. workflow_call: required inputs always apply.
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
       - name: Create quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
 
-      # --- Phase 4 (Shield): secrets + SAST (Gitleaks, Semgrep) — no app venv required ---
       - name: Scan secrets and static patterns
         uses: ./.devops/.github/actions/qa-secrets-sast
         with:
@@ -151,7 +195,70 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           devops-checkout-path: ${{ github.workspace }}/.devops
 
-      # --- Toolchain: Node/jscpd, cloc, Syft/Grype, uv, quality CLIs ---
+      - name: Install uv and Python for quality gate CLI
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: "."
+
+      - name: Sync DevOps dependencies (quality gates)
+        env:
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
+
+      - name: Enforce Semgrep SARIF policy (High only; Low/Medium no-op)
+        env:
+          STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
+          QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python -m scripts.quality_gates --semgrep-shield-only
+
+      - name: Upload shield artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: quality-shield-artifacts
+          path: ${{ env.QUALITY_OUTPUT_DIR }}/
+
+  quality-static:
+    name: "Job 2 — Static analysis (Gatekeeper)"
+    needs: [devops-coordinates, quality-shield]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out application
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out DevOps into workspace
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock', inputs.working_directory), format('{0}/pyproject.toml', inputs.working_directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-qa-uv-
+
       - name: Prepare runner quality toolchain
         uses: ./.devops/.github/actions/qa-install-toolchain
         with:
@@ -160,7 +267,9 @@ jobs:
           working-directory: ${{ inputs.working_directory }}
           python-version: ${{ inputs.python_version }}
 
-      # --- Phase 3 (Gatekeeper): app deps + Ruff (pydocstyle) + static bundle ---
+      - name: Create quality output directory
+        run: mkdir -p "$QUALITY_OUTPUT_DIR"
+
       - name: Install app and run style checks
         uses: ./.devops/.github/actions/qa-app-install-and-ruff
         with:
@@ -182,7 +291,70 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
 
-      # --- Phase 4 (Shield): Bandit, deptry, pip-audit, SBOM, Grype JSON, uv lock --check ---
+      - name: Upload static analysis artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: quality-static-artifacts
+          path: ${{ env.QUALITY_OUTPUT_DIR }}/
+
+  quality-supply-chain:
+    name: "Job 3 — Supply chain & SBOM"
+    needs: [devops-coordinates, quality-shield]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out application
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out DevOps into workspace
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock', inputs.working_directory), format('{0}/pyproject.toml', inputs.working_directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-qa-uv-
+
+      - name: Prepare runner quality toolchain
+        uses: ./.devops/.github/actions/qa-install-toolchain
+        with:
+          workspace: ${{ github.workspace }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          working-directory: ${{ inputs.working_directory }}
+          python-version: ${{ inputs.python_version }}
+
+      - name: Create quality output directory
+        run: mkdir -p "$QUALITY_OUTPUT_DIR"
+
+      - name: Install app and run style checks
+        uses: ./.devops/.github/actions/qa-app-install-and-ruff
+        with:
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          runner-temp: ${{ runner.temp }}
+          docstring-format: ${{ inputs.docstring_format }}
+          github-event-name: ${{ github.event_name }}
+          app-install-command: ${{ inputs.app_install_command || '' }}
+
       - name: Run security quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -193,7 +365,70 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
 
-      # --- Phase 5: Pytest + coverage ---
+      - name: Upload supply-chain artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: quality-security-artifacts
+          path: ${{ env.QUALITY_OUTPUT_DIR }}/
+
+  quality-test:
+    name: "Job 4 — Tests & coverage"
+    needs: [devops-coordinates, quality-static]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out application
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out DevOps into workspace
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Restore uv cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock', inputs.working_directory), format('{0}/pyproject.toml', inputs.working_directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-qa-uv-
+
+      - name: Prepare runner quality toolchain
+        uses: ./.devops/.github/actions/qa-install-toolchain
+        with:
+          workspace: ${{ github.workspace }}
+          devops-checkout-path: ${{ github.workspace }}/.devops
+          working-directory: ${{ inputs.working_directory }}
+          python-version: ${{ inputs.python_version }}
+
+      - name: Create quality output directory
+        run: mkdir -p "$QUALITY_OUTPUT_DIR"
+
+      - name: Install app and run style checks
+        uses: ./.devops/.github/actions/qa-app-install-and-ruff
+        with:
+          workspace: ${{ github.workspace }}
+          working-directory: ${{ inputs.working_directory }}
+          quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
+          runner-temp: ${{ runner.temp }}
+          docstring-format: ${{ inputs.docstring_format }}
+          github-event-name: ${{ github.event_name }}
+          app-install-command: ${{ inputs.app_install_command || '' }}
+
       - name: Run test quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -204,44 +439,186 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
 
-      - name: Enforce license policy on SBOM
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: quality-test-artifacts
+          path: ${{ env.QUALITY_OUTPUT_DIR }}/
+
+  quality-report:
+    name: "Job 5 — Reporting & artifacts"
+    needs: [devops-coordinates, quality-static, quality-supply-chain, quality-test]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      gates_passed: ${{ steps.gates-out.outputs.passed }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      - name: Check out application
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out DevOps into workspace
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
+          path: .devops
+          persist-credentials: false
+
+      - name: Install uv and Python for reporting scripts
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: "."
+
+      - name: Sync DevOps dependencies
+        env:
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
+
+      - name: Create merged quality output directory
+        run: mkdir -p "$QUALITY_OUTPUT_DIR"
+
+      - name: Download shield artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: quality-shield-artifacts
+          path: _merge/shield
+
+      - name: Download static artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: quality-static-artifacts
+          path: _merge/static
+
+      - name: Download supply-chain artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: quality-security-artifacts
+          path: _merge/security
+
+      - name: Download test artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: quality-test-artifacts
+          path: _merge/test
+
+      - name: Merge downloaded artifacts
+        run: |
+          set -euo pipefail
+          for d in _merge/shield _merge/static _merge/security _merge/test; do
+            if [ -d "$d" ] && [ "$(ls -A "$d" 2>/dev/null || true)" ]; then
+              cp -a "$d"/. "$QUALITY_OUTPUT_DIR"/
+            fi
+          done
+
+      - id: license
+        name: Enforce license policy on SBOM
+        continue-on-error: true
         env:
           SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
-        run: python3 "${{ github.workspace }}/.devops/scripts/license_gate.py"
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/license_gate.py
 
-      # Vulnerability caps (pip-audit + Grype JSON vs strictness_level) — scripts.quality_gates only
-      - name: Evaluate configured quality gates
+      - id: evaluate-gates
+        name: Evaluate configured quality gates
+        continue-on-error: true
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
-        run: uv run --directory "${{ github.workspace }}/.devops" python -m scripts.quality_gates
+          QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python -m scripts.quality_gates
 
       - name: Consolidate quality output files
         if: always()
-        run: python3 "${{ github.workspace }}/.devops/scripts/consolidate_artifacts.py"
+        env:
+          QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/consolidate_artifacts.py
 
       - name: Upload quality bundle artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
 
       - name: Render pull request comment body
         if: always() && github.event_name == 'pull_request'
-        run: python3 "${{ github.workspace }}/.devops/scripts/pr_comment_markdown.py" > "${{ github.workspace }}/quality-pr-comment.md"
+        env:
+          QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+          COMMENT_FILE: ${{ github.workspace }}/quality-pr-comment.md
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/pr_comment_markdown.py > "${COMMENT_FILE}"
 
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-quality-comment
           path: quality-pr-comment.md
           if-no-files-found: ignore
 
+      - id: gates-out
+        name: Record gate outcome for workflow outputs
+        if: always()
+        env:
+          LICENSE_OUTCOME: ${{ steps.license.outcome }}
+          EVALUATE_GATES_OUTCOME: ${{ steps.evaluate-gates.outcome }}
+        run: |
+          set -euo pipefail
+          lic="${LICENSE_OUTCOME}"
+          ev="${EVALUATE_GATES_OUTCOME}"
+          if [ "$lic" = "success" ] && [ "$ev" = "success" ]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enforce license and quality gates on job status
+        if: always()
+        env:
+          LICENSE_OUTCOME: ${{ steps.license.outcome }}
+          EVALUATE_GATES_OUTCOME: ${{ steps.evaluate-gates.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "${LICENSE_OUTCOME}" != "success" ] || [ "${EVALUATE_GATES_OUTCOME}" != "success" ]; then
+            echo "::error::License policy and/or quality gates failed (see logs and quality-bundle artifact)."
+            exit 1
+          fi
+
   pr-quality-comment:
     name: Post quality summary on PR
-    needs: python-quality
+    needs: quality-report
     if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
@@ -256,14 +633,14 @@ jobs:
 
       - name: Download staged comment artifact
         id: download
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           name: pr-quality-comment
 
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.caller_pat || github.token }}
           script: |
@@ -278,11 +655,11 @@ jobs:
               body,
             });
 
-  dast:
-    name: Dynamic app scan and load smoke
+  quality-dast:
+    name: "Dynamic analysis (ZAP + Locust)"
     if: ${{ inputs.enable_dast == true }}
+    needs: [devops-coordinates, quality-test]
     runs-on: ubuntu-latest
-    needs: python-quality
     permissions:
       contents: read
       actions: write
@@ -293,17 +670,15 @@ jobs:
           egress-policy: audit
 
       - name: Check out application
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
-          # workflow_dispatch: use inputs when set so manual runs can pin another DevOps tag/SHA;
-          # empty inputs fall back to this repo/ref. workflow_call: required inputs always apply.
-          repository: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_repository != '' && inputs.devops_repository || github.repository) || inputs.devops_repository }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && (inputs.devops_ref != '' && inputs.devops_ref || github.ref_name) || inputs.devops_ref }}
+          repository: ${{ needs.devops-coordinates.outputs.repository }}
+          ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
 
@@ -332,7 +707,7 @@ jobs:
           fi
 
       - name: Run baseline web security scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ inputs.dast_target_url }}
           rules_file_name: ".zap/rules.tsv"
@@ -355,9 +730,60 @@ jobs:
 
       - name: Upload dynamic test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dast-reports
           path: |
             report_html.html
             quality-output
+
+  release-github:
+    name: Create GitHub release (quality bundle)
+    runs-on: ubuntu-latest
+    needs: [quality-supply-chain, quality-test, quality-report, quality-dast]
+    if: |
+      always() &&
+      needs.quality-report.outputs.gates_passed == 'true' &&
+      needs.quality-supply-chain.result == 'success' &&
+      needs.quality-test.result == 'success' &&
+      needs.quality-report.result == 'success' &&
+      (needs.quality-dast.result == 'success' || needs.quality-dast.result == 'skipped') &&
+      startsWith(github.ref, 'refs/tags/v') &&
+      github.ref_type == 'tag'
+    environment: production
+    permissions:
+      contents: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@v2.16.1
+        with:
+          egress-policy: audit
+
+      # Expressions have no regex — strict vMAJOR.MINOR.PATCH (digits only) is enforced here.
+      - name: Require SemVer tag vX.Y.Z
+        shell: bash
+        run: |
+          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release requires tag vMAJOR.MINOR.PATCH (numeric only; no prerelease suffix)."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Download quality bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: quality-bundle
+          path: bundle
+
+      - name: Create release with quality bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/}"
+          (cd bundle && zip -r "${{ github.workspace }}/quality-bundle-${tag}.zip" .)
+          gh release create "$tag" "${{ github.workspace }}/quality-bundle-${tag}.zip" --generate-notes --title "$tag"

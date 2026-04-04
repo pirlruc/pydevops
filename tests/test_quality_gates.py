@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,15 @@ def tmp_out(tmp_path: Path) -> Path:
     (d / "pip_audit.json").write_text("[]", encoding="utf-8")
     (d / "grype.json").write_text(json.dumps({"matches": []}), encoding="utf-8")
     (d / "gitleaks.json").write_text("[]", encoding="utf-8")
+    (d / "semgrep.sarif").write_text(
+        json.dumps(
+            {
+                "version": "2.1.0",
+                "runs": [{"tool": {"driver": {"name": "semgrep"}}, "results": []}],
+            }
+        ),
+        encoding="utf-8",
+    )
     (d / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
     (d / "pytest_exit_code.txt").write_text("0\n", encoding="utf-8")
     return d
@@ -74,6 +84,63 @@ def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
     (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
     passed, _rows = qg.evaluate(tmp_out, "High")
     assert passed
+
+
+def test_low_has_no_semgrep_gate_rows(tmp_out: Path) -> None:
+    """Semgrep SARIF policy applies only to High strictness."""
+    passed, rows = qg.evaluate(tmp_out, "Low")
+    assert passed
+    assert not any("Semgrep" in str(r.get("gate", "")) for r in rows)
+
+
+def test_high_semgrep_error_level_fails(tmp_out: Path) -> None:
+    """High tier fails when SARIF contains an error-level result."""
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    (tmp_out / "semgrep.sarif").write_text(
+        json.dumps(
+            {
+                "version": "2.1.0",
+                "runs": [
+                    {
+                        "tool": {"driver": {"name": "semgrep"}},
+                        "results": [{"ruleId": "x", "level": "error"}],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any(r.get("gate") == "Semgrep (error-level)" for r in rows)
+
+
+def test_high_semgrep_six_warnings_fail(tmp_out: Path) -> None:
+    """High tier allows at most five warning-level SARIF results."""
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    results = [{"ruleId": f"w{i}", "level": "warning"} for i in range(6)]
+    (tmp_out / "semgrep.sarif").write_text(
+        json.dumps(
+            {
+                "version": "2.1.0",
+                "runs": [{"tool": {"driver": {"name": "semgrep"}}, "results": results}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any(r.get("gate") == "Semgrep (warning-level)" and r.get("ok") is False for r in rows)
+
+
+def test_engine_semgrep_shield_only_respects_strictness(
+    tmp_out: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CLI --semgrep-shield-only passes for Low without evaluating other gates."""
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_out))
+    monkeypatch.setenv("STRICTNESS_LEVEL", "Low")
+    monkeypatch.setattr(sys, "argv", ["x", "--semgrep-shield-only"])
+    assert qg.main() == 0
 
 
 def test_bandit_findings_fail_high(tmp_out: Path) -> None:
@@ -292,6 +359,7 @@ def test_main_cli_exit_code(tmp_out: Path, monkeypatch: pytest.MonkeyPatch) -> N
     """main() respects STRICTNESS_LEVEL and QUALITY_OUTPUT_DIR."""
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_out))
     monkeypatch.setenv("STRICTNESS_LEVEL", "Low")
+    monkeypatch.setattr(sys, "argv", ["scripts.quality_gates"])
     assert qg.main() == 0
 
 

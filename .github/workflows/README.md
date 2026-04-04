@@ -8,7 +8,7 @@ These define reusable automation you call with `uses: pirlruc/pydevops/.github/w
 
 | Workflow | Purpose |
 | --- | --- |
-| **`python-quality.yml`** | Main QaaS pipeline (`workflow_call` + `workflow_dispatch`). Implements **Gatekeeper / Shield / Tests** via composites (`qa-secrets-sast`, `qa-install-toolchain`, `qa-app-install-and-ruff`, `qa-run-quality-phase`). See [workflows.md](../docs/workflows.md#python-qualityyml). |
+| **`python-quality.yml`** | Main QaaS pipeline (`workflow_call` + `workflow_dispatch`). See [workflows.md](../../docs/workflows.md#python-qualityyml). |
 
 Optional: **`publish-pypi.yml`** is only relevant if the **app** (or this repo) publishes a Python package from the same layout; most apps will not call it from the DevOps repo.
 
@@ -18,12 +18,9 @@ Run on pushes/PRs to this repo (or on schedule). **Do not** point application re
 
 | Workflow | Purpose |
 | --- | --- |
-| **`reusable-workflows-quality.yml`** | actionlint, zizmor, OpenSSF Scorecard |
-| **`devops-scripts-ci.yml`** | pytest, pylint, interrogate, Radon on `scripts/` |
-| **`dependency-review.yml`** | GitHub Dependency review on lockfile PRs |
-| **`python-eol-watch.yml`** | Issues when tracked Python versions hit EOL (endoflife.date) |
-| **`mutmut-nightly.yml`** | Scheduled mutation testing for this repo |
-| **`publish-pypi.yml`** | Publish **this** repo’s package to PyPI on version tags |
+| **`devops-ci.yml`** | Path filter → **workflow lint** (actionlint + zizmor), **scripts** (single job: pytest, pylint, interrogate, Radon CC/MI), **supply chain** (Scorecard + dependency review on PRs) |
+| **`devops-scheduled.yml`** | Weekly lint, Scorecard, Mutmut (score ≥ 85%), Python EOL issues; push-triggered EOL-only run for policy file edits |
+| **`publish-pypi.yml`** | Manual PyPI publish (`workflow_dispatch`, `environment: pypi`) |
 
 ## Layout elsewhere under `.github/`
 

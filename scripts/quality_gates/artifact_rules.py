@@ -10,6 +10,7 @@ JSON_SHAPES: dict[str, tuple[type[Any] | tuple[type[Any], ...], str]] = {
     "pylint.json": (list, "pylint.json must be a JSON array"),
     "ruff.json": ((list, dict), "ruff.json must be array or object"),
     "gitleaks.json": (list, "gitleaks.json must be a JSON array"),
+    "semgrep.sarif": (dict, "semgrep.sarif must be a JSON object (SARIF)"),
     "bandit.json": (dict, "bandit.json must be a JSON object"),
     "pip_audit.json": (list, "pip_audit.json must be a JSON array"),
     "grype.json": (dict, "grype.json must be a JSON object"),

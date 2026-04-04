@@ -86,6 +86,7 @@ HIGH_REQUIRED_FILES: tuple[str, ...] = (
     "pydoclint.txt",
     "ruff.json",
     "gitleaks.json",
+    "semgrep.sarif",
     "bandit.json",
     "pip_audit.json",
     "grype.json",

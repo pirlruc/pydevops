@@ -19,7 +19,7 @@ Optional hardening and UX ideas. **Status** notes what is already reflected in t
 ## Supply chain
 
 9. **Generate provenance** — SLSA provenance for release artifacts. **Status:** noted in [versioning.md](./versioning.md); optional for app repos.
-10. **Dependency review** — **Done:** [.github/workflows/dependency-review.yml](../.github/workflows/dependency-review.yml) runs on PRs that touch common lockfiles. **Dependabot** covers `uv`/`uv.lock`, `github-actions`, pip/npm manifests under [`.github/dependencies/`](../.github/dependencies/), and the shared **uv CLI** version in `uv-version.txt` (see [dependency-management.md](./dependency-management.md)). **Python EOL** uses [.github/workflows/python-eol-watch.yml](../.github/workflows/python-eol-watch.yml) (Issues), not Dependabot.
+10. **Dependency review** — **Done:** PR job in [.github/workflows/devops-ci.yml](../.github/workflows/devops-ci.yml) runs [dependency-review-action](https://github.com/actions/dependency-review-action) when the consolidated workflow triggers on lockfile/manifest paths. **Dependabot** covers `uv`/`uv.lock`, `github-actions`, pip/npm manifests under [`.github/dependencies/`](../.github/dependencies/), and the shared **uv CLI** version in `uv-version.txt` (see [dependency-management.md](./dependency-management.md)). **Python EOL** uses [.github/workflows/devops-scheduled.yml](../.github/workflows/devops-scheduled.yml) (Issues), not Dependabot.
 
 ## Documentation / operations
 

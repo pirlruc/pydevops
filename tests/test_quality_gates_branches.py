@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -222,5 +223,6 @@ def test_main_failure_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     """main returns 1 when gates fail."""
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
     monkeypatch.setenv("STRICTNESS_LEVEL", "High")
+    monkeypatch.setattr(sys, "argv", ["scripts.quality_gates"])
     # no artifacts -> high fails
     assert qg.main() == 1

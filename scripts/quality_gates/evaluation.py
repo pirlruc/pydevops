@@ -24,7 +24,12 @@ from scripts.quality_gates.gates_docstrings import (
     gate_docstring_coverage,
     gate_docstring_issue_rate,
 )
-from scripts.quality_gates.gates_security import gate_bandit, gate_gitleaks, gate_vulnerabilities
+from scripts.quality_gates.gates_security import (
+    gate_bandit,
+    gate_gitleaks,
+    gate_semgrep,
+    gate_vulnerabilities,
+)
 from scripts.quality_gates.readers_cloc_docs import (
     cloc_slocs_comments,
     interrogate_coverage,
@@ -106,7 +111,18 @@ def collect_gate_results(  # pylint: disable=too-many-locals
     rows.extend(r)
     failures.extend(f)
 
+    r, f = gate_semgrep(root, sn)
+    rows.extend(r)
+    failures.extend(f)
+
     return rows, failures
+
+
+def evaluate_semgrep_shield_only(root: Path, strictness: str) -> tuple[bool, list[dict[str, Any]]]:
+    """Run only the Semgrep SARIF gate (High strictness); always pass for Low/Medium."""
+    sn = normalized_strictness_level(strictness)
+    rows, failures = gate_semgrep(root, sn)
+    return len(failures) == 0, rows
 
 
 def evaluate(root: Path, strictness: str) -> tuple[bool, list[dict[str, Any]]]:

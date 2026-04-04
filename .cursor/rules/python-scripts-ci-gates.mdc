@@ -1,0 +1,19 @@
+---
+description: Pytest, line coverage, and pylint gates when editing Python (scripts/ and tests/)
+globs: scripts/**/*.py,tests/**/*.py
+alwaysApply: false
+---
+
+# Python scripts CI gates (pytest, coverage, pylint)
+
+When you **add or edit** Python under **`scripts/`** or **`tests/`**, before finishing the task:
+
+1. **All tests pass** — run **`uv run pytest`** from the repo root (same as **`devops-ci.yml`** → **`ci-scripts`**). **Zero** failures, errors, or collection errors.
+2. **Line coverage ≥ 95%** — pytest is configured in **`pyproject.toml`** with **`--cov=scripts`**, **`--cov=src/devops_quality`**, and **`--cov-fail-under=95`**. A successful **`uv run pytest`** run enforces the total coverage floor; do not weaken or skip coverage to green the suite.
+3. **Pylint ≥ 9.5/10 on `scripts/`** — run **`uv run pylint scripts`** (or match CI). **`[tool.pylint.main]`** sets **`fail-under = 9.5`**.
+
+If **`uv run pytest`** / **`pylint`** are missing, use **`uv sync`** then **`uv run --group quality-tools …`** as in **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)**.
+
+**Always-applied** context: **[`handoff-and-commits.mdc`](handoff-and-commits.mdc)** links here alongside Radon and Interrogate.
+
+See also **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)** (docstrings on **`scripts/`**), **[`radon-complexity.mdc`](radon-complexity.mdc)** (cyclomatic complexity).

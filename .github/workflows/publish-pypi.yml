@@ -1,9 +1,14 @@
 name: Publish to PyPI
 
+# Manual publish for this repository or for callers that copy this workflow pattern.
+# Application repos should use their own trusted-publish workflow; tag-driven PyPI
+# publishing was moved off automatic tag push to require explicit approval.
+
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch: {}
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 permissions: {}
 
@@ -11,6 +16,7 @@ jobs:
   publish:
     name: Build and publish release artifacts
     runs-on: ubuntu-latest
+    environment: pypi
     permissions:
       contents: read
       id-token: write
@@ -20,8 +26,8 @@ jobs:
         with:
           egress-policy: audit
 
-      - name: Check out release tag
-        uses: actions/checkout@v5
+      - name: Check out repository
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -21,8 +22,10 @@ def test_render_markdown_table_and_no_action_verdict() -> None:
     }
     md = render_markdown(data)
     assert "github.com/foo/bar" in md
+    assert "Scope: GitHub repository" in md
     assert "Binary-Artifacts" in md
     assert "Token-Permissions" in md
+    assert "Package / ref" in md
     assert "9.0" in md
     assert "No immediate action required" in md
     assert "Action needed" not in md
@@ -221,6 +224,16 @@ def test_sarif_to_payload_and_render() -> None:
                                 "Click Remediation section below to solve this issue"
                             )
                         },
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "region": {
+                                        "startLine": 30,
+                                        "snippet": {"text": "step-security/harden-runner@v2.16.1"},
+                                    }
+                                }
+                            }
+                        ],
                     }
                 ],
             }
@@ -231,8 +244,105 @@ def test_sarif_to_payload_and_render() -> None:
     assert "github.com/o/r" in md
     assert "Check X" in md
     assert "Check X" in md and "10" in md and "+---" in md
+    assert "step-security/harden-runner@v2.16.1" in md
     assert "Click Remediation" not in md
     assert "no issues" in md
+    assert payload["checks"][0]["snippet"] == "step-security/harden-runner@v2.16.1"
+
+
+def test_sarif_repo_from_run_properties() -> None:
+    sarif = {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"rules": []}},
+                "properties": {"repositoryUri": "https://github.com/from/props"},
+                "results": [],
+            }
+        ],
+    }
+    payload = sarif_to_payload(sarif, "github.com/cli/fallback")
+    assert payload["repo"]["name"] == "https://github.com/from/props"
+    assert payload["repo"]["source"] == "sarif"
+
+
+def test_sarif_repo_from_invocations_working_directory() -> None:
+    sarif = {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"rules": []}},
+                "invocations": [{"workingDirectory": {"uri": "file:///github.com/from/wd"}}],
+                "results": [],
+            }
+        ],
+    }
+    payload = sarif_to_payload(sarif, "")
+    assert payload["repo"]["name"] == "file:///github.com/from/wd"
+    assert payload["repo"]["source"] == "sarif"
+
+
+def test_sarif_vcp_skips_non_dict_entries() -> None:
+    sarif = {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"rules": []}},
+                "versionControlProvenance": [
+                    "skip-me",
+                    {"repositoryUri": "https://github.com/ok/repo"},
+                ],
+                "results": [],
+            }
+        ],
+    }
+    payload = sarif_to_payload(sarif, None)
+    assert payload["repo"]["name"] == "https://github.com/ok/repo"
+
+
+def test_main_fills_repo_from_github_repository_env(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from scripts import scorecard_summary
+
+    sarif = {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"rules": [{"id": "Z", "name": "Zed"}]}},
+                "results": [{"ruleId": "Z", "ruleIndex": 0, "message": {"text": "score is 8: ok"}}],
+            }
+        ],
+    }
+    p = tmp_path / "r.sarif"
+    p.write_text(json.dumps(sarif), encoding="utf-8")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "acme/widget")
+    monkeypatch.setattr(sys, "argv", ["scorecard_summary.py", str(p)])
+    assert scorecard_summary.main() == 0
+    out = capsys.readouterr().out
+    assert "github.com/acme/widget" in out
+
+
+def test_sarif_version_control_provenance_repo_overrides_cli() -> None:
+    """Analyzed repo URI comes from SARIF metadata, not the action ref in result snippets."""
+    sarif = {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"rules": [{"id": "Z", "name": "Zed"}]}},
+                "versionControlProvenance": [
+                    {"repositoryUri": "https://github.com/analyzed/target-repo"}
+                ],
+                "results": [{"ruleId": "Z", "ruleIndex": 0, "message": {"text": "score is 8: ok"}}],
+            }
+        ],
+    }
+    payload = sarif_to_payload(sarif, "github.com/cli/fallback")
+    assert payload["repo"]["name"] == "https://github.com/analyzed/target-repo"
+    assert payload["repo"]["source"] == "sarif"
+    md = render_markdown(payload)
+    assert "https://github.com/analyzed/target-repo" in md
+    assert "Scope: GitHub repository `https://github.com/analyzed/target-repo`" in md
 
 
 def test_main_sarif(monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]) -> None:

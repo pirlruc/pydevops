@@ -9,6 +9,7 @@ from scripts.quality_gates.config import Thresholds
 from scripts.quality_gates.readers_bandit import bandit_finding_count
 from scripts.quality_gates.readers_grype_gitleaks import gitleaks_findings, grype_severities
 from scripts.quality_gates.readers_pip import pip_audit_vulns
+from scripts.quality_gates.readers_semgrep import semgrep_sarif_error_warning_counts
 
 RowList = list[dict[str, Any]]
 
@@ -93,6 +94,44 @@ def gate_vulnerabilities(
         failures.append("high vulnerabilities")
     if not ok_m:
         failures.append("medium vulnerabilities")
+    return rows, failures
+
+
+def gate_semgrep(root: Path, strictness_norm: str) -> tuple[RowList, list[str]]:
+    """High strictness: Semgrep SARIF — 0 error-level findings, at most 5 warning-level."""
+    if strictness_norm != "High":
+        return [], []
+    counts = semgrep_sarif_error_warning_counts(root)
+    if counts is None:
+        row = {
+            "gate": "Semgrep (SARIF)",
+            "actual": "missing or invalid semgrep.sarif",
+            "required": "0 error-level, <= 5 warning-level results",
+            "ok": False,
+        }
+        return [row], ["semgrep report"]
+    n_err, n_warn = counts
+    ok_err = n_err == 0
+    ok_warn = n_warn <= 5
+    rows: RowList = [
+        {
+            "gate": "Semgrep (error-level)",
+            "actual": str(n_err),
+            "required": "0",
+            "ok": ok_err,
+        },
+        {
+            "gate": "Semgrep (warning-level)",
+            "actual": str(n_warn),
+            "required": "<= 5",
+            "ok": ok_warn,
+        },
+    ]
+    failures: list[str] = []
+    if not ok_err:
+        failures.append("semgrep error-level findings")
+    if not ok_warn:
+        failures.append("semgrep warning-level findings")
     return rows, failures
 
 

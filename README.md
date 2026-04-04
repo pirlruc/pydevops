@@ -19,15 +19,13 @@ See **[`examples/call-python-quality.yml`](./examples/call-python-quality.yml)**
 
 ## Versioning
 
-Pin callers to SemVer tags, for example `@v1.2.0`, and set `devops_ref` to the **same** tag:
+Pin callers to SemVer tags, for example `@v1.2.0`. The reusable workflow checks out **`.devops`** from the **same repo and ref** as that `uses:` pin (via `github.workflow_ref`) when **`devops_repository`** / **`devops_ref`** are omitted; set those inputs only to override (forks, drift).
 
 ```yaml
 jobs:
   quality:
     uses: pirlruc/pydevops/.github/workflows/python-quality.yml@v1.2.0
     with:
-      devops_repository: pirlruc/pydevops
-      devops_ref: v1.2.0
       strictness_level: High
       docstring_format: Google
       enable_dast: false
@@ -40,13 +38,10 @@ jobs:
 | Path | Purpose |
 | --- | --- |
 | `.github/workflows/README.md` | **App vs DevOps** workflow index |
-| `.github/workflows/python-quality.yml` | **Apps:** `workflow_call` quality pipeline |
-| `.github/workflows/publish-pypi.yml` | **This repo:** PyPI on tags (apps rarely call this) |
-| `.github/workflows/mutmut-nightly.yml` | **This repo:** mutation testing schedule |
-| `.github/workflows/reusable-workflows-quality.yml` | **This repo:** actionlint, zizmor, Scorecard |
-| `.github/workflows/devops-scripts-ci.yml` | **This repo:** pytest / pylint / Radon on `scripts/` |
-| `.github/workflows/dependency-review.yml` | **This repo:** PR dependency review |
-| `.github/workflows/python-eol-watch.yml` | **This repo:** Python EOL issues (endoflife.date) |
+| `.github/workflows/python-quality.yml` | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
+| `.github/workflows/publish-pypi.yml` | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`) |
+| `.github/workflows/devops-ci.yml` | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
+| `.github/workflows/devops-scheduled.yml` | **This repo:** weekly lint/Scorecard/Mutmut/EOL; EOL on policy push |
 | `.github/dependabot.yml` | uv, pip/npm under `dependencies/`, GitHub Actions |
 | `.github/dependencies/` | Pinned tools, `uv-version.txt`, jscpd npm package |
 | `.github/config/` | zizmor, Semgrep rules, `python-support-versions.json` |
@@ -70,4 +65,4 @@ Set `QUALITY_OUTPUT_DIR` to your artifact directory when running gates locally.
 
 ## PyPI publishing
 
-Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on PyPI, then push a tag matching `v*.*.*`.
+Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on PyPI, create a **`pypi`** [environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) with any required approvals, then run **Publish to PyPI** via **`workflow_dispatch`**.
