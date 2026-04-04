@@ -8,6 +8,30 @@ import re
 _PIPE_SUB = "\u00a6"
 
 
+def _max_consecutive_backticks(s: str) -> int:
+    """Length of the longest run of `` ` `` characters in ``s``."""
+    best = cur = 0
+    for ch in s:
+        if ch == "`":
+            cur += 1
+            if cur > best:
+                best = cur
+        else:
+            cur = 0
+    return best
+
+
+def markdown_fenced_code_block(body: str) -> str:
+    """Wrap ``body`` in a GFM fenced code block.
+
+    The fence is at least three backticks and strictly longer than any run of backticks inside
+    ``body``, so arbitrary tool output (including Markdown examples) cannot break the fence.
+    """
+    n = max(3, _max_consecutive_backticks(body) + 1)
+    fence = "`" * n
+    return f"{fence}\n{body}\n{fence}\n"
+
+
 def sanitize_markdown_table_cell(value: object, max_len: int = 500) -> str:
     """Normalize a value for use inside a GFM pipe table cell.
 

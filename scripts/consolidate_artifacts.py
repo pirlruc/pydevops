@@ -9,7 +9,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from scripts.mdutil import sanitize_markdown_table_cell
+from scripts.mdutil import markdown_fenced_code_block, sanitize_markdown_table_cell
 from scripts.quality_gates.jsonutil import gates_rows_and_passed
 
 
@@ -45,7 +45,7 @@ def _tool_console_summary(out: Path) -> str:
     for name in sorted(out.glob("summary_*.txt")):
         title = name.stem.replace("summary_", "")
         body = name.read_text(encoding="utf-8", errors="replace").strip()
-        blocks.append(f"### {title}\n\n```\n{body}\n```\n")
+        blocks.append(f"### {title}\n\n{markdown_fenced_code_block(body)}")
     return "\n".join(blocks) if blocks else ""
 
 

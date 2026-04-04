@@ -132,7 +132,6 @@ def test_grype_match_non_dict_vulnerability_skipped(tmp_path: Path) -> None:
     h, m = qg._grype_severities(tmp_path)
     assert h == 1
     assert m == 0
-    assert m == 0
 
 
 def test_grype_medium(tmp_path: Path) -> None:

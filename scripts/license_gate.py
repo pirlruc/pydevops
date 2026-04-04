@@ -7,6 +7,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def _parse_deny_list(raw: str) -> list[str]:
@@ -27,7 +28,7 @@ def _parse_deny_list(raw: str) -> list[str]:
     return out
 
 
-def _find_license_hits(packages: list[dict], deny_l: list[str]) -> list[str]:
+def _find_license_hits(packages: list[Any], deny_l: list[str]) -> list[str]:
     """Collect human-readable hit strings for packages matching any deny pattern."""
     hits: list[str] = []
     for pkg in packages:

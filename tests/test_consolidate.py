@@ -101,3 +101,16 @@ def test_consolidate_summary_snippet(tmp_path: Path, monkeypatch: pytest.MonkeyP
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(out))
     assert consolidate_main() == 0
     assert "hello log" in (out / "quality_report.md").read_text(encoding="utf-8")
+
+
+def test_consolidate_summary_with_backticks_uses_safe_fence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Log snippets containing ``` must not break the generated Markdown fence."""
+    out = tmp_path / "q_fence"
+    out.mkdir()
+    (out / "gates.json").write_text('{"passed": true, "rows": []}', encoding="utf-8")
+    (out / "summary_risky.txt").write_text("```not code```\n", encoding="utf-8")
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(out))
+    assert consolidate_main() == 0
+    text = (out / "quality_report.md").read_text(encoding="utf-8")
+    assert "````" in text
+    assert "```not code```" in text
