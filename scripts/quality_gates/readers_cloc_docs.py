@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from scripts.quality_gates.jsonutil import read_json
+from scripts.quality_gates.jsonutil import coerce_non_negative_float, parse_float_or_none, read_json
 
 
 def cloc_slocs_comments(root: Path) -> tuple[float, float]:
@@ -16,7 +16,10 @@ def cloc_slocs_comments(root: Path) -> tuple[float, float]:
     py = data.get("Python")
     if not isinstance(py, dict):
         return 0.0, 0.0
-    return float(py.get("code", 0)), float(py.get("comment", 0))
+    return (
+        coerce_non_negative_float(py.get("code")),
+        coerce_non_negative_float(py.get("comment")),
+    )
 
 
 def interrogate_coverage(root: Path) -> float | None:
@@ -27,9 +30,9 @@ def interrogate_coverage(root: Path) -> float | None:
     text = p.read_text(encoding="utf-8", errors="replace")
     m = re.search(r"TOTAL COVERAGE:\s*([\d.]+)%", text)
     if m:
-        return float(m.group(1))
+        return parse_float_or_none(m.group(1))
     m = re.search(r"([\d.]+)%\s*covered", text, re.I)
-    return float(m.group(1)) if m else None
+    return parse_float_or_none(m.group(1)) if m else None
 
 
 # pydoclint emits flake8-style lines: ``path:line:col: ERROR ...`` (col may be omitted in some versions).

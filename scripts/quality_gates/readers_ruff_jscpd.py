@@ -51,7 +51,7 @@ def jscpd_duplication_pct(root: Path) -> float | None:
     """Total duplication percentage from jscpd JSON report."""
     data = read_json(root / "jscpd-report.json")
     pct = _dict_get(_dict_get(_dict_get(data, "statistics"), "total"), "percentage")
-    if isinstance(pct, (int, float)):
+    if isinstance(pct, (int, float)) and not isinstance(pct, bool):
         return float(pct)
     if isinstance(pct, str):
         return parse_float_or_none(pct)

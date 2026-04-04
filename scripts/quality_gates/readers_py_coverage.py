@@ -31,7 +31,7 @@ def pylint_score(root: Path) -> float | None:
         return None
     text = score_path.read_text(encoding="utf-8", errors="replace")
     m = re.search(r"rated at ([\d.]+)/10", text)
-    return float(m.group(1)) if m else None
+    return parse_float_or_none(m.group(1)) if m else None
 
 
 def pylint_issue_count(root: Path) -> int:

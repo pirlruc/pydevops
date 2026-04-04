@@ -52,6 +52,7 @@ Use `git log --oneline` for the authoritative list.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
 - **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.5`** if missing.
 - **Ruff object format**: **`ruff_messages_in_files()`** in [`readers_ruff_jscpd.py`](../scripts/quality_gates/readers_ruff_jscpd.py) counts **`files[].messages`** only when **`messages`** is a **list**; **`null`** or non-list values contribute **0** (no **`TypeError`** / wrong **`len()`** on dicts).
+- **cloc / JSON metrics**: **`cloc_slocs_comments()`** uses **`coerce_non_negative_float()`** in [`jsonutil.py`](../scripts/quality_gates/jsonutil.py) for **`Python.code`** / **`Python.comment`** so **`null`**, non-numeric strings, lists, etc. yield **0.0** instead of raising. **`interrogate_coverage()`** and **`pylint_score()`** use **`parse_float_or_none()`** on regex captures. **Radon** CC/MI and **jscpd** **`percentage`** reject JSON **booleans** for numeric fields (Python **`bool`** is a **`int`** subclass — avoids **`true` → 1.0** misreads).
 
 ### 3. GitHub Actions / workflows
 
@@ -82,7 +83,8 @@ Use `git log --oneline` for the authoritative list.
 - **`tests/test_scorecard_summary.py`**: Stronger assertion that **aggregate score line** reflects check mean when aggregateScore conflicts.
 - **`tests/test_quality_gates.py`**: PR comment text when **`gates.json`** is invalid JSON updated to match **`pr_comment_markdown.py`** wording.
 - **`tests/test_pr_comment.py`** / **`tests/test_consolidate.py`**: Cover **`gates.json`** with **omitted `passed`** (must surface as **FAILED** in comment / consolidated report).
-- **`tests/test_readers_cloc_docs.py`**: **pydoclint** issue counting matches flake8-style violation lines only (not “0 errors” summaries).
+- **`tests/test_readers_cloc_docs.py`**: **pydoclint** issue counting matches flake8-style violation lines only (not “0 errors” summaries); **cloc** defensive parsing.
+- **`tests/test_jsonutil.py`**: **`coerce_non_negative_float`** edge cases.
 - **`tests/test_license_gate_extra.py`**: **`LICENSE_DENY_LIST`** entries must be **JSON strings**; **`null`** / numbers are skipped.
 
 ### 7. Misc scripts

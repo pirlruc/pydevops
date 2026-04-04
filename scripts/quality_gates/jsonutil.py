@@ -25,6 +25,27 @@ def parse_float_or_none(s: str) -> float | None:
         return None
 
 
+def coerce_non_negative_float(v: Any, *, default: float = 0.0) -> float:
+    """Parse JSON-derived values for size/count metrics (cloc, etc.).
+
+    ``None``, booleans, containers, and non-numeric strings yield ``default``.
+    Negative numbers yield ``default`` so malformed artifacts do not crash gate evaluation.
+    """
+    if v is None:
+        return default
+    if isinstance(v, bool):
+        return default
+    if isinstance(v, (int, float)):
+        x = float(v)
+        return x if x >= 0 else default
+    if isinstance(v, str):
+        p = parse_float_or_none(v.strip())
+        if p is None or p < 0:
+            return default
+        return p
+    return default
+
+
 def gates_rows_and_passed(data: Any) -> tuple[list[dict[str, Any]], bool]:
     """Normalize ``gates.json`` payload: list of row dicts and overall pass flag."""
     if not isinstance(data, dict):

@@ -13,7 +13,7 @@ def _as_complexity(v: Any) -> float | None:
     if not isinstance(v, dict):
         return None
     raw = v.get("complexity")
-    if isinstance(raw, (int, float)):
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
         return float(raw)
     if isinstance(raw, str):
         return parse_float_or_none(raw)
@@ -53,7 +53,7 @@ def mi_value_from_entry(v: Any) -> float | None:
     """Parse a single radon mi file entry to a float MI, or None."""
     if isinstance(v, dict) and "mi" in v:
         return parse_float_or_none(str(v["mi"]))
-    if isinstance(v, (int, float)):
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
         return float(v)
     if isinstance(v, str):
         return parse_float_or_none(v)
