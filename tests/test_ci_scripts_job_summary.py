@@ -98,18 +98,18 @@ def test_build_summary_table_analysis_headers(summary_dir: Path) -> None:
         assert _row_starting_with(md, p), f"missing row {p}"
 
 
-def test_build_summary_pylint_and_docstrings(summary_dir: Path) -> None:
+def test_build_summary_code_quality_and_docstrings(summary_dir: Path) -> None:
     _write_ci_summary_fixture(summary_dir)
     md = build_summary()
-    assert "9.80" in _row_starting_with(md, "| **Pylint**")
+    assert "9.80" in _row_starting_with(md, "| **Code Quality** |")
     assert "100.0%" in md
 
 
 def test_build_summary_radon_threshold_phrases(summary_dir: Path) -> None:
     _write_ci_summary_fixture(summary_dir)
     md = build_summary()
-    assert "<= 5.0 required" in _row_starting_with(md, "| **Cyclomatic Complexity** |")
-    assert ">= 40.0 required" in _row_starting_with(md, "| **Maintainability Index** |")
+    assert "≤5.0 required" in _row_starting_with(md, "| **Cyclomatic Complexity** |")
+    assert "≥40.0 required" in _row_starting_with(md, "| **Maintainability Index** |")
 
 
 def test_pytest_counts_with_failures() -> None:

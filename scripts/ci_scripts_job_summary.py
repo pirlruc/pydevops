@@ -96,21 +96,21 @@ def _radon_mi_raw_line(text: str) -> str:
 
 
 def _radon_cc_for_summary(text: str) -> str:
-    """Radon CC log line with threshold phrasing ``(<= 5.0 required)``."""
+    """Radon CC log line with threshold phrasing ``(≤5.0 required)``."""
     raw = _radon_cc_raw_line(text)
     if not raw:
         return "—"
-    out = re.sub(r"\(\s*limit\s*≤\s*5\.0\s*\)", "(<= 5.0 required)", raw, flags=re.IGNORECASE)
-    return re.sub(r"\blimit\s*≤\s*5\.0\b", "<= 5.0 required", out)
+    out = re.sub(r"\(\s*limit\s*≤\s*5\.0\s*\)", "(≤5.0 required)", raw, flags=re.IGNORECASE)
+    return re.sub(r"\blimit\s*≤\s*5\.0\b", "≤5.0 required", out)
 
 
 def _radon_mi_for_summary(text: str) -> str:
-    """Radon MI log line with threshold phrasing ``(>= 40.0 required)``."""
+    """Radon MI log line with threshold phrasing ``(≥40.0 required)``."""
     raw = _radon_mi_raw_line(text)
     if not raw:
         return "—"
-    out = re.sub(r"\(\s*must\s+be\s*>\s*40\.0\s*\)", "(>= 40.0 required)", raw, flags=re.IGNORECASE)
-    return re.sub(r"\bmust\s+be\s*>\s*40\.0\b", ">= 40.0 required", out)
+    out = re.sub(r"\(\s*must\s+be\s*>\s*40\.0\s*\)", "(≥40.0 required)", raw, flags=re.IGNORECASE)
+    return re.sub(r"\bmust\s+be\s*>\s*40\.0\b", "≥40.0 required", out)
 
 
 def _row_two_col(analysis: str, result: str) -> str:
@@ -196,7 +196,7 @@ def build_summary() -> str:
         "| --- | --- |",
         _row_two_col("**Tests**", _result_pytest(py)),
         _row_two_col("**Code Coverage**", _result_coverage(py)),
-        _row_two_col("**Pylint** (`scripts/`)", _result_pylint(pl)),
+        _row_two_col("**Code Quality**", _result_pylint(pl)),
         _row_two_col("**Documentation Coverage**", _result_interrogate(iq)),
         _row_two_col("**Cyclomatic Complexity**", _radon_cc_for_summary(cc)),
         _row_two_col("**Maintainability Index**", _radon_mi_for_summary(mi)),
