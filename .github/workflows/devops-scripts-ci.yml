@@ -37,8 +37,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install pinned package tooling
-        uses: ./.github/actions/install-uv
+      - name: Install pinned package tooling and Python
+        uses: ./.github/actions/setup-uv-python
+        with:
+          python-version: "3.13"
 
       - name: Restore dependency install cache
         uses: actions/cache@v4

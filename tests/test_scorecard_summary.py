@@ -57,7 +57,10 @@ def test_overall_prefers_check_mean_over_declared_aggregate() -> None:
         "checks": [{"name": "X", "score": 10, "reason": "ok"}],
     }
     md = render_markdown(data)
-    assert "10.0" in md or "| X" in md
+    aggregate_lines = [ln for ln in md.splitlines() if "Aggregate score" in ln]
+    assert aggregate_lines, "expected aggregate score line in Markdown"
+    assert "10.0" in aggregate_lines[0], "headline aggregate should be check mean (10.0), not aggregateScore"
+    assert "| X" in md and "+---" in md
 
 
 def test_main_cli_ok(monkeypatch: pytest.MonkeyPatch, tmp_path, capsys: pytest.CaptureFixture[str]) -> None:
