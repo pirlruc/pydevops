@@ -80,6 +80,8 @@ Gates are evaluated in `scripts/quality_gates` from CI artifacts. **Docstring co
 
 Other numeric thresholds (coverage %, Pylint, Radon CC/MI, duplication, issues/KLoC, vulnerabilities) are defined alongside these in the same `Thresholds` table in code.
 
+The **`Evaluate configured quality gates`** step (`python -m scripts.quality_gates`) is the **only** enforcement of aggregate vulnerability counts from **pip-audit** and **Grype** JSON artifacts; tier limits (for example Low allows up to two high-severity findings) come from that table. Do not add a separate Grype CLI `--fail-on` step in the same job, or it would override those thresholds.
+
 **Caller configuration**
 
 Use `secrets: inherit` only if you intentionally pass organization/caller secrets into the reusable workflow. The pipeline does not require custom secrets for the default same-repository PR flow.

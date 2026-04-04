@@ -208,15 +208,7 @@ jobs:
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
         run: python3 "${{ github.workspace }}/.devops/scripts/license_gate.py"
 
-      - name: Fail on high severity vulnerabilities
-        run: |
-          SBOM="$QUALITY_OUTPUT_DIR/sbom-cyclonedx.json"
-          if [ -f "$SBOM" ] && [ -s "$SBOM" ]; then
-            grype "sbom:$SBOM" --fail-on high
-          else
-            echo "No CycloneDX SBOM; skipping Grype scan."
-          fi
-
+      # Vulnerability caps (pip-audit + Grype JSON vs strictness_level) — scripts.quality_gates only
       - name: Evaluate configured quality gates
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
