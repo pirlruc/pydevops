@@ -11,6 +11,7 @@ Central reference material lives under **[`docs/`](./docs/README.md)**:
 - **[Security tooling (actionlint, zizmor, Scorecard, Harden-Runner)](./docs/security-tooling.md)**
 - **[Improvements & suggestions](./docs/improvements.md)**
 - **[Dependency updates & Python EOL](./docs/dependency-management.md)**
+- **[AI / maintainer handoff (CI & gates context)](./docs/ai-agent-handoff.md)**
 
 ## Example app integration
 
