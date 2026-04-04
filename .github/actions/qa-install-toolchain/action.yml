@@ -46,6 +46,7 @@ runs:
         tar -xzf "$tmp/syft.tgz" -C "$HOME/.local/bin" syft
         curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VER}/grype_${GRYPE_VER}_linux_amd64.tar.gz" -o "$tmp/grype.tgz"
         tar -xzf "$tmp/grype.tgz" -C "$HOME/.local/bin" grype
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
     - id: uv_version
       name: Read pinned installer version file

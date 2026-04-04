@@ -35,8 +35,6 @@ def gate_cyclomatic(
 ) -> tuple[RowList, list[str]]:
     """Evaluate max cyclomatic complexity (High: max <= 5, strictly below 6)."""
     req = f"<= {t.cyclomatic_max:.0f}"
-    if t.cyclomatic_max <= 5:
-        req += ", target <= 4"
     label = _cyclomatic_gate_label(strictness_norm)
     if cc is None:
         if strictness_norm == "High":
