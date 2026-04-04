@@ -6,10 +6,32 @@ from pathlib import Path
 from typing import Any
 
 from scripts.quality_gates.config import Thresholds
+from scripts.quality_gates.readers_bandit import bandit_finding_count
 from scripts.quality_gates.readers_grype_gitleaks import gitleaks_findings, grype_severities
 from scripts.quality_gates.readers_pip import pip_audit_vulns
 
 RowList = list[dict[str, Any]]
+
+
+def gate_bandit(root: Path, t: Thresholds) -> tuple[RowList, list[str]]:
+    """Evaluate Bandit result count against tier-specific caps."""
+    n = bandit_finding_count(root)
+    if n is None:
+        row = {
+            "gate": "Bandit (SAST)",
+            "actual": "missing or invalid bandit.json",
+            "required": "object with results[]",
+            "ok": False,
+        }
+        return [row], ["bandit report"]
+    ok = n <= t.bandit_findings_max
+    row = {
+        "gate": "Bandit (SAST) findings",
+        "actual": str(n),
+        "required": f"<= {t.bandit_findings_max}",
+        "ok": ok,
+    }
+    return [row], [] if ok else ["bandit findings"]
 
 
 def gate_vulnerabilities(

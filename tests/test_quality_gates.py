@@ -67,6 +67,37 @@ def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
     assert passed
 
 
+def test_bandit_findings_fail_high(tmp_out: Path) -> None:
+    """High tier allows zero Bandit findings; any result fails."""
+    (tmp_out / "bandit.json").write_text(
+        json.dumps({"results": [{"test_id": "B101"}]}),
+        encoding="utf-8",
+    )
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any(r.get("gate") == "Bandit (SAST) findings" for r in rows)
+
+
+def test_bandit_findings_within_medium_cap_passes(tmp_out: Path) -> None:
+    """Medium tier allows up to three Bandit findings."""
+    (tmp_out / "bandit.json").write_text(
+        json.dumps({"results": [{"i": 1}, {"i": 2}, {"i": 3}]}),
+        encoding="utf-8",
+    )
+    passed, _ = qg.evaluate(tmp_out, "Medium")
+    assert passed
+
+
+def test_bandit_findings_exceed_medium_cap_fails(tmp_out: Path) -> None:
+    """More than three Bandit findings fails Medium."""
+    (tmp_out / "bandit.json").write_text(
+        json.dumps({"results": [{"i": i} for i in range(4)]}),
+        encoding="utf-8",
+    )
+    passed, _ = qg.evaluate(tmp_out, "Medium")
+    assert not passed
+
+
 def test_high_fails_missing_pytest_exit(tmp_out: Path) -> None:
     """High tier requires pytest_exit_code.txt from the test phase."""
     (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")

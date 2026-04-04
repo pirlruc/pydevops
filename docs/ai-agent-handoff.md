@@ -30,7 +30,7 @@ Use `git log --oneline` for the authoritative list.
 ### 1. Quality gates (`scripts/quality_gates/`)
 
 - Central evaluation: **`python -m scripts.quality_gates`** (reads `QUALITY_OUTPUT_DIR`, `STRICTNESS_LEVEL`), writes **`gates.json`**.
-- **Strictness tiers** (`Low` / `Medium` / `High`) map to **`Thresholds`** in [`scripts/quality_gates/config.py`](../scripts/quality_gates/config.py) (coverage, Pylint, Radon CC/MI, duplication, vulns, docstrings, etc.).
+- **Strictness tiers** (`Low` / `Medium` / `High`) map to **`Thresholds`** in [`scripts/quality_gates/config.py`](../scripts/quality_gates/config.py) (coverage, Pylint, Radon CC/MI, duplication, vulns, **Bandit finding counts**, docstrings, etc.).
 - **High** tier additionally requires non-empty artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if tools skipped).
 - Parsers were **hardened** to fail closed on malformed JSON (coverage, radon, pip-audit, grype, cloc, gates.json `passed` flag, SARIF tool/driver shapes in `scorecard_summary.py`, etc.).
 - **Cyclomatic complexity / maintainability** targets for *this repo’s* `scripts/quality_gates` were brought in line with CI (Radon CC ≤ 5, MI floor, Interrogate docstring coverage).
@@ -73,7 +73,9 @@ Use `git log --oneline` for the authoritative list.
 ### 7. Misc scripts
 
 - **`scripts/scorecard_summary.py`**: SARIF **`tool` / `tool.driver`** validation; consolidated **`_truncate`** (removed duplicate `_truncate_cell`).
-- **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file exists.
+- **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file exists. **GFM gate tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py) (`sanitize_markdown_table_cell`: newlines/tabs → spaces, `|` → U+00A6 broken bar, truncation) so tool messages cannot break columns.
+- **`scripts/consolidate_artifacts.py`**: Uses the same cell sanitization for the consolidated **quality_report.md** gate table.
+- **Bandit gate**: [`scripts/quality_gates/gates_security.py`](../scripts/quality_gates/gates_security.py) `gate_bandit` uses [`readers_bandit.py`](../scripts/quality_gates/readers_bandit.py) to count `bandit.json` `results` vs **`bandit_findings_max`** per tier (High: 0; Medium: 3; Low: 15). Wired in [`evaluation.py`](../scripts/quality_gates/evaluation.py) `collect_gate_results` so SAST findings affect **`passed`** like other gates.
 
 ---
 
@@ -96,6 +98,7 @@ Use `git log --oneline` for the authoritative list.
 - **Focused diffs** — avoid unrelated refactors when fixing CI/gates.
 - **Fail-closed** for High-tier required artifacts and security parsers where applicable.
 - **Single source of truth** for vuln counts: **`gate_vulnerabilities`**, not an extra Grype `--fail-on` in the workflow.
+- **Bandit policy** is tiered via **`bandit_findings_max`** only (count of `results[]`); adjust thresholds in **`config.py`** if product policy changes.
 - **Conventional commits** have been used in this line (e.g. `fix(ci):`, `fix(quality-gates):`, `docs(workflows):`).
 
 ---

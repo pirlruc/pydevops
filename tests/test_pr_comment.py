@@ -60,6 +60,33 @@ def test_pr_comment_missing_passed_defaults_failed(
     assert "FAILED" in capsys.readouterr().out
 
 
+def test_pr_comment_table_cells_sanitize_pipe_and_newlines(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Pipe and newline in cell values must not break GFM table columns."""
+    (tmp_path / "gates.json").write_text(
+        json.dumps(
+            {
+                "passed": True,
+                "rows": [
+                    {
+                        "gate": "a|b",
+                        "actual": "c\nd",
+                        "required": "ok",
+                        "ok": True,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(tmp_path))
+    assert pr_main() == 0
+    out = capsys.readouterr().out
+    assert "\u00a6" in out
+    assert "c d" in out
+
+
 def test_pr_comment_coerces_malformed_rows(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -9,6 +9,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from scripts.mdutil import sanitize_markdown_table_cell
 from scripts.quality_gates.jsonutil import gates_rows_and_passed
 
 
@@ -27,9 +28,9 @@ def _md_table(rows: list[dict]) -> str:
             "| "
             + " | ".join(
                 [
-                    str(r.get("gate", "")),
-                    str(r.get("actual", "")),
-                    str(r.get("required", "")),
+                    sanitize_markdown_table_cell(r.get("gate", "")),
+                    sanitize_markdown_table_cell(r.get("actual", "")),
+                    sanitize_markdown_table_cell(r.get("required", "")),
                     status,
                 ]
             )

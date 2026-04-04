@@ -20,6 +20,7 @@ class Thresholds:  # pylint: disable=too-many-instance-attributes
     docstring_issues_per_kloc_cloc_max: float
     vuln_high_max: int
     vuln_medium_max: int
+    bandit_findings_max: int
 
 
 STRICTNESS: dict[str, Thresholds] = {
@@ -35,6 +36,7 @@ STRICTNESS: dict[str, Thresholds] = {
         docstring_issues_per_kloc_cloc_max=8.0,
         vuln_high_max=2,
         vuln_medium_max=25,
+        bandit_findings_max=15,
     ),
     "Medium": Thresholds(
         coverage_line_min=85.0,
@@ -48,6 +50,7 @@ STRICTNESS: dict[str, Thresholds] = {
         docstring_issues_per_kloc_cloc_max=5.0,
         vuln_high_max=0,
         vuln_medium_max=10,
+        bandit_findings_max=3,
     ),
     "High": Thresholds(
         coverage_line_min=95.0,
@@ -61,6 +64,7 @@ STRICTNESS: dict[str, Thresholds] = {
         docstring_issues_per_kloc_cloc_max=2.0,
         vuln_high_max=0,
         vuln_medium_max=5,
+        bandit_findings_max=0,
     ),
 }
 
