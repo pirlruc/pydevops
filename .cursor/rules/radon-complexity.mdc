@@ -15,4 +15,6 @@ Malformed JSON often uses **booleans** where numbers are expected — **`bool`**
 
 Reference: thresholds in **`scripts/quality_gates/config.py`** and CI Radon checks for this repo’s **`scripts/quality_gates`** package.
 
+For **pytest**, **line coverage (≥ 95%)**, and **pylint (≥ 9.5 on `scripts/`)**, see **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)**.
+
 For **docstring coverage** on **`scripts/`** (separate from Radon), see **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)**.

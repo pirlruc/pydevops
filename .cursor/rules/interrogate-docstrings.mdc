@@ -15,4 +15,6 @@ When you **add or edit** **`scripts/**/*.py`**, before finishing:
 
 **Always-applied** context: **[`handoff-and-commits.mdc`](handoff-and-commits.mdc)** points here so sessions that touch **`scripts/`** do not skip the gate.
 
+See also **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)** for **pytest** (all green), **line coverage ≥ 95%**, and **pylint ≥ 9.5** on **`scripts/`**.
+
 See also **[`radon-complexity.mdc`](radon-complexity.mdc)** for cyclomatic complexity on **`scripts/`** and **`tests/`**.

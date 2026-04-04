@@ -12,11 +12,13 @@ from scripts.ci_scripts_job_summary import (
     build_summary,
     _interrogate_actual_pct,
     _log_tail_fence,
+    _passed_failed_from_summary_line,
     _pylint_rating_value,
     _pytest_coverage_pct,
-    _pytest_tests_line,
-    _radon_cc_summary,
-    _radon_mi_summary,
+    _pytest_counts_phrase,
+    _pytest_successful_failed,
+    _radon_cc_for_summary,
+    _radon_mi_for_summary,
     _read,
 )
 
@@ -51,23 +53,74 @@ def _write_ci_summary_fixture(d: Path) -> None:
     )
 
 
-def test_build_summary_pytest_coverage(summary_dir: Path) -> None:
+def _row_starting_with(md: str, prefix: str) -> str:
+    for line in md.splitlines():
+        if line.strip().startswith(prefix):
+            return line
+    return ""
+
+
+def test_build_summary_tests_row(summary_dir: Path) -> None:
+    _write_ci_summary_fixture(summary_dir)
+    md = build_summary()
+    row = _row_starting_with(md, "| **Tests** |")
+    assert "**145** successful" in row and "**0** failed" in row
+    assert "0.41s" not in row
+
+
+def test_build_summary_coverage_row(summary_dir: Path) -> None:
+    _write_ci_summary_fixture(summary_dir)
+    md = build_summary()
+    row = _row_starting_with(md, "| **Code Coverage** |")
+    assert "**95%** line coverage" in row
+    assert "pytest-cov TOTAL" not in row
+    assert "≥95% required" in row
+
+
+def test_build_summary_has_header(summary_dir: Path) -> None:
     _write_ci_summary_fixture(summary_dir)
     md = build_summary()
     assert "## Scripts quality (CI)" in md
-    assert "145 passed" in md
-    assert "**95%** line coverage" in md
-    assert "≥95% required" in md
+    assert "| Analysis | Result |" in md
 
 
-def test_build_summary_pylint_interrogate_radon(summary_dir: Path) -> None:
+def test_build_summary_table_analysis_headers(summary_dir: Path) -> None:
     _write_ci_summary_fixture(summary_dir)
     md = build_summary()
-    assert "9.80" in md
+    prefixes = (
+        "| **Tests** |",
+        "| **Code Coverage** |",
+        "| **Documentation Coverage** |",
+        "| **Cyclomatic Complexity** |",
+        "| **Maintainability Index** |",
+    )
+    for p in prefixes:
+        assert _row_starting_with(md, p), f"missing row {p}"
+
+
+def test_build_summary_pylint_and_docstrings(summary_dir: Path) -> None:
+    _write_ci_summary_fixture(summary_dir)
+    md = build_summary()
+    assert "9.80" in _row_starting_with(md, "| **Pylint**")
     assert "100.0%" in md
-    assert "Overall max CC" in md
-    assert "Minimum MI" in md
-    assert "| Tool | Result |" in md
+
+
+def test_build_summary_radon_threshold_phrases(summary_dir: Path) -> None:
+    _write_ci_summary_fixture(summary_dir)
+    md = build_summary()
+    assert "<= 5.0 required" in _row_starting_with(md, "| **Cyclomatic Complexity** |")
+    assert ">= 40.0 required" in _row_starting_with(md, "| **Maintainability Index** |")
+
+
+def test_pytest_counts_with_failures() -> None:
+    log = "2 failed, 143 passed in 1.23s\n"
+    assert _pytest_counts_phrase(log) == "**143** successful, **2** failed"
+    assert "1.23s" not in _pytest_counts_phrase(log)
+
+
+def test_passed_failed_from_summary_line() -> None:
+    assert _passed_failed_from_summary_line("2 failed, 143 passed in 1s") == (143, 2)
+    assert _passed_failed_from_summary_line("145 passed in 0.41s") == (145, 0)
 
 
 def test_build_summary_empty_logs_use_placeholders(summary_dir: Path) -> None:
@@ -83,8 +136,12 @@ def test_read_missing_file_is_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert _read("nope.txt") == ""
 
 
-def test_pytest_tests_line_empty() -> None:
-    assert _pytest_tests_line("") == "—"
+def test_pytest_counts_phrase_empty() -> None:
+    assert _pytest_counts_phrase("") == "—"
+
+
+def test_pytest_successful_failed_empty() -> None:
+    assert _pytest_successful_failed("") is None
 
 
 def test_pytest_coverage_pct_missing() -> None:
@@ -99,12 +156,12 @@ def test_interrogate_actual_pct_missing() -> None:
     assert _interrogate_actual_pct("no percent here") == ""
 
 
-def test_radon_cc_summary_missing() -> None:
-    assert _radon_cc_summary("no cc line") == "—"
+def test_radon_cc_for_summary_missing() -> None:
+    assert _radon_cc_for_summary("no cc line") == "—"
 
 
-def test_radon_mi_summary_missing() -> None:
-    assert _radon_mi_summary("no mi line") == "—"
+def test_radon_mi_for_summary_missing() -> None:
+    assert _radon_mi_for_summary("no mi line") == "—"
 
 
 def test_log_tail_fence_empty() -> None:

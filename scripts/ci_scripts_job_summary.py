@@ -16,13 +16,41 @@ def _read(name: str) -> str:
     return p.read_text(encoding="utf-8", errors="replace")
 
 
-def _pytest_tests_line(text: str) -> str:
-    """Extract the last pytest line that reports ``N passed``."""
+def _pytest_int_after(line: str, pattern: str) -> int:
+    """First capturing group from ``pattern`` on ``line``, parsed as int, else ``0``."""
+    m = re.search(pattern, line)
+    return int(m.group(1)) if m else 0
+
+
+def _passed_failed_from_summary_line(line: str) -> tuple[int, int] | None:
+    """Parse one pytest summary line into ``(passed, failed)``; ``failed`` includes errors."""
+    line = line.strip()
+    if not re.search(r"\b\d+\s+(passed|failed|error)", line):
+        return None
+    passed_n = _pytest_int_after(line, r"(\d+)\s+passed")
+    failed_n = _pytest_int_after(line, r"(\d+)\s+failed")
+    err_n = _pytest_int_after(line, r"(\d+)\s+errors?")
+    if passed_n == 0 and failed_n == 0 and err_n == 0:
+        return None
+    return passed_n, failed_n + err_n
+
+
+def _pytest_successful_failed(text: str) -> tuple[int, int] | None:
+    """From pytest's last summary line, return ``(passed_count, failed_count)``."""
     for line in reversed(text.strip().splitlines()):
-        line = line.strip()
-        if re.search(r"\d+\s+passed", line):
-            return line
-    return "—"
+        got = _passed_failed_from_summary_line(line)
+        if got is not None:
+            return got
+    return None
+
+
+def _pytest_counts_phrase(text: str) -> str:
+    """``**N** successful, **M** failed`` with no duration (for the summary table)."""
+    got = _pytest_successful_failed(text)
+    if got is None:
+        return "—"
+    passed, failed = got
+    return f"**{passed}** successful, **{failed}** failed"
 
 
 def _pytest_coverage_pct(text: str) -> str:
@@ -51,39 +79,57 @@ def _interrogate_actual_pct(text: str) -> str:
     return ""
 
 
-def _radon_cc_summary(text: str) -> str:
-    """Return the line containing ``Overall max CC``, or ``—``."""
+def _radon_cc_raw_line(text: str) -> str:
+    """Return the line containing ``Overall max CC``, or empty string."""
     for line in text.splitlines():
         if "Overall max CC" in line:
             return line.strip()
-    return "—"
+    return ""
 
 
-def _radon_mi_summary(text: str) -> str:
-    """Return the line containing ``Minimum MI``, or ``—``."""
+def _radon_mi_raw_line(text: str) -> str:
+    """Return the line containing ``Minimum MI``, or empty string."""
     for line in text.splitlines():
         if "Minimum MI" in line:
             return line.strip()
-    return "—"
+    return ""
 
 
-def _row_two_col(tool: str, result: str) -> str:
+def _radon_cc_for_summary(text: str) -> str:
+    """Radon CC log line with threshold phrasing ``(<= 5.0 required)``."""
+    raw = _radon_cc_raw_line(text)
+    if not raw:
+        return "—"
+    out = re.sub(r"\(\s*limit\s*≤\s*5\.0\s*\)", "(<= 5.0 required)", raw, flags=re.IGNORECASE)
+    return re.sub(r"\blimit\s*≤\s*5\.0\b", "<= 5.0 required", out)
+
+
+def _radon_mi_for_summary(text: str) -> str:
+    """Radon MI log line with threshold phrasing ``(>= 40.0 required)``."""
+    raw = _radon_mi_raw_line(text)
+    if not raw:
+        return "—"
+    out = re.sub(r"\(\s*must\s+be\s*>\s*40\.0\s*\)", "(>= 40.0 required)", raw, flags=re.IGNORECASE)
+    return re.sub(r"\bmust\s+be\s*>\s*40\.0\b", ">= 40.0 required", out)
+
+
+def _row_two_col(analysis: str, result: str) -> str:
     """One Markdown table row with pipe escaping in the result cell."""
     esc = result.replace("|", "\\|")
-    return f"| {tool} | {esc} |"
+    return f"| {analysis} | {esc} |"
 
 
 def _result_pytest(py: str) -> str:
-    """Pytest counts plus pass requirement (same style as Radon threshold lines)."""
-    line = _pytest_tests_line(py)
+    """Successful / failed counts only, plus pass requirement."""
+    phrase = _pytest_counts_phrase(py)
     tail = " (all tests in `tests/` must pass)"
-    return line + tail if line != "—" else "—" + tail
+    return phrase + tail if phrase != "—" else "—" + tail
 
 
 def _result_coverage(py: str) -> str:
-    """Coverage value plus ≥95% threshold."""
+    """Line coverage percentage and ≥95% threshold."""
     pct = _pytest_coverage_pct(py)
-    core = f"**{pct}%** line coverage (pytest-cov TOTAL)" if pct else "—"
+    core = f"**{pct}%** line coverage" if pct else "—"
     return f"{core} (≥95% required)"
 
 
@@ -146,14 +192,14 @@ def build_summary() -> str:
     body: list[str] = [
         "## Scripts quality (CI)",
         "",
-        "| Tool | Result |",
+        "| Analysis | Result |",
         "| --- | --- |",
-        _row_two_col("**pytest**", _result_pytest(py)),
-        _row_two_col("**Coverage** (`pytest-cov`)", _result_coverage(py)),
-        _row_two_col("**pylint** (`scripts/`)", _result_pylint(pl)),
-        _row_two_col("**interrogate** (`scripts/`)", _result_interrogate(iq)),
-        _row_two_col("**Radon CC**", _radon_cc_summary(cc)),
-        _row_two_col("**Radon MI**", _radon_mi_summary(mi)),
+        _row_two_col("**Tests**", _result_pytest(py)),
+        _row_two_col("**Code Coverage**", _result_coverage(py)),
+        _row_two_col("**Pylint** (`scripts/`)", _result_pylint(pl)),
+        _row_two_col("**Documentation Coverage**", _result_interrogate(iq)),
+        _row_two_col("**Cyclomatic Complexity**", _radon_cc_for_summary(cc)),
+        _row_two_col("**Maintainability Index**", _radon_mi_for_summary(mi)),
         "",
         *_raw_details_sections(py, pl, iq, cc, mi),
     ]
