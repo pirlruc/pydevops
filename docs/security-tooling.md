@@ -43,7 +43,7 @@ Run from the repository root and pass `-c .github/config/zizmor.yml` (or set `ZI
 
 **What it does:** Scores repository security health (branch protection, dependencies, CI, etc.). CI writes **SARIF** (`results.sarif`) and **publishes** it to GitHub code scanning. The same SARIF file is parsed by `scripts/scorecard_summary.py` to print a Markdown table and verdict in the log and the GitHub **job summary** (Scorecard encodes each check as `score is N: …` in SARIF result messages).
 
-**Where it runs:** **`devops-ci.yml`** job **`openssf-scorecard`** and **`devops-scheduled.yml`** job **`scheduled-openssf-scorecard`** using `ossf/scorecard-action@v2.4.3`.
+**Where it runs:** **`devops-ci.yml`** job **`ci-supply-chain`** (with dependency review on PRs) and **`devops-scheduled.yml`** job **`scheduled-openssf-scorecard`**, using `ossf/scorecard-action@v2.4.3`.
 
 **Requirements:** The job uses `id-token: write` and `security-events: write` for the action; runs are skipped on forks.
 

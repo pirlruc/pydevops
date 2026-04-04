@@ -30,11 +30,13 @@ After merging a Dependabot PR that changes a manifest consumed by YAML, workflow
 
 ## Node.js runtime for JavaScript actions
 
-Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node 20 runtime run on Node 24 on the runner (see [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). **`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes; the env remains a safety net for **`actions/dependency-review-action`** until it updates.
+Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node 20 runtime run on Node 24 on the runner (see [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). **`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes.
+
+The **`ci-supply-chain`** job (Scorecard + dependency review) sets **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "false"`** so **`actions/dependency-review-action`** (still **`runs.using: node20`**) runs on its declared runtime without “forced to Node 24” deprecation warnings. Other jobs keep the workflow default.
 
 ## Dependency review vs OpenSSF Scorecard (repository)
 
-**[Dependency review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review)** can show **per-dependency** OpenSSF Scorecard scores for packages added in a PR. That is separate from the **[OpenSSF Scorecard](https://scorecard.dev/)** job that scores **your repository’s** practices (branch protection, workflows, etc.). This repo disables **`show-openssf-scorecard`** on **`dependency-review-action`** so low scores on small transitive PyPI tools do not fail the PR; supply-chain posture is still covered by vuln/license checks and the dedicated Scorecard job.
+**[Dependency review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review)** can show **per-dependency** OpenSSF Scorecard scores for packages added in a PR. That is separate from the **[OpenSSF Scorecard](https://scorecard.dev/)** job that scores **your repository’s** practices (branch protection, workflows, etc.). This repo disables **`show-openssf-scorecard`** on **`dependency-review-action`** so low scores on small transitive PyPI tools do not fail the PR; supply-chain posture is still covered by vuln/license checks and the **OpenSSF Scorecard** step in **`ci-supply-chain`** (and scheduled Scorecard).
 
 ## Astral uv CLI version (single source)
 
@@ -63,4 +65,4 @@ Bump **only** `uv-version.txt` (and merge) to roll the CLI forward. Dependabot d
 
 ## Dependency review
 
-Pull requests that change lockfiles or manifests may run the **dependency review** job in [`.github/workflows/devops-ci.yml`](../.github/workflows/devops-ci.yml).
+Pull requests run **dependency review** inside the **`ci-supply-chain`** job in [`.github/workflows/devops-ci.yml`](../.github/workflows/devops-ci.yml) (with OpenSSF Scorecard on the same job when workflow files warrant it). Inline **`with:`** on **`dependency-review-action`** sets **`retry-on-snapshot-warnings`** for transient “no snapshot for head SHA” cases. Use **`allow-dependencies-licenses`** (comma-separated PURLs) in the workflow if you need to exempt specific packages from license checks when the graph lacks SPDX metadata.

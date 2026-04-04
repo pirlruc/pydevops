@@ -1,5 +1,7 @@
-# Consolidated CI for this repository: path-filtered jobs so one workflow run covers
-# scripts/tests, workflow linting, dependency review (PRs), and OpenSSF Scorecard.
+# Consolidated CI: path filter → three lanes (separate jobs):
+#   1) Workflow static analysis — actionlint + zizmor (same job: one checkout/setup, same scope).
+#   2) Python scripts quality — pytest, pylint, interrogate, Radon CC/MI (one job: one uv sync).
+#   3) Supply chain — OpenSSF Scorecard (workflows / dispatch) + dependency review (PRs only).
 
 name: DevOps CI
 
@@ -130,8 +132,16 @@ jobs:
           find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort | sed 's/^/  /'
           echo "actionlint — scanning composite actions under .github/actions/**/action.y*ml"
           find .github/actions -type f \( -name 'action.yml' -o -name 'action.yaml' \) 2>/dev/null | sort | sed 's/^/  /' || true
+          echo "::add-matcher::${GITHUB_WORKSPACE}/.github/matchers/actionlint.json"
+          set +e
           actionlint -color
-          echo "actionlint: OK (no findings)."
+          al=$?
+          set -e
+          echo "::remove-matcher owner=actionlint::"
+          if [ "$al" -eq 0 ]; then
+            echo "actionlint: OK (no findings)."
+          fi
+          exit "$al"
 
       - name: Install workflow scanner from pins
         run: |
@@ -153,7 +163,7 @@ jobs:
             echo "No zizmor inputs found; skipping."
             exit 0
           fi
-          zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}"
+          zizmor -c .github/config/zizmor.yml --format github "${inputs[@]}"
 
       - name: Gate — workflow lint job
         if: always()
@@ -162,23 +172,37 @@ jobs:
           ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
         run: |
           set -euo pipefail
-          if [ "${ACTIONLINT_OUTCOME}" != "success" ] || [ "${ZIZMOR_OUTCOME}" != "success" ]; then
-            echo "::error::actionlint and/or zizmor did not succeed (see prior steps)."
+          failed=()
+          if [ "${ACTIONLINT_OUTCOME}" != "success" ]; then
+            failed+=("actionlint")
+          fi
+          if [ "${ZIZMOR_OUTCOME}" != "success" ]; then
+            failed+=("zizmor")
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Workflow lint failed: ${failed[*]} (see annotations and prior steps)."
             exit 1
           fi
           echo "Workflow lint job passed."
 
-  openssf-scorecard:
-    name: "CI — OpenSSF Scorecard"
+  ci-supply-chain:
+    name: "CI — supply chain (Scorecard & dependency review)"
     needs: changes
     if: >
-      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true') &&
-      github.event.repository.fork == false &&
-      (github.event_name != 'pull_request' ||
-       github.event.pull_request.head.repo.full_name == github.repository)
+      github.event_name == 'pull_request' ||
+      (
+        (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true') &&
+        github.event.repository.fork == false &&
+        (github.event_name != 'pull_request' ||
+         github.event.pull_request.head.repo.full_name == github.repository)
+      )
     runs-on: ubuntu-latest
+    env:
+      # dependency-review-action still targets Node 20; avoid Node 24 force for this job (see docs/dependency-management.md).
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "false"
     permissions:
       contents: read
+      pull-requests: write
       security-events: write
       id-token: write
     steps:
@@ -193,7 +217,12 @@ jobs:
           persist-credentials: false
 
       - id: scorecard
-        name: Run repository security scorecard
+        name: Run OpenSSF Scorecard (repository)
+        if: >
+          (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true') &&
+          github.event.repository.fork == false &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
         continue-on-error: true
         uses: ossf/scorecard-action@v2.4.3
         with:
@@ -201,67 +230,46 @@ jobs:
           results_format: sarif
           publish_results: true
 
-      - name: Summarize scorecard for job log
+      - name: Summarize Scorecard for job log
+        if: always() && steps.scorecard.outcome != 'skipped'
         continue-on-error: true
         run: |
           set -euo pipefail
           python3 scripts/scorecard_summary.py --repo "github.com/${{ github.repository }}" results.sarif \
             | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
-      - name: Gate — Scorecard job
-        if: always()
-        env:
-          SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${SCORECARD_OUTCOME}" != "success" ]; then
-            echo "::error::OpenSSF Scorecard step did not succeed."
-            exit 1
-          fi
-          echo "Scorecard job passed."
-
-  dependency-review:
-    name: "CI — dependency review"
-    needs: changes
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
-        with:
-          egress-policy: audit
-
-      - name: Check out pull request head
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
       - id: review
-        name: Compare dependency changes versus base
+        name: Dependency review (pull request)
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/dependency-review-action@v4.9.0
         with:
-          # Per-dependency OpenSSF scores (e.g. small PyPI helpers) are informational; repo-level
-          # Scorecard runs in openssf-scorecard. Disabling avoids false "review failed" on low scores.
           show-openssf-scorecard: false
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 180
 
-      - name: Gate — dependency review job
+      - name: Gate — supply chain job
         if: always()
         env:
+          SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
         run: |
           set -euo pipefail
-          if [ "${REVIEW_OUTCOME}" != "success" ]; then
-            echo "::error::dependency-review-action did not succeed."
+          failed=()
+          if [ "${SCORECARD_OUTCOME}" = "failure" ]; then
+            failed+=("OpenSSF Scorecard")
+          fi
+          if [ "${REVIEW_OUTCOME}" = "failure" ]; then
+            failed+=("dependency review")
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Supply chain checks failed: ${failed[*]} (see prior steps)."
             exit 1
           fi
-          echo "Dependency review job passed."
+          echo "Supply chain job passed."
 
-  ci-scripts-pytest:
-    name: "CI — scripts (pytest)"
+  ci-scripts:
+    name: "CI — scripts (pytest, pylint, interrogate, Radon)"
     needs: changes
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
     runs-on: ubuntu-latest
@@ -282,6 +290,7 @@ jobs:
         uses: ./.github/actions/setup-uv-python
         with:
           python-version: "3.13"
+          uv-cache-suffix: ${{ github.job }}
 
       - name: Restore dependency install cache
         uses: actions/cache@v5
@@ -306,153 +315,15 @@ jobs:
         continue-on-error: true
         run: uv run pytest
 
-      - name: Gate — pytest job
-        if: always()
-        env:
-          PYTEST_OUTCOME: ${{ steps.pytest.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${PYTEST_OUTCOME}" != "success" ]; then
-            echo "::error::pytest did not succeed."
-            exit 1
-          fi
-          echo "Pytest job passed."
-
-  ci-scripts-pylint:
-    name: "CI — scripts (pylint)"
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Install pinned package tooling and Python
-        uses: ./.github/actions/setup-uv-python
-        with:
-          python-version: "3.13"
-
-      - name: Restore dependency install cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: Sync dependencies from lockfile
-        run: uv sync
-
       - id: pylint
         name: Lint scripts directory
         continue-on-error: true
         run: uv run pylint scripts
 
-      - name: Gate — pylint job
-        if: always()
-        env:
-          PYLINT_OUTCOME: ${{ steps.pylint.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${PYLINT_OUTCOME}" != "success" ]; then
-            echo "::error::pylint did not succeed."
-            exit 1
-          fi
-          echo "Pylint job passed."
-
-  ci-scripts-docstrings:
-    name: "CI — scripts (interrogate)"
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Install pinned package tooling and Python
-        uses: ./.github/actions/setup-uv-python
-        with:
-          python-version: "3.13"
-
-      - name: Restore dependency install cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: Sync dependencies from lockfile
-        run: uv sync
-
       - id: docstrings
         name: Check docstring coverage on scripts
         continue-on-error: true
         run: uv run interrogate scripts -vv --fail-under 95
-
-      - name: Gate — interrogate job
-        if: always()
-        env:
-          DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${DOCSTRINGS_OUTCOME}" != "success" ]; then
-            echo "::error::interrogate did not succeed."
-            exit 1
-          fi
-          echo "Interrogate job passed."
-
-  ci-scripts-radon-cc:
-    name: "CI — scripts (Radon CC)"
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Install pinned package tooling and Python
-        uses: ./.github/actions/setup-uv-python
-        with:
-          python-version: "3.13"
-
-      - name: Restore dependency install cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: Sync dependencies from lockfile
-        run: uv sync
 
       - id: radon_cc
         name: Enforce complexity limits on gates
@@ -504,52 +375,6 @@ jobs:
           print("PASS: cyclomatic complexity within limit.")
           PY
 
-      - name: Gate — Radon CC job
-        if: always()
-        env:
-          RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${RADON_CC_OUTCOME}" != "success" ]; then
-            echo "::error::Radon CC check did not succeed."
-            exit 1
-          fi
-          echo "Radon CC job passed."
-
-  ci-scripts-radon-mi:
-    name: "CI — scripts (Radon MI)"
-    needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
-        with:
-          egress-policy: audit
-
-      - name: Check out repository
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Install pinned package tooling and Python
-        uses: ./.github/actions/setup-uv-python
-        with:
-          python-version: "3.13"
-
-      - name: Restore dependency install cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-
-      - name: Sync dependencies from lockfile
-        run: uv sync
-
       - id: radon_mi
         name: Enforce maintainability floor on gates
         continue-on-error: true
@@ -595,14 +420,24 @@ jobs:
           print("PASS: maintainability index above floor for all files.")
           PY
 
-      - name: Gate — Radon MI job
+      - name: Gate — scripts job
         if: always()
         env:
+          PYTEST_OUTCOME: ${{ steps.pytest.outcome }}
+          PYLINT_OUTCOME: ${{ steps.pylint.outcome }}
+          DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
+          RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
           RADON_MI_OUTCOME: ${{ steps.radon_mi.outcome }}
         run: |
           set -euo pipefail
-          if [ "${RADON_MI_OUTCOME}" != "success" ]; then
-            echo "::error::Radon MI check did not succeed."
+          failed=()
+          if [ "${PYTEST_OUTCOME}" != "success" ]; then failed+=("pytest"); fi
+          if [ "${PYLINT_OUTCOME}" != "success" ]; then failed+=("pylint"); fi
+          if [ "${DOCSTRINGS_OUTCOME}" != "success" ]; then failed+=("interrogate"); fi
+          if [ "${RADON_CC_OUTCOME}" != "success" ]; then failed+=("Radon CC"); fi
+          if [ "${RADON_MI_OUTCOME}" != "success" ]; then failed+=("Radon MI"); fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Scripts quality failed: ${failed[*]} (see prior steps)."
             exit 1
           fi
-          echo "Radon MI job passed."
+          echo "Scripts job passed."

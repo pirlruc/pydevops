@@ -131,7 +131,7 @@ The following workflows are **not** meant as the primary `uses:` target for appl
 
 ### `devops-ci.yml`
 
-**Purpose:** Single entry workflow for most pushes/PRs on this repo: **path-filtered jobs** (via `dorny/paths-filter`) for **actionlint** + **zizmor** (actionlint uses **`continue-on-error: true`** so zizmor still runs; each job ends with a **gate** step), **OpenSSF Scorecard**, **dependency review** (pull requests only), and **five parallel script jobs** (`pytest`, `pylint`, `interrogate`, Radon CC, Radon MI) each with its own **gate** step.
+**Purpose:** Single entry workflow for most pushes/PRs on this repo: **path-filtered jobs** (via `dorny/paths-filter`) for **workflow lint** (**actionlint** + **zizmor** in one job; actionlint uses **`continue-on-error: true`** so zizmor still runs; **gate** lists failing tools), **supply chain** (**OpenSSF Scorecard** when workflow paths apply + **dependency review** on pull requests; shared **gate**), and **one scripts job** (**pytest**, **pylint**, **interrogate**, Radon CC, Radon MI after a single **`uv sync`**; **gate** lists failing tools).
 
 **Triggers:** Pull request and push to `main`/`master` with a **union** of paths (scripts, tests, lockfiles, `.github/`, `examples/`, `docs/`, etc.); **`workflow_dispatch`** runs all path groups.
 

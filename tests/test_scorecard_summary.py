@@ -21,6 +21,7 @@ def test_render_markdown_table_and_no_action_verdict() -> None:
     }
     md = render_markdown(data)
     assert "github.com/foo/bar" in md
+    assert "Target repository (Scorecard analyzes this GitHub repo" in md
     assert "Binary-Artifacts" in md
     assert "Token-Permissions" in md
     assert "9.0" in md

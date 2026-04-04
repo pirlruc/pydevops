@@ -2,6 +2,7 @@ name: Python Quality (Reusable)
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
 
 on:
   workflow_call:
@@ -109,9 +110,6 @@ on:
         default: "http://localhost:8080"
 
 permissions: {}
-
-env:
-  QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
 
 jobs:
   devops-coordinates:

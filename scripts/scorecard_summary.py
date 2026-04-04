@@ -92,7 +92,30 @@ def _ascii_row(row: tuple[str, str, str], w_n: int, w_s: int, w_r: int) -> str:
     return f"| {a:<{w_n}} | {b:>{w_s}} | {c:<{w_r}} |"
 
 
-def _checks_table_block(checks: list[dict], reason_max: int, name_max: int = 44) -> list[str]:
+def _text_fence_open(repo_caption: str | None) -> list[str]:
+    """First lines inside the fenced ``text`` block (optional caption for Scorecard scope)."""
+    if not repo_caption:
+        return ["```text"]
+    return ["```text", repo_caption, ""]
+
+
+def _ascii_column_widths(
+    headers: tuple[str, str, str],
+    body: list[tuple[str, str, str]],
+) -> tuple[int, int, int]:
+    """Column widths for the checks table from header labels and body rows."""
+    w_n = max(len(headers[0]), max((len(r[0]) for r in body), default=0))
+    w_s = max(len(headers[1]), max((len(r[1]) for r in body), default=0))
+    w_r = max(len(headers[2]), max((len(r[2]) for r in body), default=0))
+    return w_n, w_s, w_r
+
+
+def _checks_table_block(
+    checks: list[dict],
+    reason_max: int,
+    name_max: int = 44,
+    repo_caption: str | None = None,
+) -> list[str]:
     """ASCII +/| bordered table for aligned columns in logs and summaries."""
     headers = ("Check", "Score", "Reason")
     body: list[tuple[str, str, str]] = [
@@ -103,11 +126,10 @@ def _checks_table_block(checks: list[dict], reason_max: int, name_max: int = 44)
         )
         for c in checks
     ]
-    w_n = max(len(headers[0]), max((len(r[0]) for r in body), default=0))
-    w_s = max(len(headers[1]), max((len(r[1]) for r in body), default=0))
-    w_r = max(len(headers[2]), max((len(r[2]) for r in body), default=0))
+    w_n, w_s, w_r = _ascii_column_widths(headers, body)
     sep = _ascii_hline(w_n, w_s, w_r)
-    out = ["```text", sep, _ascii_row(headers, w_n, w_s, w_r), sep]
+    out = _text_fence_open(repo_caption)
+    out.extend([sep, _ascii_row(headers, w_n, w_s, w_r), sep])
     out.extend(_ascii_row(r, w_n, w_s, w_r) for r in body)
     out.extend([sep, "```"])
     return out
@@ -228,7 +250,12 @@ def render_markdown(data: dict, reason_max: int = 100) -> str:
         "### Checks",
         "",
     ]
-    lines.extend(_checks_table_block(checks, reason_max))
+    table_caption: str | None = None
+    if repo_name != "—":
+        table_caption = (
+            f"Target repository (Scorecard analyzes this GitHub repo, not PyPI packages): {repo_name}"
+        )
+    lines.extend(_checks_table_block(checks, reason_max, repo_caption=table_caption))
     lines.append("")
 
     action = _needs_action(checks, overall)

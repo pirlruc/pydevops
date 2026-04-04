@@ -18,7 +18,7 @@ Run on pushes/PRs to this repo (or on schedule). **Do not** point application re
 
 | Workflow | Purpose |
 | --- | --- |
-| **`devops-ci.yml`** | Consolidated CI: path-filtered jobs for actionlint + zizmor, Scorecard, dependency review (PRs), scripts pytest/pylint/interrogate/Radon (parallel jobs + per-job gates) |
+| **`devops-ci.yml`** | Path filter → **workflow lint** (actionlint + zizmor), **scripts** (single job: pytest, pylint, interrogate, Radon CC/MI), **supply chain** (Scorecard + dependency review on PRs) |
 | **`devops-scheduled.yml`** | Weekly lint, Scorecard, Mutmut (score ≥ 85%), Python EOL issues; push-triggered EOL-only run for policy file edits |
 | **`publish-pypi.yml`** | Manual PyPI publish (`workflow_dispatch`, `environment: pypi`) |
 

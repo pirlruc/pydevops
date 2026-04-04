@@ -51,7 +51,16 @@ jobs:
           set -euo pipefail
           find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort | sed 's/^/  /'
           find .github/actions -type f \( -name 'action.yml' -o -name 'action.yaml' \) 2>/dev/null | sort | sed 's/^/  /' || true
+          echo "::add-matcher::${GITHUB_WORKSPACE}/.github/matchers/actionlint.json"
+          set +e
           actionlint -color
+          al=$?
+          set -e
+          echo "::remove-matcher owner=actionlint::"
+          if [ "$al" -eq 0 ]; then
+            echo "actionlint: OK (no findings)."
+          fi
+          exit "$al"
 
       - name: Install workflow scanner from pins
         run: |
@@ -73,7 +82,7 @@ jobs:
             echo "No zizmor inputs found; skipping."
             exit 0
           fi
-          zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}"
+          zizmor -c .github/config/zizmor.yml --format github "${inputs[@]}"
 
       - name: Gate — scheduled workflow lint job
         if: always()
@@ -82,8 +91,15 @@ jobs:
           ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
         run: |
           set -euo pipefail
-          if [ "${ACTIONLINT_OUTCOME}" != "success" ] || [ "${ZIZMOR_OUTCOME}" != "success" ]; then
-            echo "::error::actionlint and/or zizmor did not succeed."
+          failed=()
+          if [ "${ACTIONLINT_OUTCOME}" != "success" ]; then
+            failed+=("actionlint")
+          fi
+          if [ "${ZIZMOR_OUTCOME}" != "success" ]; then
+            failed+=("zizmor")
+          fi
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Workflow lint failed: ${failed[*]} (see annotations and prior steps)."
             exit 1
           fi
           echo "Scheduled workflow lint job passed."
