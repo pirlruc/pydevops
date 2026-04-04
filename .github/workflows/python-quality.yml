@@ -1,5 +1,8 @@
 name: Python Quality (Reusable)
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   workflow_call:
     inputs:
@@ -553,10 +556,13 @@ jobs:
       - id: gates-out
         name: Record gate outcome for workflow outputs
         if: always()
+        env:
+          LICENSE_OUTCOME: ${{ steps.license.outcome }}
+          EVALUATE_GATES_OUTCOME: ${{ steps.evaluate-gates.outcome }}
         run: |
           set -euo pipefail
-          lic="${{ steps.license.outcome }}"
-          ev="${{ steps.evaluate-gates.outcome }}"
+          lic="${LICENSE_OUTCOME}"
+          ev="${EVALUATE_GATES_OUTCOME}"
           if [ "$lic" = "success" ] && [ "$ev" = "success" ]; then
             echo "passed=true" >> "$GITHUB_OUTPUT"
           else
@@ -565,9 +571,12 @@ jobs:
 
       - name: Enforce license and quality gates on job status
         if: always()
+        env:
+          LICENSE_OUTCOME: ${{ steps.license.outcome }}
+          EVALUATE_GATES_OUTCOME: ${{ steps.evaluate-gates.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.license.outcome }}" != "success" ] || [ "${{ steps.evaluate-gates.outcome }}" != "success" ]; then
+          if [ "${LICENSE_OUTCOME}" != "success" ] || [ "${EVALUATE_GATES_OUTCOME}" != "success" ]; then
             echo "::error::License policy and/or quality gates failed (see logs and quality-bundle artifact)."
             exit 1
           fi

@@ -8,10 +8,12 @@ from pathlib import Path
 
 
 def _root() -> Path:
+    """Return the repository root directory (parent of ``scripts/``)."""
     return Path(__file__).resolve().parent.parent
 
 
 def _groups_table(data: object) -> dict[str, object]:
+    """Return the ``dependency-groups`` table from parsed ``pyproject.toml`` data."""
     if not isinstance(data, dict):
         raise SystemExit("pyproject.toml: invalid structure")
     groups = data.get("dependency-groups")
@@ -21,6 +23,7 @@ def _groups_table(data: object) -> dict[str, object]:
 
 
 def _quality_tools_entries(groups: dict[str, object]) -> list[str]:
+    """Return PEP 508 requirement strings from the ``quality-tools`` dependency group."""
     qt = groups.get("quality-tools")
     if not isinstance(qt, list):
         raise SystemExit("pyproject.toml: missing quality-tools group")
@@ -33,6 +36,7 @@ def _quality_tools_entries(groups: dict[str, object]) -> list[str]:
 
 
 def export_quality_tools_requirements(root: Path) -> None:
+    """Write ``quality-tools/requirements.txt`` under ``root`` from ``[dependency-groups].quality-tools``."""
     raw = (root / "pyproject.toml").read_text(encoding="utf-8")
     data = tomllib.loads(raw)
     lines = _quality_tools_entries(_groups_table(data))
@@ -47,6 +51,7 @@ def export_quality_tools_requirements(root: Path) -> None:
 
 
 def main() -> None:
+    """CLI entrypoint: export pins for the current repository layout."""
     export_quality_tools_requirements(_root())
 
 

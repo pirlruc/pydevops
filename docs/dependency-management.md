@@ -28,9 +28,17 @@
 
 After merging a Dependabot PR that changes a manifest consumed by YAML, workflows already read that file; avoid duplicating the same version string in workflow `run:` blocks.
 
+## Node.js runtime for JavaScript actions
+
+Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node 20 runtime run on Node 24 on the runner (see [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). **`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes; the env remains a safety net for **`actions/dependency-review-action`** until it updates.
+
+## Dependency review vs OpenSSF Scorecard (repository)
+
+**[Dependency review](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review)** can show **per-dependency** OpenSSF Scorecard scores for packages added in a PR. That is separate from the **[OpenSSF Scorecard](https://scorecard.dev/)** job that scores **your repository’s** practices (branch protection, workflows, etc.). This repo disables **`show-openssf-scorecard`** on **`dependency-review-action`** so low scores on small transitive PyPI tools do not fail the PR; supply-chain posture is still covered by vuln/license checks and the dedicated Scorecard job.
+
 ## Astral uv CLI version (single source)
 
-The **uv installer version** is **not** repeated in every workflow. It lives in [`.github/dependencies/uv-version.txt`](../.github/dependencies/uv-version.txt). Composite actions run [`.github/dependencies/emit-uv-version.sh`](../.github/dependencies/emit-uv-version.sh) and pass the value to `astral-sh/setup-uv@v5`:
+The **uv installer version** is **not** repeated in every workflow. It lives in [`.github/dependencies/uv-version.txt`](../.github/dependencies/uv-version.txt). Composite actions run [`.github/dependencies/emit-uv-version.sh`](../.github/dependencies/emit-uv-version.sh) and pass the value to `astral-sh/setup-uv` (pin in [`github-actions-pins.json`](../.github/dependencies/github-actions-pins.json)):
 
 - [`.github/actions/install-uv`](../.github/actions/install-uv/action.yml) — used by repo-only workflows (and the DAST job via `./.devops/.github/actions/install-uv`).
 - [`.github/actions/setup-uv-python`](../.github/actions/setup-uv-python/action.yml) — same version source, then `uv python install` for app pipelines.

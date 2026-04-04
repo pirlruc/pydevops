@@ -3,6 +3,9 @@
 
 name: DevOps scheduled
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   schedule:
     - cron: "0 6 * * 1"
@@ -74,9 +77,12 @@ jobs:
 
       - name: Gate — scheduled workflow lint job
         if: always()
+        env:
+          ACTIONLINT_OUTCOME: ${{ steps.actionlint.outcome }}
+          ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.actionlint.outcome }}" != "success" ] || [ "${{ steps.zizmor.outcome }}" != "success" ]; then
+          if [ "${ACTIONLINT_OUTCOME}" != "success" ] || [ "${ZIZMOR_OUTCOME}" != "success" ]; then
             echo "::error::actionlint and/or zizmor did not succeed."
             exit 1
           fi
@@ -119,9 +125,11 @@ jobs:
 
       - name: Gate — Scorecard job
         if: always()
+        env:
+          SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.scorecard.outcome }}" != "success" ]; then
+          if [ "${SCORECARD_OUTCOME}" != "success" ]; then
             echo "::error::OpenSSF Scorecard step did not succeed."
             exit 1
           fi
@@ -292,9 +300,11 @@ jobs:
 
       - name: Gate — EOL watch job
         if: always()
+        env:
+          EOL_OUTCOME: ${{ steps.eol.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.eol.outcome }}" != "success" ]; then
+          if [ "${EOL_OUTCOME}" != "success" ]; then
             echo "::error::Python EOL watch step did not succeed."
             exit 1
           fi

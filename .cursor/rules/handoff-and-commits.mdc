@@ -18,3 +18,7 @@ When you implement or materially change **CI workflows**, **quality gates**, **s
 This project uses that format in git history; matching it keeps automation and reviewers aligned.
 
 See also **[`radon-complexity.mdc`](radon-complexity.mdc)** — run **`radon cc -s`** on edited **`scripts/`** and **`tests/`** Python files; **`scripts/quality_gates/`** must stay at **CC ≤ 5** per function (no grade **B** on touched code).
+
+When you add or edit **`scripts/*.py`** (excluding `tests/`), keep **Interrogate docstring coverage ≥ 95%** on **`scripts/`** (same as **`devops-ci`** `ci-scripts-docstrings`). Run **`uv run python -m interrogate scripts -vv --fail-under 95`** before finishing.
+
+When you add or edit **`.github/workflows/*.yml`** or **`.github/actions/**/action.yml`**, run **zizmor** (or ensure CI would pass): **do not** embed **`${{ steps.*.outcome }}`** (or other expressions) inside **`run: |`** shell strings — pass them via **`env:`** and reference plain shell variables (avoids **template-injection** findings). Goal: **no zizmor findings** on touched workflow files.

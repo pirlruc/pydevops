@@ -11,10 +11,12 @@ from pathlib import Path
 
 
 def _repo_root() -> Path:
+    """Return the repository root directory (parent of ``scripts/``)."""
     return Path(__file__).resolve().parent.parent
 
 
 def _load_pins(path: Path) -> dict[str, str]:
+    """Load action name → ref tag mapping from JSON (string keys and values only)."""
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise SystemExit("pins file must be a JSON object")
@@ -26,6 +28,7 @@ def _load_pins(path: Path) -> dict[str, str]:
 
 
 def _yaml_files(root: Path) -> list[Path]:
+    """List workflow YAML files and composite ``action.yml`` files to scan or rewrite."""
     gh = root / ".github"
     paths: list[Path] = []
     paths.extend(sorted((gh / "workflows").glob("*.yml")))
@@ -35,10 +38,12 @@ def _yaml_files(root: Path) -> list[Path]:
 
 
 def _uses_pattern(action: str) -> re.Pattern[str]:
+    """Build a regex that matches ``uses: <action>@<anything>`` for replacement."""
     return re.compile(rf"(uses:\s*){re.escape(action)}@[^\s#]+")
 
 
 def _apply_file(path: Path, pins: dict[str, str]) -> bool:
+    """Rewrite ``path`` so every pinned action uses the ref from ``pins``. Return True if changed."""
     text = path.read_text(encoding="utf-8")
     orig = text
     for name in sorted(pins, key=len, reverse=True):
@@ -51,6 +56,7 @@ def _apply_file(path: Path, pins: dict[str, str]) -> bool:
 
 
 def _uses_spec_drift(path: Path, spec: str, pins: dict[str, str]) -> str | None:
+    """If ``spec`` is a pinned third-party action with wrong ref, return an error line; else None."""
     if "@" not in spec or spec.startswith(("./", "../")):
         return None
     name, have = spec.rsplit("@", 1)
@@ -61,6 +67,7 @@ def _uses_spec_drift(path: Path, spec: str, pins: dict[str, str]) -> str | None:
 
 
 def _check_file(path: Path, pins: dict[str, str]) -> list[str]:
+    """Return human-readable drift messages for any ``uses:`` in ``path`` that disagrees with ``pins``."""
     text = path.read_text(encoding="utf-8")
     errs: list[str] = []
     for m in re.finditer(r"uses:\s*([^\s#]+)", text):
@@ -71,6 +78,7 @@ def _check_file(path: Path, pins: dict[str, str]) -> list[str]:
 
 
 def _run_check(files: list[Path], pins: dict[str, str]) -> None:
+    """Exit with code 1 if any file has a ``uses:`` ref that does not match ``pins``."""
     all_errs: list[str] = []
     for f in files:
         all_errs.extend(_check_file(f, pins))
@@ -81,6 +89,7 @@ def _run_check(files: list[Path], pins: dict[str, str]) -> None:
 
 
 def _run_apply(files: list[Path], pins: dict[str, str]) -> bool:
+    """Apply ``pins`` to all ``files``; return True if any file was modified."""
     changed = False
     for f in files:
         if _apply_file(f, pins):
@@ -89,6 +98,7 @@ def _run_apply(files: list[Path], pins: dict[str, str]) -> bool:
 
 
 def main() -> None:
+    """Parse CLI flags and either verify pins (--check) or rewrite workflow YAML files."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check",

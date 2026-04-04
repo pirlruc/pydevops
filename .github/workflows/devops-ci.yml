@@ -3,6 +3,10 @@
 
 name: DevOps CI
 
+# Prefer Node 24 for JavaScript actions until all upstream actions ship node24 runtimes.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   pull_request:
     paths:
@@ -62,7 +66,7 @@ jobs:
       - name: Filter paths
         if: github.event_name != 'workflow_dispatch'
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4.0.1
         with:
           filters: |
             scripts:
@@ -77,14 +81,18 @@ jobs:
 
       - name: Expose path flags
         id: flags
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          FILTER_SCRIPTS: ${{ steps.filter.outputs.scripts }}
+          FILTER_WORKFLOWS: ${{ steps.filter.outputs.workflows }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
             echo "scripts=true" >> "$GITHUB_OUTPUT"
             echo "workflows=true" >> "$GITHUB_OUTPUT"
           else
-            echo "scripts=${{ steps.filter.outputs.scripts }}" >> "$GITHUB_OUTPUT"
-            echo "workflows=${{ steps.filter.outputs.workflows }}" >> "$GITHUB_OUTPUT"
+            echo "scripts=${FILTER_SCRIPTS}" >> "$GITHUB_OUTPUT"
+            echo "workflows=${FILTER_WORKFLOWS}" >> "$GITHUB_OUTPUT"
           fi
 
   ci-workflow-lint:
@@ -149,9 +157,12 @@ jobs:
 
       - name: Gate — workflow lint job
         if: always()
+        env:
+          ACTIONLINT_OUTCOME: ${{ steps.actionlint.outcome }}
+          ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.actionlint.outcome }}" != "success" ] || [ "${{ steps.zizmor.outcome }}" != "success" ]; then
+          if [ "${ACTIONLINT_OUTCOME}" != "success" ] || [ "${ZIZMOR_OUTCOME}" != "success" ]; then
             echo "::error::actionlint and/or zizmor did not succeed (see prior steps)."
             exit 1
           fi
@@ -199,9 +210,11 @@ jobs:
 
       - name: Gate — Scorecard job
         if: always()
+        env:
+          SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.scorecard.outcome }}" != "success" ]; then
+          if [ "${SCORECARD_OUTCOME}" != "success" ]; then
             echo "::error::OpenSSF Scorecard step did not succeed."
             exit 1
           fi
@@ -230,12 +243,18 @@ jobs:
         name: Compare dependency changes versus base
         continue-on-error: true
         uses: actions/dependency-review-action@v4.9.0
+        with:
+          # Per-dependency OpenSSF scores (e.g. small PyPI helpers) are informational; repo-level
+          # Scorecard runs in openssf-scorecard. Disabling avoids false "review failed" on low scores.
+          show-openssf-scorecard: false
 
       - name: Gate — dependency review job
         if: always()
+        env:
+          REVIEW_OUTCOME: ${{ steps.review.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.review.outcome }}" != "success" ]; then
+          if [ "${REVIEW_OUTCOME}" != "success" ]; then
             echo "::error::dependency-review-action did not succeed."
             exit 1
           fi
@@ -289,9 +308,11 @@ jobs:
 
       - name: Gate — pytest job
         if: always()
+        env:
+          PYTEST_OUTCOME: ${{ steps.pytest.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.pytest.outcome }}" != "success" ]; then
+          if [ "${PYTEST_OUTCOME}" != "success" ]; then
             echo "::error::pytest did not succeed."
             exit 1
           fi
@@ -338,9 +359,11 @@ jobs:
 
       - name: Gate — pylint job
         if: always()
+        env:
+          PYLINT_OUTCOME: ${{ steps.pylint.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.pylint.outcome }}" != "success" ]; then
+          if [ "${PYLINT_OUTCOME}" != "success" ]; then
             echo "::error::pylint did not succeed."
             exit 1
           fi
@@ -387,9 +410,11 @@ jobs:
 
       - name: Gate — interrogate job
         if: always()
+        env:
+          DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.docstrings.outcome }}" != "success" ]; then
+          if [ "${DOCSTRINGS_OUTCOME}" != "success" ]; then
             echo "::error::interrogate did not succeed."
             exit 1
           fi
@@ -481,9 +506,11 @@ jobs:
 
       - name: Gate — Radon CC job
         if: always()
+        env:
+          RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.radon_cc.outcome }}" != "success" ]; then
+          if [ "${RADON_CC_OUTCOME}" != "success" ]; then
             echo "::error::Radon CC check did not succeed."
             exit 1
           fi
@@ -570,9 +597,11 @@ jobs:
 
       - name: Gate — Radon MI job
         if: always()
+        env:
+          RADON_MI_OUTCOME: ${{ steps.radon_mi.outcome }}
         run: |
           set -euo pipefail
-          if [ "${{ steps.radon_mi.outcome }}" != "success" ]; then
+          if [ "${RADON_MI_OUTCOME}" != "success" ]; then
             echo "::error::Radon MI check did not succeed."
             exit 1
           fi
