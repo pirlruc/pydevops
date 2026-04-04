@@ -17,7 +17,14 @@ def _dict_get(d: Any, key: str) -> Any | None:
 
 def ruff_messages_in_files(files: list[Any]) -> int:
     """Sum message counts across Ruff file objects."""
-    return sum(len(f.get("messages", [])) for f in files if isinstance(f, dict))
+    n = 0
+    for f in files:
+        if not isinstance(f, dict):
+            continue
+        msgs = f.get("messages")
+        if isinstance(msgs, list):
+            n += len(msgs)
+    return n
 
 
 def ruff_issue_count_from_obj(data: dict[str, Any]) -> int:

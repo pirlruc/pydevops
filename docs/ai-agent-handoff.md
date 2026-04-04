@@ -51,6 +51,7 @@ Use `git log --oneline` for the authoritative list.
 - **Low/Medium** may still use minimal placeholders for some **static** tools (documented in header comment); High omits more aggressively.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
 - **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.5`** if missing.
+- **Ruff object format**: **`ruff_messages_in_files()`** in [`readers_ruff_jscpd.py`](../scripts/quality_gates/readers_ruff_jscpd.py) counts **`files[].messages`** only when **`messages`** is a **list**; **`null`** or non-list values contribute **0** (no **`TypeError`** / wrong **`len()`** on dicts).
 
 ### 3. GitHub Actions / workflows
 

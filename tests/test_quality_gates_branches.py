@@ -39,6 +39,23 @@ def test_ruff_dict_format(tmp_path: Path) -> None:
     assert qg._ruff_issue_count(tmp_path) == 1
 
 
+def test_ruff_files_messages_non_list_ignored(tmp_path: Path) -> None:
+    """Malformed ``messages`` (null, dict, etc.) must not raise or use wrong len()."""
+    (tmp_path / "ruff.json").write_text(
+        json.dumps(
+            {
+                "files": [
+                    {"messages": None},
+                    {"messages": {"not": "a list"}},
+                    {"messages": [{"code": "E1"}, {"code": "E2"}]},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert qg._ruff_issue_count(tmp_path) == 2
+
+
 def test_radon_mi_string_value(tmp_path: Path) -> None:
     """_radon_mi_min parses string MI values."""
     (tmp_path / "radon_mi.json").write_text(json.dumps({"a.py": "70.5"}), encoding="utf-8")
