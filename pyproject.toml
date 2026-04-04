@@ -21,7 +21,7 @@ scripts = [
     "radon>=6.0,<7",
 ]
 quality-tools = [
-    "ruff==0.15.8",
+    "ruff==0.15.9",
     "pylint==4.0.5",
     "mypy==1.20.0",
     "pydoclint==0.8.3",
