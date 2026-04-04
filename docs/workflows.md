@@ -135,7 +135,7 @@ The following workflows are **not** meant as the primary `uses:` target for appl
 
 **Triggers:** Pull request and push to `main`/`master` with a **union** of paths (scripts, tests, lockfiles, `.github/`, `examples/`, `docs/`, etc.); **`workflow_dispatch`** runs all path groups.
 
-**`GITHUB_TOKEN` scopes:** Vary by job (`contents`, `pull-requests`, `security-events`, `id-token` as needed).
+**`GITHUB_TOKEN` scopes:** Vary by job (`contents`, `pull-requests` on **`changes`** for path filtering, `security-events`, `id-token` on **`ci-supply-chain`**; **`ci-supply-chain`** does not use **`pull-requests: write`** because **dependency-review-action** is not configured to post PR comments).
 
 ---
 

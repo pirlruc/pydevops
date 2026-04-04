@@ -229,9 +229,10 @@ jobs:
          github.event.pull_request.head.repo.full_name == github.repository)
       )
     runs-on: ubuntu-latest
+    # contents + security-events + id-token for Scorecard; dependency-review uses default
+    # comment-summary-in-pr (never) so pull-requests: write is not required.
     permissions:
       contents: read
-      pull-requests: write
       security-events: write
       id-token: write
     steps:

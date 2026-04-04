@@ -88,12 +88,15 @@ on:
         default: "[]"
       devops_repository:
         description: >
-          DevOps repo (owner/name). Empty uses this repository. workflow_call defaults to pirlruc/pydevops.
+          Optional DevOps owner/name. Empty: same resolution as workflow_call — parse from
+          github.workflow_ref (repo that defines this reusable workflow) or fall back to
+          github.repository.
         type: string
         default: ""
       devops_ref:
         description: >
-          Git ref for DevOps checkout — empty uses the current ref name.
+          Optional DevOps git ref. Empty: parse from github.workflow_ref or use github.ref_name
+          (same as workflow_call). Prefer an immutable tag or SHA in production.
         type: string
         default: ""
       working_directory:
