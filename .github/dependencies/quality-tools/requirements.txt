@@ -1,7 +1,7 @@
 # Pinned CLI tools for python-quality.yml (uv tool install). Dependabot: pip, /.github/dependencies/quality-tools
 ruff==0.9.10
 pylint==3.3.4
-mypy==1.15.0
+mypy==1.20.0
 pydoclint==0.5.14
 interrogate==1.7.0
 bandit==1.8.0
