@@ -222,7 +222,7 @@ jobs:
 
       - name: Upload quality bundle artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -233,7 +233,7 @@ jobs:
 
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-quality-comment
           path: quality-pr-comment.md
@@ -355,7 +355,7 @@ jobs:
 
       - name: Upload dynamic test artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dast-reports
           path: |
