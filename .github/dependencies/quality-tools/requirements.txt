@@ -8,5 +8,5 @@ bandit==1.8.0
 deptry==0.22.0
 pip-audit==2.7.3
 pytest==8.3.5
-pytest-cov==6.0.0
+pytest-cov==7.1.0
 pylint-json2html==2.0.0
