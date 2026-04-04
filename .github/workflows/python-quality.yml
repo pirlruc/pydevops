@@ -125,13 +125,13 @@ jobs:
           egress-policy: audit
 
       - name: Check out application full history
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           # workflow_dispatch: use inputs when set so manual runs can pin another DevOps tag/SHA;
           # empty inputs fall back to this repo/ref. workflow_call: required inputs always apply.
@@ -293,12 +293,12 @@ jobs:
           egress-policy: audit
 
       - name: Check out application
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           # workflow_dispatch: use inputs when set so manual runs can pin another DevOps tag/SHA;
           # empty inputs fall back to this repo/ref. workflow_call: required inputs always apply.
