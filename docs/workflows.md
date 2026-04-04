@@ -6,52 +6,68 @@ Workflows are split by audience; see also [`.github/workflows/README.md`](../.gi
 
 ## Application repositories (consumers)
 
-These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (with matching `devops_ref`).
+These workflows are intended to be referenced from **your app** repo via `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (pin the workflow definition to a tag or SHA you trust). Pass **`devops_ref`** so the **checkout** of this repo under `.devops` matches the scripts and composites you want at runtime (often the same tag as `uses:`).
 
 ### `python-quality.yml`
 
-**Purpose:** Central Quality-as-a-Service pipeline: static analysis, tests/coverage, SBOM, secret/SAST scans, optional DAST, artifact bundle, and (on same-repo pull requests) a PR comment.
+**Purpose:** Central Quality-as-a-Service pipeline: multi-job gated CI (shield, static, supply chain, tests, reporting), optional DAST, GitHub Release with the quality bundle on SemVer tags when all gates pass, and (on same-repo pull requests) a PR comment.
 
-#### How the pipeline is structured (Gatekeeper / Shield / Tests)
+#### GitHub limitation (dynamic `uses:` vs dynamic checkout)
 
-The job is split into **composite actions** under `.github/actions/` (not separate `workflow_call` files) because GitHub does not support a **parameterized** `uses: ${{ inputs.devops_repository }}/…` for nested reusable workflows from arbitrary app repos. Composites referenced as `./.devops/.github/actions/…` keep a single checkout and one shared `quality-output/` directory.
+GitHub does **not** allow the **`uses:`** line of a **reusable workflow** call to be a full expression like `${{ inputs.foo }}/.github/workflows/bar.yml@${{ inputs.ref }}`. Callers therefore pin a **literal** `uses: pirlruc/pydevops/.github/workflows/python-quality.yml@vX.Y.Z`. The **dynamic ref** you need day to day is the **`devops_ref` input**, which controls **`actions/checkout`** of the DevOps repo into `.devops` inside each job. The repo is **`pirlruc/pydevops` by default** (`devops_repository` defaults there); override only if you fork.
 
-| Your concept | Composite / step | Tools (high level) |
+#### How the pipeline is structured (jobs and composites)
+
+Jobs run on **separate runners**; phase outputs are merged in the reporting job from uploaded artifacts. Composites under `.github/actions/` stay the unit of reuse (`./.devops/.github/actions/…`).
+
+| Job | Role | Composites / tools (high level) |
 | --- | --- | --- |
-| **Shield — secrets & SAST** (early) | `qa-secrets-sast` | **Gitleaks** (JSON + SARIF, fail on leak), **Semgrep** (`p/python` + custom rules, SARIF + blocking scan) |
-| **Toolchain** | `qa-install-toolchain` | Node (jscpd), **cloc**, **Syft** / **Grype** binaries, **uv** + Python, DevOps `uv sync`, pinned CLIs from `dependencies/quality-tools` |
-| **Gatekeeper — app + Ruff** | `qa-app-install-and-ruff` | App `uv sync` / install command, **Ruff** with QaaS pydocstyle convention |
-| **Gatekeeper — static bundle** | `qa-run-quality-phase` (`static`) | **Pylint**, **Mypy**, **pydoclint**, **Interrogate**, **jscpd**, **Radon** CC/MI |
-| **Shield — supply chain** | `qa-run-quality-phase` (`security`) | **`uv lock --check`**, **Bandit**, **deptry**, **pip-audit**, **Syft** SBOM (CycloneDX + SPDX), **Grype** JSON on SBOM |
-| **Tests** | `qa-run-quality-phase` (`test`) | **Pytest** + **pytest-cov** (line + branch) |
+| **quality-shield** | Shield — stop leaks early | `qa-secrets-sast`: **Gitleaks** (fail on finding), **Semgrep** SARIF (`continue-on-error` on scan); **High**: `python -m scripts.quality_gates --semgrep-shield-only` (0 SARIF **error**-level results, ≤ 5 **warning**-level) |
+| **quality-static** | Gatekeeper — static | `qa-install-toolchain`, `qa-app-install-and-ruff`, `qa-run-quality-phase` (`static`) |
+| **quality-supply-chain** | SBOM / vuln / deps (parallel with static after shield) | Same toolchain + install, `qa-run-quality-phase` (`security`) |
+| **quality-test** | Tests (after static) | Same toolchain + install, `qa-run-quality-phase` (`test`) |
+| **quality-report** | Merge artifacts, **license** gate, full **`scripts.quality_gates`**, consolidate, bundle + PR comment artifact | `if: always()` on the job; final step fails the job if license or gates failed (after uploads) |
+| **pr-quality-comment** | Post PR summary | Downloads comment artifact |
+| **quality-dast** | Optional ZAP + Locust | After tests when `enable_dast` |
+| **release-github** | Tag-only GitHub Release | **`environment: production`**; needs supply + test + report + dast; runs only on `refs/tags/v*.*.*` (SemVer) when **`gates_passed`** is true and DAST succeeded or was skipped |
 
-Gitleaks and Semgrep run **before** the full toolchain so secret and pattern issues fail without waiting for all tool installs. The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** (`static`, `security`, `test`, or `all`) for the three bundle steps.
+The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** per composite call (`static`, `security`, or `test`).
 
-**Mutation testing (Mutmut)** stays in the separate scheduled workflow `mutmut-nightly.yml` (optional / nightly), not in this pipeline.
+**Mutation testing (Mutmut)** stays in `mutmut-nightly.yml`, not in this pipeline.
 
 **Triggers**
 
 - `workflow_call` — primary entry point for app repositories.
 - `workflow_dispatch` — manual runs (self-test / debugging).
 
+To produce **GitHub Releases** from **`release-github`**, the **calling** workflow must run on SemVer tag pushes (for example `on.push.tags: ['v*.*.*']`); the reusable job’s release step is gated on `refs/tags/v*.*.*` and successful gates.
+
+**`workflow_call` outputs**
+
+| Output | Meaning |
+| --- | --- |
+| `gates_passed` | `"true"` when license enforcement and full `scripts.quality_gates` succeeded in **quality-report** (string booleans as emitted by the job). |
+
 **`GITHUB_TOKEN` scopes (by job)**
 
 | Job | `contents` | `actions` | `security-events` | `pull-requests` |
 | --- | --- | --- | --- | --- |
-| `python-quality` | read | write | write | — |
+| `quality-shield` | read | write | write | — |
+| `quality-static`, `quality-supply-chain`, `quality-test`, `quality-report` | read | write | — | — |
 | `pr-quality-comment` | read | read | — | write |
-| `dast` | read | write | — | — |
+| `quality-dast` | read | write | — | — |
+| `release-github` | write | — | — | — |
 
-- **`actions: write`** — upload workflow artifacts (quality bundle, PR comment body).
-- **`security-events: write`** — upload SARIF (Gitleaks, Semgrep) when GitHub Advanced Security / code scanning is available.
-- **`pull-requests: write`** — post the summary comment (only on pull requests from the **same** repository; fork PRs skip the comment job to avoid token limitations).
+- **`actions: write`** — upload/download workflow artifacts.
+- **`security-events: write`** — upload SARIF (Gitleaks, Semgrep) on the shield job when code scanning is available.
+- **`pull-requests: write`** — post the summary comment (same-repo PRs only; fork PRs skip).
 
 **Inputs (`workflow_call`)**
 
 | Input | Type | Required | Default | Notes |
 | --- | --- | --- | --- | --- |
-| `devops_repository` | string | yes | — | `owner/name` of this DevOps repo |
-| `devops_ref` | string | yes | — | Tag, branch, or SHA (prefer SemVer tag, e.g. `v1.0.0`) |
+| `devops_repository` | string | no | `pirlruc/pydevops` | DevOps `owner/name` for `.devops` checkout |
+| `devops_ref` | string | yes | — | Tag, branch, or SHA for `.devops` checkout (prefer SemVer tag, e.g. `v1.0.0`) |
 | `strictness_level` | string | no | `Medium` | `Low` \| `Medium` \| `High` — see **Strictness tiers** below |
 | `docstring_format` | string | no | `Google` | `Google` \| `Numpy` \| `Pep257` — Ruff pydocstyle convention matches the name; **Pep257** uses pydoclint `--style=sphinx` (pydoclint has no pep257 mode; Google/NumPy section layouts conflict with pep257-focused Ruff) |
 | `enable_dast` | boolean | no | `false` | Runs ZAP + Locust job after quality |
@@ -76,11 +92,13 @@ Gates are evaluated in `scripts/quality_gates` from CI artifacts. **Docstring co
 | --- | --- | --- | --- |
 | **Low** | ≥ 70% | ≤ 8.0 | Relaxed defaults for legacy codebases |
 | **Medium** | ≥ 85% | ≤ 5.0 | Default for most callers |
-| **High** | **≥ 95%** | ≤ 2.0 | Also: Pylint ≥ 9.5, max cyclomatic ≤ 5 (&lt; 6), min Radon MI ≥ 60, stricter coverage/duplication/vuln caps; required artifacts in `HIGH_REQUIRED_FILES` (`scripts/quality_gates/config.py`) must exist (including **`pydoclint.txt`** for the docstring issue-rate gate) |
+| **High** | **≥ 95%** | ≤ 2.0 | Also: Pylint ≥ 9.5, max cyclomatic ≤ 5 (&lt; 6), min Radon MI ≥ 60, stricter coverage/duplication/vuln caps; **Semgrep** SARIF (`semgrep.sarif`): 0 **error**-level results, ≤ 5 **warning**-level; required artifacts in `HIGH_REQUIRED_FILES` (`scripts/quality_gates/config.py`) must exist (including **`pydoclint.txt`** and **`semgrep.sarif`**) |
 
 Other numeric thresholds (coverage %, Pylint, Radon CC/MI, duplication, issues/KLoC, vulnerabilities) are defined alongside these in the same `Thresholds` table in code.
 
 The **`Evaluate configured quality gates`** step (`python -m scripts.quality_gates`) is the **only** enforcement of aggregate vulnerability counts from **pip-audit** and **Grype** JSON artifacts; tier limits (for example Low allows up to two high-severity findings) come from that table. Do not add a separate Grype CLI `--fail-on` step in the same job, or it would override those thresholds.
+
+**Cross-job cache:** Static, supply-chain, and test jobs restore **`~/.cache/uv`** via **`actions/cache`** so repeated `uv` work stays warm across parallel jobs.
 
 **Caller configuration**
 
@@ -173,7 +191,9 @@ Scorecard runs only when `github.event.repository.fork == false`.
 
 **Purpose:** Build with `uv build` and publish **this** repository’s package to PyPI using **Trusted Publishing (OIDC)**.
 
-**Triggers:** Push of tags matching `v*.*.*`.
+**Triggers:** **`workflow_dispatch` only** (manual). Pin or extend the workflow if you need tag-scoped builds.
+
+**Environment:** **`pypi`** — use GitHub Environment protection rules for approval gates.
 
 **`GITHUB_TOKEN` scopes:** `contents: read`, `id-token: write`.
 

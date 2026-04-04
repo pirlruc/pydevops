@@ -41,6 +41,7 @@ Use `git log --oneline` for the authoritative list.
 - **Cyclomatic complexity / maintainability** targets for *this repo’s* `scripts/quality_gates` were brought in line with CI (Radon CC ≤ 5, MI floor, Interrogate docstring coverage).
 - **`gates_complexity.py`**: Gate **labels** for cyclomatic / maintainability use **High-specific wording only when `strictness_norm == "High"`** so Low/Medium reports are not misleading.
 - **`artifact_rules.py`**: Extracted static JSON shape / path rules for High-tier artifact validation; **`gates_artifacts.py`** consumes them.
+- **Semgrep (High only)**: **`gate_semgrep`** + **`readers_semgrep.semgrep_sarif_error_warning_counts`** enforce **`semgrep.sarif`**: **0** SARIF **`level: error`** results, **≤ 5** **`level: warning`** (note-level ignored). **`HIGH_REQUIRED_FILES`** includes **`semgrep.sarif`**. Shield job runs **`python -m scripts.quality_gates --semgrep-shield-only`** after **`qa-secrets-sast`** (Low/Medium: no-op pass). **`qa-secrets-sast`**: Semgrep scan uses **`continue-on-error: true`**; the blocking second **`--error`** scan was removed in favor of gates.
 
 ### 2. Shell driver `scripts/ci_run_quality.sh`
 
@@ -56,13 +57,14 @@ Use `git log --oneline` for the authoritative list.
 
 ### 3. GitHub Actions / workflows
 
-- **`python-quality.yml`**: Reusable **`workflow_call`** pipeline for **app** repos (checkout DevOps under `.devops`, run composites, evaluate gates).
-  - **Removed** a standalone **`grype ... --fail-on high`** step so **vulnerability policy is single-sourced** in **`scripts.quality_gates`** (`gate_vulnerabilities` uses pip-audit + Grype JSON vs `Thresholds`). Documented in [`docs/workflows.md`](workflows.md).
-  - **`devops_ref`** (not `pydevops_ref`) matches workflow inputs.
-  - **`workflow_dispatch` DevOps checkout**: When **`devops_repository`** / **`devops_ref`** are **non-empty**, they are used for the `.devops` checkout so manual runs can test against a **pinned tag or SHA** of this or another trusted repo. If left **empty** (defaults), checkout falls back to **`github.repository`** / **`github.ref_name`** (current repo and branch/tag). **`workflow_call`** continues to require **`devops_repository`** / **`devops_ref`** from the caller.
-  - **`workflow_dispatch`** is limited to **10 inputs** on GitHub. Inputs that exist only under **`workflow_call`** (e.g. **`app_install_command`**) may be omitted from dispatch; the composite can still use **`${{ inputs.app_install_command || '' }}`** — missing keys evaluate to empty. **Do not** “fix” this by reading **`github.event.inputs.app_install_command`** unless that input is declared on dispatch: **actionlint** rejects undefined properties on the typed `github.event.inputs` object.
-  - **`docstring_format: Pep257`**: Ruff uses **`convention = "pep257"`**; **pydoclint** maps to **`--style=sphinx`** (pydoclint has no pep257 style — avoids conflicting with Google-style pydoclint vs Ruff).
-  - Inputs **`devops_repository`** / **`devops_ref`**: documented as **supply-chain sensitive** (trusted tag/SHA); caller-controlled checkout runs composites with job token — see workflow descriptions and [`docs/workflows.md`](workflows.md).
+- **`python-quality.yml`**: Reusable **`workflow_call`** for **app** repos — **multi-job** gated pipeline: **`quality-shield`** → **`quality-static`** + **`quality-supply-chain`** (parallel) → **`quality-test`** → **`quality-report`** (`if: always()`, merge artifacts, license + full **`scripts.quality_gates`**, consolidate, bundle; final step fails job if license/gates failed after uploads) → **`pr-quality-comment`** → optional **`quality-dast`** → **`release-github`** (only on **`refs/tags/v*.*.*`**, **`environment: production`**, requires **`gates_passed`**, supply + test + report success, DAST success or skipped). **`workflow_call` outputs** include **`gates_passed`**. **`~/.cache/uv`** restored via **`actions/cache`** on static/supply/test jobs.
+  - **Dynamic ref**: Callers still use a **literal** `uses: pirlruc/pydevops/.github/workflows/python-quality.yml@…`; **`devops_ref`** input drives **`actions/checkout`** of `.devops`. **`devops_repository`** defaults to **`pirlruc/pydevops`** (optional on **`workflow_call`**).
+  - **Removed** standalone **`grype --fail-on`**; vuln caps remain in **`gate_vulnerabilities`**. Documented in [`docs/workflows.md`](workflows.md).
+  - **`workflow_dispatch` DevOps checkout**: Empty **`devops_repository`** / **`devops_ref`** fall back to **`github.repository`** / **`github.ref_name`**. **`workflow_call`** requires **`devops_ref`**; **`devops_repository`** may be omitted (defaults to **`pirlruc/pydevops`**).
+  - **`workflow_dispatch`** input limit (**10**): **`app_install_command`** exists only on **`workflow_call`**; use **`${{ inputs.app_install_command || '' }}`**. Do not read undefined **`github.event.inputs`** for undeclared dispatch keys (**actionlint**).
+  - **`docstring_format: Pep257`**: Ruff **`convention = "pep257"`**; pydoclint **`--style=sphinx`**.
+  - **Tag releases**: Callers must run the reusable workflow on **tag pushes** (e.g. `on.push.tags`) for **`release-github`** to execute.
+- **`publish-pypi.yml`**: **`workflow_dispatch` only**; job uses **`environment: pypi`** (manual PyPI publish with OIDC).
 - **`devops-scripts-ci.yml`**: This repo’s script tests; **template-injection** mitigation: step outcomes passed via **`env`** instead of `${{ }}` inside shell strings. Quality steps use **`continue-on-error: true`** so **all checks run**, then a **final** step fails the job if any outcome was not `success`. **Interrogate** targets **`scripts`** with **`--fail-under 95`** to match stated docstring coverage policy.
 - **`reusable-workflows-quality.yml` — zizmor**: Build a bash array of paths that **exist** (e.g. **`.github/workflows`**, **`.github/actions`**, **`.github/dependabot.yml`**, **`examples`**), then run **`zizmor`** **once** with that list (or skip if empty). Avoid passing only a directory that yields **no auditable files** — zizmor exits with **“no inputs collected”** (exit code 3).
 - **`qa-install-toolchain`**: **Syft / Grype** installed to **`/usr/local/bin`** with `sudo tar` (avoids **`GITHUB_PATH`** writes flagged by zizmor; tools still on default PATH).
@@ -75,8 +77,8 @@ Use `git log --oneline` for the authoritative list.
 
 ### 5. Documentation
 
-- [`docs/workflows.md`](workflows.md): `devops_ref`, docstring / interrogate behavior by tier, **no duplicate Grype CLI fail-on** alongside gates.
-- Other docs under [`docs/`](README.md) unchanged unless noted in commits.
+- [`docs/workflows.md`](workflows.md): multi-job **`python-quality.yml`**, Semgrep High policy, **`workflow_call` outputs**, **`release-github`** / **`publish-pypi`** behavior, **no duplicate Grype CLI fail-on** alongside gates.
+- [`README.md`](../README.md): PyPI manual dispatch + **`pypi`** environment.
 
 ### 6. Tests / tooling
 
@@ -106,7 +108,8 @@ Use `git log --oneline` for the authoritative list.
 | `gates.json` normalization | `scripts/quality_gates/jsonutil.py` (`read_json` returns `None` on missing file, invalid JSON, **OSError**, or **UnicodeError**) |
 | Gate orchestration | `scripts/quality_gates/evaluation.py`, `engine.py` |
 | CI bundle | `scripts/ci_run_quality.sh` |
-| Reusable app workflow | `.github/workflows/python-quality.yml` |
+| Reusable app workflow | `.github/workflows/python-quality.yml` (multi-job; see `docs/workflows.md`) |
+| Semgrep SARIF reader | `scripts/quality_gates/readers_semgrep.py` |
 | Toolchain composite | `.github/actions/qa-install-toolchain/action.yml` |
 | Zizmor policy | `.github/config/zizmor.yml` |
 | Caller docs | `docs/workflows.md`, `examples/call-python-quality.yml` |

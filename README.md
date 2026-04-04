@@ -40,8 +40,8 @@ jobs:
 | Path | Purpose |
 | --- | --- |
 | `.github/workflows/README.md` | **App vs DevOps** workflow index |
-| `.github/workflows/python-quality.yml` | **Apps:** `workflow_call` quality pipeline |
-| `.github/workflows/publish-pypi.yml` | **This repo:** PyPI on tags (apps rarely call this) |
+| `.github/workflows/python-quality.yml` | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
+| `.github/workflows/publish-pypi.yml` | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`) |
 | `.github/workflows/mutmut-nightly.yml` | **This repo:** mutation testing schedule |
 | `.github/workflows/reusable-workflows-quality.yml` | **This repo:** actionlint, zizmor, Scorecard |
 | `.github/workflows/devops-scripts-ci.yml` | **This repo:** pytest / pylint / Radon on `scripts/` |
@@ -70,4 +70,4 @@ Set `QUALITY_OUTPUT_DIR` to your artifact directory when running gates locally.
 
 ## PyPI publishing
 
-Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on PyPI, then push a tag matching `v*.*.*`.
+Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on PyPI, create a **`pypi`** [environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) with any required approvals, then run **Publish to PyPI** via **`workflow_dispatch`**.

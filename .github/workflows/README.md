@@ -23,7 +23,7 @@ Run on pushes/PRs to this repo (or on schedule). **Do not** point application re
 | **`dependency-review.yml`** | GitHub Dependency review on lockfile PRs |
 | **`python-eol-watch.yml`** | Issues when tracked Python versions hit EOL (endoflife.date) |
 | **`mutmut-nightly.yml`** | Scheduled mutation testing for this repo |
-| **`publish-pypi.yml`** | Publish **this** repo’s package to PyPI on version tags |
+| **`publish-pypi.yml`** | Manual PyPI publish (**`workflow_dispatch`**, **`environment: pypi`**) |
 
 ## Layout elsewhere under `.github/`
 
