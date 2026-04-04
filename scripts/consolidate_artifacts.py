@@ -49,32 +49,52 @@ def _tool_console_summary(out: Path) -> str:
     return "\n".join(blocks) if blocks else ""
 
 
+def _gates_rows_passed_and_note(out: Path) -> tuple[list[dict], bool, str]:
+    """Parse ``gates.json`` if present; else fail-closed with an explanatory note."""
+    gates_path = out / "gates.json"
+    if not gates_path.is_file():
+        note = (
+            "_`gates.json` is missing (quality gates may have failed or not run); "
+            "marking overall result as failed for this report._\n\n"
+        )
+        return [], False, note
+    try:
+        data = json.loads(gates_path.read_text(encoding="utf-8", errors="replace"))
+        rows, passed = gates_rows_and_passed(data)
+        return rows, passed, ""
+    except json.JSONDecodeError:
+        note = (
+            "_`gates.json` was not valid JSON (e.g. partial write); "
+            "marking overall result as failed for this report._\n\n"
+        )
+        return [], False, note
+
+
+def _write_bundle_zip(out: Path) -> Path:
+    """Zip all files under ``out`` except the bundle itself; overwrite if present."""
+    zip_path = out / "quality_bundle.zip"
+    if zip_path.is_file():
+        zip_path.unlink()
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in sorted(out.rglob("*")):
+            if f.is_file() and f.name != "quality_bundle.zip":
+                zf.write(f, arcname=str(f.relative_to(out)))
+    return zip_path
+
+
 def main() -> int:
     """Write ``quality_report.md`` and ``quality_bundle.zip`` under ``QUALITY_OUTPUT_DIR``."""
     out = Path(os.environ.get("QUALITY_OUTPUT_DIR", "quality-output")).resolve()
     out.mkdir(parents=True, exist_ok=True)
 
-    gates_path = out / "gates.json"
-    rows: list[dict] = []
-    passed = True
-    gates_parse_note = ""
-    if gates_path.is_file():
-        try:
-            data = json.loads(gates_path.read_text(encoding="utf-8", errors="replace"))
-            rows, passed = gates_rows_and_passed(data)
-        except json.JSONDecodeError:
-            rows = []
-            passed = False
-            gates_parse_note = (
-                "_`gates.json` was not valid JSON (e.g. partial write); "
-                "marking overall result as failed for this report._\n\n"
-            )
+    rows, passed, gates_parse_note = _gates_rows_passed_and_note(out)
 
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
+    overall = "PASSED" if passed else "FAILED"
     md = f"""# Consolidated quality report
 
 Generated: {now}
-Overall: **{'PASSED' if passed else 'FAILED'}**
+Overall: **{overall}**
 
 ## Gate summary
 
@@ -86,17 +106,7 @@ Overall: **{'PASSED' if passed else 'FAILED'}**
 """
     report_path = out / "quality_report.md"
     report_path.write_text(md, encoding="utf-8")
-
-    zip_path = out / "quality_bundle.zip"
-    if zip_path.is_file():
-        zip_path.unlink()
-
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        for f in sorted(out.rglob("*")):
-            if f.is_file() and f.name != "quality_bundle.zip":
-                arc = f.relative_to(out)
-                zf.write(f, arcname=str(arc))
-
+    zip_path = _write_bundle_zip(out)
     print(f"Wrote {report_path} and {zip_path}")
     return 0
 

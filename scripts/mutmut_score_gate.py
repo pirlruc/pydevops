@@ -49,11 +49,36 @@ def _exit_for_score(score: float, min_score: float) -> int:
     return 0
 
 
+def _min_score_from_env() -> float | None:
+    """Parse MUTMUT_MIN_SCORE (default 85); return None and print stderr if invalid."""
+    raw = os.environ.get("MUTMUT_MIN_SCORE", "85").strip()
+    try:
+        val = float(raw)
+    except ValueError:
+        print(
+            f"mutmut score gate: MUTMUT_MIN_SCORE must be a number, got {raw!r}",
+            file=sys.stderr,
+        )
+        return None
+    if val != val:  # NaN
+        print("mutmut score gate: MUTMUT_MIN_SCORE must not be NaN", file=sys.stderr)
+        return None
+    if val < 0.0 or val > 100.0:
+        print(
+            f"mutmut score gate: MUTMUT_MIN_SCORE must be between 0 and 100, got {val}",
+            file=sys.stderr,
+        )
+        return None
+    return val
+
+
 def main() -> int:
     """Read mutmut-cicd-stats.json and exit 1 if score < MUTMUT_MIN_SCORE (default 85)."""
     raw_path = os.environ.get("MUTMUT_CICD_STATS", "mutants/mutmut-cicd-stats.json")
     path = Path(raw_path)
-    min_score = float(os.environ.get("MUTMUT_MIN_SCORE", "85"))
+    min_score = _min_score_from_env()
+    if min_score is None:
+        return 1
     root = _load_stats_root(path)
     if root is None:
         return 1

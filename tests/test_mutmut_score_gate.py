@@ -38,3 +38,27 @@ def test_gate_zero_denominator(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     p.write_text(json.dumps({"killed": 0, "survived": 0}), encoding="utf-8")
     monkeypatch.setenv("MUTMUT_CICD_STATS", str(p))
     assert msg.main() == 1
+
+
+def test_gate_invalid_min_score_not_a_number(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    p = tmp_path / "stats.json"
+    p.write_text(json.dumps({"killed": 90, "survived": 10}), encoding="utf-8")
+    monkeypatch.setenv("MUTMUT_CICD_STATS", str(p))
+    monkeypatch.setenv("MUTMUT_MIN_SCORE", "not-a-float")
+    assert msg.main() == 1
+    err = capsys.readouterr().err
+    assert "MUTMUT_MIN_SCORE must be a number" in err
+
+
+def test_gate_min_score_out_of_range(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    p = tmp_path / "stats.json"
+    p.write_text(json.dumps({"killed": 90, "survived": 10}), encoding="utf-8")
+    monkeypatch.setenv("MUTMUT_CICD_STATS", str(p))
+    monkeypatch.setenv("MUTMUT_MIN_SCORE", "101")
+    assert msg.main() == 1
+    err = capsys.readouterr().err
+    assert "between 0 and 100" in err

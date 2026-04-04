@@ -194,17 +194,23 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           devops-checkout-path: ${{ github.workspace }}/.devops
 
-      - name: Install uv for quality gate CLI
-        uses: ./.devops/.github/actions/install-uv
+      - name: Install uv and Python for quality gate CLI
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: "."
 
       - name: Sync DevOps dependencies (quality gates)
-        run: uv sync --directory "${{ github.workspace }}/.devops"
+        run: uv sync --python "${{ inputs.python_version }}" --directory "${{ github.workspace }}/.devops"
 
       - name: Enforce Semgrep SARIF policy (High only; Low/Medium no-op)
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: uv run --directory "${{ github.workspace }}/.devops" python -m scripts.quality_gates --semgrep-shield-only
+        run: >
+          uv run --python "${{ inputs.python_version }}"
+          --directory "${{ github.workspace }}/.devops"
+          python -m scripts.quality_gates --semgrep-shield-only
 
       - name: Upload shield artifacts
         if: always()
@@ -465,11 +471,14 @@ jobs:
           path: .devops
           persist-credentials: false
 
-      - name: Install uv for reporting scripts
-        uses: ./.devops/.github/actions/install-uv
+      - name: Install uv and Python for reporting scripts
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: "."
 
       - name: Sync DevOps dependencies
-        run: uv sync --directory "${{ github.workspace }}/.devops"
+        run: uv sync --python "${{ inputs.python_version }}" --directory "${{ github.workspace }}/.devops"
 
       - name: Create merged quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
@@ -513,10 +522,14 @@ jobs:
 
       - id: license
         name: Enforce license policy on SBOM
+        continue-on-error: true
         env:
           SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
-        run: python3 "${{ github.workspace }}/.devops/scripts/license_gate.py"
+        run: >
+          uv run --python "${{ inputs.python_version }}"
+          --directory "${{ github.workspace }}/.devops"
+          python scripts/license_gate.py
 
       - id: evaluate-gates
         name: Evaluate configured quality gates
@@ -524,13 +537,19 @@ jobs:
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: uv run --directory "${{ github.workspace }}/.devops" python -m scripts.quality_gates
+        run: >
+          uv run --python "${{ inputs.python_version }}"
+          --directory "${{ github.workspace }}/.devops"
+          python -m scripts.quality_gates
 
       - name: Consolidate quality output files
         if: always()
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: python3 "${{ github.workspace }}/.devops/scripts/consolidate_artifacts.py"
+        run: >
+          uv run --python "${{ inputs.python_version }}"
+          --directory "${{ github.workspace }}/.devops"
+          python scripts/consolidate_artifacts.py
 
       - name: Upload quality bundle artifact
         if: always()
@@ -543,7 +562,11 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: python3 "${{ github.workspace }}/.devops/scripts/pr_comment_markdown.py" > "${{ github.workspace }}/quality-pr-comment.md"
+        run: >
+          uv run --python "${{ inputs.python_version }}"
+          --directory "${{ github.workspace }}/.devops"
+          python scripts/pr_comment_markdown.py
+          > "${{ github.workspace }}/quality-pr-comment.md"
 
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository

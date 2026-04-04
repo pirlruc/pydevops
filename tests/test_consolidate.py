@@ -29,13 +29,14 @@ def test_consolidate_writes_report_and_zip(tmp_path: Path, monkeypatch: pytest.M
 
 
 def test_consolidate_empty_gates_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Missing gates.json still writes report with empty table."""
+    """Missing gates.json writes FAILED overall (fail-closed) and an explanatory note."""
     out = tmp_path / "q2"
     out.mkdir()
     monkeypatch.setenv("QUALITY_OUTPUT_DIR", str(out))
     assert consolidate_main() == 0
     text = (out / "quality_report.md").read_text(encoding="utf-8")
-    assert "PASSED" in text or "FAILED" in text
+    assert "Overall: **FAILED**" in text
+    assert "`gates.json` is missing" in text
 
 
 def test_consolidate_table_sanitizes_cell_pipes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
