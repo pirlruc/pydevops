@@ -59,15 +59,7 @@ def _fmt_score(v: object) -> str:
 
 
 def _truncate(s: str, max_len: int) -> str:
-    """Single-line reason text capped for table width."""
-    s = s.replace("\n", " ").strip()
-    if len(s) <= max_len:
-        return s
-    return s[: max_len - 1] + "…"
-
-
-def _truncate_cell(s: str, max_len: int) -> str:
-    """Truncate one table cell to a column width budget."""
+    """Single-line table text (name, reason, etc.) capped to ``max_len`` with an ellipsis."""
     s = s.replace("\n", " ").strip()
     if len(s) <= max_len:
         return s
@@ -91,7 +83,7 @@ def _checks_table_block(checks: list[dict], reason_max: int, name_max: int = 44)
     headers = ("Check", "Score", "Reason")
     body: list[tuple[str, str, str]] = [
         (
-            _truncate_cell(str(c.get("name", "?")), name_max),
+            _truncate(str(c.get("name", "?")), name_max),
             _fmt_score(c.get("score")),
             _truncate(str(c.get("reason", "")), reason_max),
         )

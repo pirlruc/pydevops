@@ -5,10 +5,13 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-.}"
 DEVOPS_DIR="${DEVOPS_DIR:-.devops}"
-OUT="${QUALITY_OUTPUT_DIR:-quality-output}"
-mkdir -p "$OUT"
-
 cd "$APP_DIR"
+OUT="${QUALITY_OUTPUT_DIR:-quality-output}"
+# Resolve relative output dir against the app root (after cd) so writes match mkdir.
+if [[ "$OUT" != /* ]]; then
+  OUT="$(pwd)/$OUT"
+fi
+mkdir -p "$OUT"
 
 # High strictness: omit artifact files when a required tool is missing so gates fail closed.
 # Low/Medium: some missing CLIs still write minimal placeholders ({}, [], etc.) so downstream
