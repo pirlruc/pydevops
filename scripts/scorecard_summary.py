@@ -184,6 +184,36 @@ def _sarif_result_to_check(
     return {"name": name, "score": score, "reason": reason}
 
 
+def _repo_uri_from_sarif_run(run: dict[str, Any]) -> str | None:
+    """Best-effort repository URI Scorecard embeds in SARIF (analyzed project, not the action ref)."""
+    vcp = run.get("versionControlProvenance")
+    if isinstance(vcp, list):
+        for item in vcp:
+            if not isinstance(item, dict):
+                continue
+            for key in ("repositoryUri", "repositoryURL", "uri", "url", "repositoryUrl"):
+                val = item.get(key)
+                if isinstance(val, str) and val.strip():
+                    return val.strip()
+    props = run.get("properties")
+    if isinstance(props, dict):
+        for key in ("repositoryUri", "repository", "repo", "repositoryURL"):
+            val = props.get(key)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+    inv = run.get("invocations")
+    if isinstance(inv, list):
+        for item in inv:
+            if not isinstance(item, dict):
+                continue
+            wc = item.get("workingDirectory")
+            if isinstance(wc, dict):
+                uri = wc.get("uri")
+                if isinstance(uri, str) and uri.strip():
+                    return uri.strip()
+    return None
+
+
 def _sarif_driver(run: dict[str, Any]) -> dict[str, Any]:
     """Return the SARIF tool.driver object or raise a controlled error."""
     tool = run.get("tool")
@@ -223,9 +253,13 @@ def sarif_to_payload(sarif: dict[str, Any], repo_display: str | None) -> dict[st
         checks.append(_sarif_result_to_check(res, rule_by_id))
 
     checks.sort(key=lambda c: str(c.get("name", "")))
-    repo: str | dict[str, str] = "—"
-    if repo_display:
-        repo = {"name": repo_display}
+    sarif_repo = _repo_uri_from_sarif_run(run0)
+    chosen = (sarif_repo or (repo_display or "").strip() or "").strip() or None
+    if chosen:
+        src = "sarif" if sarif_repo else "cli"
+        repo: str | dict[str, str] = {"name": chosen, "source": src}
+    else:
+        repo = "—"
     return {"repo": repo, "checks": checks}
 
 
@@ -236,15 +270,24 @@ def render_markdown(data: dict, reason_max: int = 100) -> str:
     overall = _overall_score(data, checks)
     repo = data.get("repo")
     repo_name = "—"
+    source = ""
     if isinstance(repo, dict):
         repo_name = str(repo.get("name", "—"))
+        source = str(repo.get("source", "cli"))
     elif isinstance(repo, str):
         repo_name = repo
+
+    sarif_note = ""
+    if source == "sarif":
+        sarif_note = (
+            " _(URI from Scorecard SARIF metadata — the **GitHub repository** analyzed; "
+            "not a dependency package or the `ossf/scorecard-action` line in your workflow)_"
+        )
 
     lines: list[str] = [
         "## OpenSSF Scorecard summary",
         "",
-        f"- **Repository:** `{repo_name}`",
+        f"- **Repository analyzed:** `{repo_name}`{sarif_note}",
         f"- **Aggregate score (0–10, higher is better):** {_fmt_score(overall)}",
         "",
         "### Checks",
@@ -252,9 +295,7 @@ def render_markdown(data: dict, reason_max: int = 100) -> str:
     ]
     table_caption: str | None = None
     if repo_name != "—":
-        table_caption = (
-            f"Target repository (Scorecard analyzes this GitHub repo, not PyPI packages): {repo_name}"
-        )
+        table_caption = f"Scope: GitHub repository `{repo_name}` (OpenSSF Scorecard target)"
     lines.extend(_checks_table_block(checks, reason_max, repo_caption=table_caption))
     lines.append("")
 
@@ -287,7 +328,11 @@ def _parse_input(path: Path, repo_display: str | None) -> dict[str, Any]:
     if "checks" in data or _checks(data):
         out = dict(data)
         if repo_display and not (isinstance(out.get("repo"), dict) and out["repo"].get("name")):
-            out["repo"] = {"name": repo_display}
+            out["repo"] = {"name": repo_display, "source": "cli"}
+        elif isinstance(out.get("repo"), dict):
+            merged = dict(out["repo"])
+            merged.setdefault("source", "cli")
+            out["repo"] = merged
         return out
 
     raise ValueError("Unrecognized format: expected Scorecard JSON or SARIF 2.1.0")

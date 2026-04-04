@@ -199,16 +199,20 @@ jobs:
           working-directory: "."
 
       - name: Sync DevOps dependencies (quality gates)
-        run: uv sync --python "${{ inputs.python_version }}" --directory "${{ github.workspace }}/.devops"
+        env:
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
 
       - name: Enforce Semgrep SARIF policy (High only; Low/Medium no-op)
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: >
-          uv run --python "${{ inputs.python_version }}"
-          --directory "${{ github.workspace }}/.devops"
-          python -m scripts.quality_gates --semgrep-shield-only
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python -m scripts.quality_gates --semgrep-shield-only
 
       - name: Upload shield artifacts
         if: always()
@@ -476,7 +480,10 @@ jobs:
           working-directory: "."
 
       - name: Sync DevOps dependencies
-        run: uv sync --python "${{ inputs.python_version }}" --directory "${{ github.workspace }}/.devops"
+        env:
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
 
       - name: Create merged quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
@@ -524,10 +531,11 @@ jobs:
         env:
           SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
-        run: >
-          uv run --python "${{ inputs.python_version }}"
-          --directory "${{ github.workspace }}/.devops"
-          python scripts/license_gate.py
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/license_gate.py
 
       - id: evaluate-gates
         name: Evaluate configured quality gates
@@ -535,19 +543,21 @@ jobs:
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: >
-          uv run --python "${{ inputs.python_version }}"
-          --directory "${{ github.workspace }}/.devops"
-          python -m scripts.quality_gates
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python -m scripts.quality_gates
 
       - name: Consolidate quality output files
         if: always()
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: >
-          uv run --python "${{ inputs.python_version }}"
-          --directory "${{ github.workspace }}/.devops"
-          python scripts/consolidate_artifacts.py
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/consolidate_artifacts.py
 
       - name: Upload quality bundle artifact
         if: always()
@@ -560,11 +570,12 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-        run: >
-          uv run --python "${{ inputs.python_version }}"
-          --directory "${{ github.workspace }}/.devops"
-          python scripts/pr_comment_markdown.py
-          > "${{ github.workspace }}/quality-pr-comment.md"
+          UV_PYTHON: ${{ inputs.python_version }}
+          DEVOPS_ROOT: ${{ github.workspace }}/.devops
+          COMMENT_FILE: ${{ github.workspace }}/quality-pr-comment.md
+        run: |
+          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/pr_comment_markdown.py > "${COMMENT_FILE}"
 
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository

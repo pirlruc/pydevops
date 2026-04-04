@@ -128,24 +128,25 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          mkdir -p _diag
           echo "actionlint — scanning workflow files under .github/workflows/"
           find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort | sed 's/^/  /'
           echo "actionlint — scanning composite actions under .github/actions/**/action.y*ml"
           find .github/actions -type f \( -name 'action.yml' -o -name 'action.yaml' \) 2>/dev/null | sort | sed 's/^/  /' || true
-          echo "::add-matcher::${GITHUB_WORKSPACE}/.github/matchers/actionlint.json"
           set +e
-          actionlint -color
-          al=$?
+          actionlint -no-color 2>&1 | tee _diag/actionlint.txt
+          al=${PIPESTATUS[0]}
           set -e
-          echo "::remove-matcher owner=actionlint::"
           if [ "$al" -eq 0 ]; then
             echo "actionlint: OK (no findings)."
           fi
           exit "$al"
 
       - name: Install workflow scanner from pins
+        env:
+          REPO_ROOT: ${{ github.workspace }}
         run: |
-          python3 -m pip install --user -r "${{ github.workspace }}/.github/dependencies/zizmor/requirements.txt"
+          python3 -m pip install --user -r "${REPO_ROOT}/.github/dependencies/zizmor/requirements.txt"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - id: zizmor
@@ -153,6 +154,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          mkdir -p _diag
           inputs=()
           for p in .github/workflows .github/actions .github/dependabot.yml examples; do
             if [ -e "$p" ]; then
@@ -160,10 +162,35 @@ jobs:
             fi
           done
           if [ "${#inputs[@]}" -eq 0 ]; then
-            echo "No zizmor inputs found; skipping."
+            echo "No zizmor inputs found; skipping." | tee _diag/zizmor.txt
             exit 0
           fi
-          zizmor -c .github/config/zizmor.yml --format github "${inputs[@]}"
+          set +e
+          zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}" 2>&1 | tee _diag/zizmor.txt
+          zm=${PIPESTATUS[0]}
+          set -e
+          exit "$zm"
+
+      - name: Workflow lint — job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Workflow lint"
+            echo ""
+            echo "### actionlint"
+            echo ""
+            echo '```text'
+            if [ -f _diag/actionlint.txt ]; then cat _diag/actionlint.txt; else echo "(no actionlint log)"; fi
+            echo '```'
+            echo ""
+            echo "### zizmor"
+            echo ""
+            echo '```text'
+            if [ -f _diag/zizmor.txt ]; then cat _diag/zizmor.txt; else echo "(no zizmor log)"; fi
+            echo '```'
+            echo ""
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Gate — workflow lint job
         if: always()
@@ -180,7 +207,7 @@ jobs:
             failed+=("zizmor")
           fi
           if [ "${#failed[@]}" -gt 0 ]; then
-            echo "::error::Workflow lint failed: ${failed[*]} (see annotations and prior steps)."
+            echo "::error::Workflow lint failed: ${failed[*]} (see this job's summary card)."
             exit 1
           fi
           echo "Workflow lint job passed."
@@ -197,9 +224,6 @@ jobs:
          github.event.pull_request.head.repo.full_name == github.repository)
       )
     runs-on: ubuntu-latest
-    env:
-      # dependency-review-action still targets Node 20; avoid Node 24 force for this job (see docs/dependency-management.md).
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "false"
     permissions:
       contents: read
       pull-requests: write
@@ -230,13 +254,26 @@ jobs:
           results_format: sarif
           publish_results: true
 
+      - name: Supply chain — open summary section
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCORECARD_STEP_OUTCOME: ${{ steps.scorecard.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "${EVENT_NAME}" = "pull_request" ] || [ "${SCORECARD_STEP_OUTCOME}" != "skipped" ]; then
+            printf '%s\n\n' "## Supply chain" >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
       - name: Summarize Scorecard for job log
         if: always() && steps.scorecard.outcome != 'skipped'
         continue-on-error: true
+        env:
+          REPO_FULL: ${{ github.repository }}
         run: |
           set -euo pipefail
-          python3 scripts/scorecard_summary.py --repo "github.com/${{ github.repository }}" results.sarif \
-            | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
+          python3 scripts/scorecard_summary.py --repo "github.com/${REPO_FULL}" results.sarif \
+            | tee -a "${GITHUB_STEP_SUMMARY}"
 
       - id: review
         name: Dependency review (pull request)
@@ -245,8 +282,6 @@ jobs:
         uses: actions/dependency-review-action@v4.9.0
         with:
           show-openssf-scorecard: false
-          retry-on-snapshot-warnings: true
-          retry-on-snapshot-warnings-timeout: 180
 
       - name: Gate — supply chain job
         if: always()
@@ -310,26 +345,40 @@ jobs:
           git diff --exit-code -- .github/dependencies/quality-tools/requirements.txt
           python3 scripts/github_actions_pins.py --check
 
+      - name: Prepare log capture for job summary
+        run: mkdir -p _ci_summary
+
       - id: pytest
         name: Run automated test suite
         continue-on-error: true
-        run: uv run pytest
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          uv run pytest 2>&1 | tee _ci_summary/pytest.txt
 
       - id: pylint
         name: Lint scripts directory
         continue-on-error: true
-        run: uv run pylint scripts
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          uv run pylint scripts 2>&1 | tee _ci_summary/pylint.txt
 
       - id: docstrings
         name: Check docstring coverage on scripts
         continue-on-error: true
-        run: uv run interrogate scripts -vv --fail-under 95
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          uv run interrogate scripts -vv --fail-under 95 2>&1 | tee _ci_summary/interrogate.txt
 
       - id: radon_cc
         name: Enforce complexity limits on gates
         continue-on-error: true
         run: |
-          uv run python << 'PY'
+          set -euo pipefail
+          set -o pipefail
+          uv run python << 'PY' | tee _ci_summary/radon_cc.txt
           import json
           import subprocess
           import sys
@@ -379,7 +428,9 @@ jobs:
         name: Enforce maintainability floor on gates
         continue-on-error: true
         run: |
-          uv run python << 'PY'
+          set -euo pipefail
+          set -o pipefail
+          uv run python << 'PY' | tee _ci_summary/radon_mi.txt
           import json
           import subprocess
           import sys
@@ -419,6 +470,10 @@ jobs:
               sys.exit(1)
           print("PASS: maintainability index above floor for all files.")
           PY
+
+      - name: Scripts quality — job summary
+        if: always()
+        run: uv run python scripts/ci_scripts_job_summary.py >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Gate — scripts job
         if: always()

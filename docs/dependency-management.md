@@ -30,9 +30,7 @@ After merging a Dependabot PR that changes a manifest consumed by YAML, workflow
 
 ## Node.js runtime for JavaScript actions
 
-Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node 20 runtime run on Node 24 on the runner (see [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). **`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes.
-
-The **`ci-supply-chain`** job (Scorecard + dependency review) sets **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "false"`** so **`actions/dependency-review-action`** (still **`runs.using: node20`**) runs on its declared runtime without “forced to Node 24” deprecation warnings. Other jobs keep the workflow default.
+Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node 20 runtime run on Node 24 on the runner (see [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)). **`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes. **`ci-supply-chain`** does **not** override this; **`actions/dependency-review-action`** may still log a deprecation notice until the action ships a Node 24 runtime.
 
 ## Dependency review vs OpenSSF Scorecard (repository)
 
@@ -65,4 +63,4 @@ Bump **only** `uv-version.txt` (and merge) to roll the CLI forward. Dependabot d
 
 ## Dependency review
 
-Pull requests run **dependency review** inside the **`ci-supply-chain`** job in [`.github/workflows/devops-ci.yml`](../.github/workflows/devops-ci.yml) (with OpenSSF Scorecard on the same job when workflow files warrant it). Inline **`with:`** on **`dependency-review-action`** sets **`retry-on-snapshot-warnings`** for transient “no snapshot for head SHA” cases. Use **`allow-dependencies-licenses`** (comma-separated PURLs) in the workflow if you need to exempt specific packages from license checks when the graph lacks SPDX metadata.
+Pull requests run **dependency review** inside the **`ci-supply-chain`** job in [`.github/workflows/devops-ci.yml`](../.github/workflows/devops-ci.yml) (with OpenSSF Scorecard on the same job when workflow files warrant it). Use **`allow-dependencies-licenses`** (comma-separated PURLs) in the workflow if you need to exempt specific packages from license checks when the graph lacks SPDX metadata.
