@@ -32,13 +32,17 @@ def interrogate_coverage(root: Path) -> float | None:
     return float(m.group(1)) if m else None
 
 
+# pydoclint emits flake8-style lines: ``path:line:col: ERROR ...`` (col may be omitted in some versions).
+_RE_PYDOCLINT_VIOLATION = re.compile(r":\d+:\s*(?:\d+:\s*)?ERROR\s+", re.I)
+
+
 def pydoclint_issue_count(root: Path) -> int:
-    """Heuristic count of pydoclint error lines in captured output."""
+    """Count pydoclint violation lines (flake8-style ``...:line: ERROR``), not summary text."""
     p = root / "pydoclint.txt"
     if not p.is_file():
         return 0
-    return sum(
-        1
-        for line in p.read_text(encoding="utf-8", errors="replace").splitlines()
-        if "ERROR" in line or "error" in line.lower()
-    )
+    n = 0
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        if _RE_PYDOCLINT_VIOLATION.search(line):
+            n += 1
+    return n

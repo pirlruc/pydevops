@@ -20,13 +20,13 @@ def gate_bandit(root: Path, t: Thresholds) -> tuple[RowList, list[str]]:
         row = {
             "gate": "Bandit (SAST)",
             "actual": "missing or invalid bandit.json",
-            "required": "object with results[]",
+            "required": "parseable JSON object with results[]",
             "ok": False,
         }
         return [row], ["bandit report"]
     ok = n <= t.bandit_findings_max
     row = {
-        "gate": "Bandit (SAST) findings",
+        "gate": "Bandit (SAST)",
         "actual": str(n),
         "required": f"<= {t.bandit_findings_max}",
         "ok": ok,

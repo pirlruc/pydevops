@@ -75,7 +75,7 @@ def test_bandit_findings_fail_high(tmp_out: Path) -> None:
     )
     passed, rows = qg.evaluate(tmp_out, "High")
     assert not passed
-    assert any(r.get("gate") == "Bandit (SAST) findings" for r in rows)
+    assert any(r.get("gate") == "Bandit (SAST)" for r in rows)
 
 
 def test_bandit_findings_within_medium_cap_passes(tmp_out: Path) -> None:

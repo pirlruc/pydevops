@@ -1,0 +1,18 @@
+---
+description: Conventional commits and AI agent handoff doc updates for pydevops
+alwaysApply: true
+---
+
+# Handoff and commits
+
+When you implement or materially change **CI workflows**, **quality gates**, **scripts used by callers**, or **docs/contracts** in this repo:
+
+1. **Update** [`docs/ai-agent-handoff.md`](docs/ai-agent-handoff.md) so the next human or agent session reflects the new behavior (what changed, where, and any non-obvious decisions). Skip only for trivial typo-only edits.
+
+2. At the **end of your final reply** to the user, include a **conventional commit** message suggestion (one line) in the form:
+
+   `type(scope): imperative description`
+
+   Use types such as `fix`, `feat`, `docs`, `ci`, `refactor`, `test`. Scopes examples: `ci`, `quality-gates`, `scripts`, `workflows`.
+
+This project uses that format in git history; matching it keeps automation and reviewers aligned.

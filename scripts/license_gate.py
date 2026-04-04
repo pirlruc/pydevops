@@ -10,11 +10,21 @@ from pathlib import Path
 
 
 def _parse_deny_list(raw: str) -> list[str]:
-    """Return normalized lowercase deny substrings from a JSON array string."""
+    """Return normalized lowercase deny substrings from a JSON array string.
+
+    Only string entries are used; ``null``, numbers, and other types are skipped so malformed
+    values cannot become accidental patterns (e.g. ``"none"`` from ``null``).
+    """
     deny = json.loads(raw)
     if not isinstance(deny, list):
         raise ValueError("LICENSE_DENY_LIST must be a JSON array")
-    return [str(x).lower().strip() for x in deny if str(x).strip()]
+    out: list[str] = []
+    for x in deny:
+        if isinstance(x, str):
+            s = x.lower().strip()
+            if s:
+                out.append(s)
+    return out
 
 
 def _find_license_hits(packages: list[dict], deny_l: list[str]) -> list[str]:

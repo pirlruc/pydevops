@@ -38,10 +38,19 @@ def test_license_gate_not_list(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
 
 
 def test_parse_deny_list() -> None:
-    """_parse_deny_list normalizes entries."""
+    """_parse_deny_list normalizes string entries; skips non-strings."""
     from scripts.license_gate import _parse_deny_list
 
     assert _parse_deny_list('["MIT", " GPL "]') == ["mit", "gpl"]
+    assert _parse_deny_list("[null, 123, \"gpl\"]") == ["gpl"]
+
+
+def test_parse_deny_list_skips_non_strings_no_none_pattern() -> None:
+    """Null and numbers must not become deny patterns like 'none' or '123'."""
+    from scripts.license_gate import _parse_deny_list
+
+    assert _parse_deny_list("[null]") == []
+    assert _parse_deny_list("[42]") == []
 
 
 def test_license_gate_packages_not_list(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
