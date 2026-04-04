@@ -10,8 +10,9 @@ mkdir -p "$OUT"
 
 cd "$APP_DIR"
 
-# High strictness: do not write non-empty placeholders for artifacts required by quality_gates
-# (empty/missing files let enforce_high_artifact_presence and parsers fail closed).
+# High strictness: do not write non-empty placeholders for artifacts required by quality_gates.
+# For all tiers: avoid success-shaped JSON when a tool is not installed (empty arrays, 0% dup,
+# empty matches) — that would make quality_gates under-count or pass gates without a real run.
 _high=0
 case "$(echo "${STRICTNESS_LEVEL:-Medium}" | tr '[:upper:]' '[:lower:]')" in
   high) _high=1 ;;
@@ -143,11 +144,7 @@ if [[ "${want_static}" == "1" ]]; then
       echo "jscpd did not produce ${OUT}/jscpd-report.json (see ${OUT}/jscpd.stderr)" >&2
     fi
   else
-    if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/jscpd-report.json"
-    else
-      echo '{"statistics":{"total":{"percentage":0}}}' >"$OUT/jscpd-report.json"
-    fi
+    rm -f "$OUT/jscpd-report.json"
   fi
 
   # Radon
@@ -180,11 +177,7 @@ if [[ "${want_security}" == "1" ]]; then
   if command -v bandit >/dev/null 2>&1; then
     bandit -q -r . -x ./.devops -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
   else
-    if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/bandit.json"
-    else
-      echo '{"results":[]}' >"$OUT/bandit.json"
-    fi
+    rm -f "$OUT/bandit.json"
   fi
 
   # deptry
@@ -198,11 +191,7 @@ if [[ "${want_security}" == "1" ]]; then
   if command -v pip-audit >/dev/null 2>&1; then
     pip-audit --format json --output "$OUT/pip_audit.json" 2>"$OUT/pip_audit.stderr" || true
   else
-    if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/pip_audit.json"
-    else
-      echo '[]' >"$OUT/pip_audit.json"
-    fi
+    rm -f "$OUT/pip_audit.json"
   fi
 
   # Syft SBOMs
@@ -210,23 +199,14 @@ if [[ "${want_security}" == "1" ]]; then
     syft scan dir:. -o cyclonedx-json="$OUT/sbom-cyclonedx.json" 2>"$OUT/syft.stderr" || true
     syft scan dir:. -o spdx-json="$OUT/sbom-spdx.json" 2>>"$OUT/syft.stderr" || true
   else
-    if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/sbom-cyclonedx.json" "$OUT/sbom-spdx.json"
-    else
-      echo '{}' >"$OUT/sbom-cyclonedx.json"
-      echo '{}' >"$OUT/sbom-spdx.json"
-    fi
+    rm -f "$OUT/sbom-cyclonedx.json" "$OUT/sbom-spdx.json"
   fi
 
   # Grype (SBOM)
   if command -v grype >/dev/null 2>&1 && [[ -f "$OUT/sbom-cyclonedx.json" ]]; then
     grype "sbom:$OUT/sbom-cyclonedx.json" -o json >"$OUT/grype.json" 2>"$OUT/grype.stderr" || true
   else
-    if [[ "${_high}" == "1" ]]; then
-      rm -f "$OUT/grype.json"
-    else
-      echo '{"matches":[]}' >"$OUT/grype.json"
-    fi
+    rm -f "$OUT/grype.json"
   fi
 fi
 
