@@ -1,0 +1,18 @@
+---
+description: Interrogate docstring coverage (scripts/) when editing Python under scripts/
+globs: scripts/**/*.py
+alwaysApply: false
+---
+
+# Docstring coverage (interrogate)
+
+CI (**`devops-ci.yml`** → **`ci-scripts`**) runs **`interrogate scripts -vv --fail-under 95`**, matching **`[tool.interrogate]`** in **`pyproject.toml`** (**`exclude`** includes **`tests/`** — only **`scripts/`** is measured).
+
+When you **add or edit** **`scripts/**/*.py`**, before finishing:
+
+1. Run **`uv run interrogate scripts -vv --fail-under 95`** from the repo root (same as CI). If the **`interrogate`** entrypoint is missing, use **`uv run --group quality-tools python -m interrogate scripts -vv --fail-under 95`** after **`uv sync`**.
+2. If it fails, add minimal module/function docstrings until **actual ≥ 95%**; match the style of neighboring modules.
+
+**Always-applied** context: **[`handoff-and-commits.mdc`](handoff-and-commits.mdc)** points here so sessions that touch **`scripts/`** do not skip the gate.
+
+See also **[`radon-complexity.mdc`](radon-complexity.mdc)** for cyclomatic complexity on **`scripts/`** and **`tests/`**.

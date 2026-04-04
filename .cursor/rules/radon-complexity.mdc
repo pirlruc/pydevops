@@ -14,3 +14,5 @@ When you add or edit **Python** (`.py`) files under **`scripts/`** or **`tests/`
 Malformed JSON often uses **booleans** where numbers are expected — **`bool`** is a **`int`** subclass in Python, so use **`isinstance(x, (int, float)) and not isinstance(x, bool)`** or shared helpers when reading numeric fields from artifacts.
 
 Reference: thresholds in **`scripts/quality_gates/config.py`** and CI Radon checks for this repo’s **`scripts/quality_gates`** package.
+
+For **docstring coverage** on **`scripts/`** (separate from Radon), see **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)**.

@@ -25,6 +25,7 @@ def test_render_markdown_table_and_no_action_verdict() -> None:
     assert "Scope: GitHub repository" in md
     assert "Binary-Artifacts" in md
     assert "Token-Permissions" in md
+    assert "Package / ref" in md
     assert "9.0" in md
     assert "No immediate action required" in md
     assert "Action needed" not in md
@@ -223,6 +224,16 @@ def test_sarif_to_payload_and_render() -> None:
                                 "Click Remediation section below to solve this issue"
                             )
                         },
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "region": {
+                                        "startLine": 30,
+                                        "snippet": {"text": "step-security/harden-runner@v2.16.1"},
+                                    }
+                                }
+                            }
+                        ],
                     }
                 ],
             }
@@ -233,8 +244,10 @@ def test_sarif_to_payload_and_render() -> None:
     assert "github.com/o/r" in md
     assert "Check X" in md
     assert "Check X" in md and "10" in md and "+---" in md
+    assert "step-security/harden-runner@v2.16.1" in md
     assert "Click Remediation" not in md
     assert "no issues" in md
+    assert payload["checks"][0]["snippet"] == "step-security/harden-runner@v2.16.1"
 
 
 def test_sarif_repo_from_run_properties() -> None:

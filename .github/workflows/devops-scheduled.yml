@@ -57,7 +57,7 @@ jobs:
           al=${PIPESTATUS[0]}
           set -e
           if [ "$al" -eq 0 ]; then
-            echo "actionlint: OK (no findings)."
+            echo "actionlint: OK (no findings)." | tee -a _diag/actionlint.txt
           fi
           exit "$al"
 
@@ -106,7 +106,7 @@ jobs:
             echo "### zizmor"
             echo ""
             echo '```text'
-            if [ -f _diag/zizmor.txt ]; then cat _diag/zizmor.txt; else echo "(no zizmor log)"; fi
+            if [ -f _diag/zizmor.txt ]; then sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' _diag/zizmor.txt; else echo "(no zizmor log)"; fi
             echo '```'
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"

@@ -10,10 +10,10 @@ import pytest
 from scripts import ci_scripts_job_summary
 from scripts.ci_scripts_job_summary import (
     build_summary,
-    _interrogate_pct,
+    _interrogate_actual_pct,
     _log_tail_fence,
-    _pylint_rating,
-    _pytest_coverage_line,
+    _pylint_rating_value,
+    _pytest_coverage_pct,
     _pytest_tests_line,
     _radon_cc_summary,
     _radon_mi_summary,
@@ -56,7 +56,8 @@ def test_build_summary_pytest_coverage(summary_dir: Path) -> None:
     md = build_summary()
     assert "## Scripts quality (CI)" in md
     assert "145 passed" in md
-    assert "**95%**" in md
+    assert "**95%** line coverage" in md
+    assert "≥95% required" in md
 
 
 def test_build_summary_pylint_interrogate_radon(summary_dir: Path) -> None:
@@ -66,6 +67,7 @@ def test_build_summary_pylint_interrogate_radon(summary_dir: Path) -> None:
     assert "100.0%" in md
     assert "Overall max CC" in md
     assert "Minimum MI" in md
+    assert "| Tool | Result |" in md
 
 
 def test_build_summary_empty_logs_use_placeholders(summary_dir: Path) -> None:
@@ -85,16 +87,16 @@ def test_pytest_tests_line_empty() -> None:
     assert _pytest_tests_line("") == "—"
 
 
-def test_pytest_coverage_line_missing_total() -> None:
-    assert _pytest_coverage_line("no total line") == "—"
+def test_pytest_coverage_pct_missing() -> None:
+    assert _pytest_coverage_pct("no total line") == ""
 
 
-def test_pylint_rating_missing() -> None:
-    assert _pylint_rating("no rating") == "—"
+def test_pylint_rating_value_missing() -> None:
+    assert _pylint_rating_value("no rating") == ""
 
 
-def test_interrogate_pct_missing() -> None:
-    assert _interrogate_pct("no percent here") == "—"
+def test_interrogate_actual_pct_missing() -> None:
+    assert _interrogate_actual_pct("no percent here") == ""
 
 
 def test_radon_cc_summary_missing() -> None:

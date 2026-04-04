@@ -138,7 +138,7 @@ jobs:
           al=${PIPESTATUS[0]}
           set -e
           if [ "$al" -eq 0 ]; then
-            echo "actionlint: OK (no findings)."
+            echo "actionlint: OK (no findings)." | tee -a _diag/actionlint.txt
           fi
           exit "$al"
 
@@ -166,6 +166,7 @@ jobs:
             exit 0
           fi
           set +e
+          # Color in this step’s log and _diag/zizmor.txt; strip ANSI when writing the job summary (next step).
           zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}" 2>&1 | tee _diag/zizmor.txt
           zm=${PIPESTATUS[0]}
           set -e
@@ -187,7 +188,7 @@ jobs:
             echo "### zizmor"
             echo ""
             echo '```text'
-            if [ -f _diag/zizmor.txt ]; then cat _diag/zizmor.txt; else echo "(no zizmor log)"; fi
+            if [ -f _diag/zizmor.txt ]; then sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' _diag/zizmor.txt; else echo "(no zizmor log)"; fi
             echo '```'
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"

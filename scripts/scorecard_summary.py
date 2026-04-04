@@ -80,16 +80,37 @@ def _truncate(s: str, max_len: int) -> str:
     return s[: max_len - 1] + "…"
 
 
-def _ascii_hline(w_n: int, w_s: int, w_r: int) -> str:
-    """Return the horizontal border line for the ASCII checks table."""
-    seg = "+{0}+{1}+{2}+"
-    return seg.format("-" * (w_n + 2), "-" * (w_s + 2), "-" * (w_r + 2))
+_SCORE_COL_INDEX = 1
 
 
-def _ascii_row(row: tuple[str, str, str], w_n: int, w_s: int, w_r: int) -> str:
-    """Render one left/right aligned row for the ASCII checks table."""
-    a, b, c = row
-    return f"| {a:<{w_n}} | {b:>{w_s}} | {c:<{w_r}} |"
+def _ascii_hline_widths(widths: tuple[int, ...]) -> str:
+    """Horizontal rule for a variable-width ASCII table."""
+    inner = "+".join("-" * (w + 2) for w in widths)
+    return f"+{inner}+"
+
+
+def _ascii_row_widths(row: tuple[str, ...], widths: tuple[int, ...]) -> str:
+    """One table row; score column (index 1) is right-aligned."""
+    parts: list[str] = []
+    for i, (cell, w) in enumerate(zip(row, widths, strict=True)):
+        if i == _SCORE_COL_INDEX:
+            parts.append(f"{cell:>{w}}")
+        else:
+            parts.append(f"{cell:<{w}}")
+    return "| " + " | ".join(parts) + " |"
+
+
+def _ascii_column_widths_multi(
+    headers: tuple[str, ...],
+    body: list[tuple[str, ...]],
+) -> tuple[int, ...]:
+    """Per-column max width from headers and body."""
+    n = len(headers)
+    widths = [len(headers[i]) for i in range(n)]
+    for r in body:
+        for i, cell in enumerate(r):
+            widths[i] = max(widths[i], len(cell))
+    return tuple(widths)
 
 
 def _text_fence_open(repo_caption: str | None) -> list[str]:
@@ -99,38 +120,71 @@ def _text_fence_open(repo_caption: str | None) -> list[str]:
     return ["```text", repo_caption, ""]
 
 
-def _ascii_column_widths(
-    headers: tuple[str, str, str],
-    body: list[tuple[str, str, str]],
-) -> tuple[int, int, int]:
-    """Column widths for the checks table from header labels and body rows."""
-    w_n = max(len(headers[0]), max((len(r[0]) for r in body), default=0))
-    w_s = max(len(headers[1]), max((len(r[1]) for r in body), default=0))
-    w_r = max(len(headers[2]), max((len(r[2]) for r in body), default=0))
-    return w_n, w_s, w_r
+def _snippet_text_from_physical_location(pl: dict[str, Any]) -> str:
+    """Return stripped ``region.snippet.text`` when present on a SARIF physical location."""
+    region = pl.get("region")
+    if not isinstance(region, dict):
+        return ""
+    sn = region.get("snippet")
+    if not isinstance(sn, dict):
+        return ""
+    t = sn.get("text")
+    return t.strip() if isinstance(t, str) and t.strip() else ""
+
+
+def _snippet_from_one_location(loc: object) -> str:
+    """Snippet text from one SARIF ``location`` object, or empty."""
+    if not isinstance(loc, dict):
+        return ""
+    pl = loc.get("physicalLocation")
+    if not isinstance(pl, dict):
+        return ""
+    return _snippet_text_from_physical_location(pl)
+
+
+def _first_snippet_among_locations(locs: list[Any]) -> str:
+    """Walk SARIF ``locations``; return first non-empty snippet text."""
+    for loc in locs:
+        got = _snippet_from_one_location(loc)
+        if got:
+            return got
+    return ""
+
+
+def _snippet_from_sarif_result(res: dict[str, Any]) -> str:
+    """First non-empty ``locations[].physicalLocation`` snippet text (action ref, path, etc.)."""
+    locs = res.get("locations")
+    if not isinstance(locs, list):
+        return ""
+    return _first_snippet_among_locations(locs)
 
 
 def _checks_table_block(
     checks: list[dict],
     reason_max: int,
     name_max: int = 44,
+    snippet_max: int = 40,
     repo_caption: str | None = None,
 ) -> list[str]:
     """ASCII +/| bordered table for aligned columns in logs and summaries."""
-    headers = ("Check", "Score", "Reason")
-    body: list[tuple[str, str, str]] = [
-        (
-            _truncate(str(c.get("name", "?")), name_max),
-            _fmt_score(c.get("score")),
-            _truncate(str(c.get("reason", "")), reason_max),
+    headers = ("Check", "Score", "Reason", "Package / ref")
+    body: list[tuple[str, str, str, str]] = []
+    for c in checks:
+        raw_snip = c.get("snippet", "")
+        snip = _truncate(str(raw_snip), snippet_max) if raw_snip else "—"
+        body.append(
+            (
+                _truncate(str(c.get("name", "?")), name_max),
+                _fmt_score(c.get("score")),
+                _truncate(str(c.get("reason", "")), reason_max),
+                snip,
+            )
         )
-        for c in checks
-    ]
-    w_n, w_s, w_r = _ascii_column_widths(headers, body)
-    sep = _ascii_hline(w_n, w_s, w_r)
+    widths = _ascii_column_widths_multi(headers, body)
+    sep = _ascii_hline_widths(widths)
     out = _text_fence_open(repo_caption)
-    out.extend([sep, _ascii_row(headers, w_n, w_s, w_r), sep])
-    out.extend(_ascii_row(r, w_n, w_s, w_r) for r in body)
+    out.extend([sep, _ascii_row_widths(headers, widths), sep])
+    out.extend(_ascii_row_widths(r, widths) for r in body)
     out.extend([sep, "```"])
     return out
 
@@ -181,7 +235,12 @@ def _sarif_result_to_check(
             reason = reason.split(cut, 1)[0].strip()
     rule = rule_by_id.get(rid, {})
     name = _rule_name(rule) if rule else rid or "?"
-    return {"name": name, "score": score, "reason": reason}
+    return {
+        "name": name,
+        "score": score,
+        "reason": reason,
+        "snippet": _snippet_from_sarif_result(res),
+    }
 
 
 def _repo_uri_from_sarif_run(run: dict[str, Any]) -> str | None:
