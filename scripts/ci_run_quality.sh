@@ -16,7 +16,8 @@ mkdir -p "$OUT"
 # High strictness: omit artifact files when a required tool is missing so gates fail closed.
 # Low/Medium: some missing CLIs still write minimal placeholders ({}, [], etc.) so downstream
 # parsers get valid JSON; security tools (bandit, pip-audit, grype, syft, jscpd without npx)
-# omit files instead of success-shaped payloads. See each section below.
+# omit files instead of success-shaped payloads. High also omits pydoclint.txt when pydoclint is
+# missing (required in HIGH_REQUIRED_FILES). See each section below.
 _high=0
 case "$(echo "${STRICTNESS_LEVEL:-Medium}" | tr '[:upper:]' '[:lower:]')" in
   high) _high=1 ;;
@@ -117,7 +118,11 @@ if [[ "${want_static}" == "1" ]]; then
     # shellcheck disable=SC2086
     pydoclint . ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
   else
-    echo "pydoclint not installed" >"$OUT/pydoclint.txt"
+    if [[ "${_high}" == "1" ]]; then
+      rm -f "$OUT/pydoclint.txt"
+    else
+      echo "pydoclint not installed" >"$OUT/pydoclint.txt"
+    fi
   fi
 
   # Interrogate (docstring coverage)

@@ -31,7 +31,7 @@ Use `git log --oneline` for the authoritative list.
 
 - Central evaluation: **`python -m scripts.quality_gates`** (reads `QUALITY_OUTPUT_DIR`, `STRICTNESS_LEVEL`), writes **`gates.json`**.
 - **Strictness tiers** (`Low` / `Medium` / `High`) map to **`Thresholds`** in [`scripts/quality_gates/config.py`](../scripts/quality_gates/config.py) (coverage, Pylint, Radon CC/MI, duplication, vulns, **Bandit finding counts**, docstrings, etc.).
-- **High** tier additionally requires non-empty artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if tools skipped).
+- **High** tier additionally requires artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if tools skipped); includes **`pydoclint.txt`** so a missing pydoclint run cannot be confused with zero findings. **`pydoclint.txt`** may be **empty** when there are zero violations (still counts as present).
 - Parsers were **hardened** to fail closed on malformed JSON (coverage, radon, pip-audit, grype, cloc, SARIF tool/driver shapes in `scorecard_summary.py`, etc.).
 - **`scripts/quality_gates/jsonutil.py` — `gates_rows_and_passed()`**: If the root is a dict and `rows` is a list, **`passed` defaults to `False` when the key is missing** (legacy / partial `gates.json` must not summarize as PASSED). Used by **`pr_comment_markdown.py`** and **`consolidate_artifacts.py`** (alongside invalid-JSON handling there).
 - **Vulnerabilities**: `pip_audit_vulns()` / `grype_severities()` return **`None`** when the report is missing, invalid JSON, or wrong top-level type; **`gate_vulnerabilities`** adds explicit failing rows (report shape / missing file) instead of treating as zero findings. **`HIGH_REQUIRED_FILES`** includes **`pip_audit.json`** and **`grype.json`** so High tier cannot skip those scans silently. **`readers_grype_gitleaks.count_one_grype_match`** requires **`vulnerability`** to be a **dict** before reading **`severity`** (non-dict values are ignored so malformed Grype rows do not raise).
@@ -46,7 +46,7 @@ Use `git log --oneline` for the authoritative list.
 
 - Phases: **`QUALITY_PHASES`** = `static` | `security` | `test` | `all`.
 - **Output directory**: `cd "$APP_DIR"` first; then **`OUT`** from `QUALITY_OUTPUT_DIR` — **relative paths are resolved under the app root** so `mkdir` and writes align.
-- **No fake “success-shaped” outputs** for missing **security** tools (bandit, pip-audit, grype, syft, jscpd when `npx` missing): files are **omitted** instead of empty JSON implying zero issues.
+- **No fake “success-shaped” outputs** for missing **security** tools (bandit, pip-audit, grype, syft, jscpd when `npx` missing): files are **omitted** instead of empty JSON implying zero issues. **High** also **omits `pydoclint.txt`** when the **pydoclint** CLI is missing (Low/Medium still write the placeholder line that gates ignore for “not installed”).
 - **Syft**: If the **`syft`** CLI is absent, **`sbom-cyclonedx.json`** / **`sbom-spdx.json`** are **removed** (not `{}`), consistent with other security fallbacks. Grype only runs when **`sbom-cyclonedx.json`** exists.
 - **Low/Medium** may still use minimal placeholders for some **static** tools (documented in header comment); High omits more aggressively.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.

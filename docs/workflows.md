@@ -76,7 +76,7 @@ Gates are evaluated in `scripts/quality_gates` from CI artifacts. **Docstring co
 | --- | --- | --- | --- |
 | **Low** | ≥ 70% | ≤ 8.0 | Relaxed defaults for legacy codebases |
 | **Medium** | ≥ 85% | ≤ 5.0 | Default for most callers |
-| **High** | **≥ 95%** | ≤ 2.0 | Also: Pylint ≥ 9.5, max cyclomatic ≤ 5 (&lt; 6), min Radon MI ≥ 60, stricter coverage/duplication/vuln caps; required artifacts in `HIGH_REQUIRED_FILES` (`scripts/quality_gates/config.py`) must exist |
+| **High** | **≥ 95%** | ≤ 2.0 | Also: Pylint ≥ 9.5, max cyclomatic ≤ 5 (&lt; 6), min Radon MI ≥ 60, stricter coverage/duplication/vuln caps; required artifacts in `HIGH_REQUIRED_FILES` (`scripts/quality_gates/config.py`) must exist (including **`pydoclint.txt`** for the docstring issue-rate gate) |
 
 Other numeric thresholds (coverage %, Pylint, Radon CC/MI, duplication, issues/KLoC, vulnerabilities) are defined alongside these in the same `Thresholds` table in code.
 

@@ -60,6 +60,15 @@ def test_high_fails_missing_artifact(tmp_out: Path) -> None:
     assert any("bandit.json" in r.get("gate", "") for r in rows)
 
 
+def test_high_fails_missing_pydoclint_artifact(tmp_out: Path) -> None:
+    """High strictness requires pydoclint.txt so a missing run cannot masquerade as zero issues."""
+    (tmp_out / "pydoclint.txt").unlink()
+    (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
+    passed, rows = qg.evaluate(tmp_out, "High")
+    assert not passed
+    assert any("pydoclint.txt" in str(r.get("gate", "")) for r in rows)
+
+
 def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
     """High strictness passes when artifacts meet stricter numeric gates."""
     (tmp_out / "bandit.json").write_text(json.dumps({"results": []}), encoding="utf-8")
@@ -212,8 +221,8 @@ def test_license_gate_hits(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     assert license_gate.main() == 1
 
 
-def test_vulnerabilities_fail_high(tmp_out: Path) -> None:
-    """High-severity vulns fail when above tier limit."""
+def test_vulnerabilities_high_severity_fails_medium_tier(tmp_out: Path) -> None:
+    """Medium tier allows zero high-severity vulns; a single HIGH finding fails."""
     (tmp_out / "pip_audit.json").write_text(
         json.dumps([{"vulns": [{"id": "h1", "severity": "HIGH", "description": ""}]}]),
         encoding="utf-8",

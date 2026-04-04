@@ -83,6 +83,7 @@ HIGH_REQUIRED_FILES: tuple[str, ...] = (
     "radon_cc.json",
     "radon_mi.json",
     "interrogate.txt",
+    "pydoclint.txt",
     "ruff.json",
     "gitleaks.json",
     "bandit.json",

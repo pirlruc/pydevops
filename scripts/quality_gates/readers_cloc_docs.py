@@ -39,6 +39,11 @@ def interrogate_coverage(root: Path) -> float | None:
 _RE_PYDOCLINT_VIOLATION = re.compile(r":\d+:\s*(?:\d+:\s*)?ERROR\s+", re.I)
 
 
+def pydoclint_txt_present(root: Path) -> int | None:
+    """Return a sentinel if ``pydoclint.txt`` exists (file may be empty when there are zero findings)."""
+    return 0 if (root / "pydoclint.txt").is_file() else None
+
+
 def pydoclint_issue_count(root: Path) -> int:
     """Count pydoclint violation lines (flake8-style ``...:line: ERROR``), not summary text."""
     p = root / "pydoclint.txt"
