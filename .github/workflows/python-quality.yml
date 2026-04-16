@@ -640,7 +640,7 @@ jobs:
 
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.caller_pat || github.token }}
           script: |

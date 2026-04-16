@@ -251,7 +251,7 @@ jobs:
       - id: eol
         name: Open or skip EOL tracking issues
         continue-on-error: true
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
