@@ -167,7 +167,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -233,7 +233,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -307,7 +307,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -381,7 +381,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -458,7 +458,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -627,7 +627,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -665,7 +665,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
@@ -755,7 +755,7 @@ jobs:
       contents: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
 
