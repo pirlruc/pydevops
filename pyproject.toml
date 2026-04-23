@@ -23,7 +23,7 @@ scripts = [
 quality-tools = [
     "ruff==0.15.8",
     "pylint==4.0.5",
-    "mypy==1.20.0",
+    "mypy==1.20.2",
     "pydoclint==0.8.3",
     "interrogate==1.7.0",
     "bandit==1.9.4",
