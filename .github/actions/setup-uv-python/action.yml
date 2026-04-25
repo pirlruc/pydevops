@@ -1,8 +1,8 @@
+---
 name: Pinned tooling and Python setup
 description: >
   Installs the pinned dependency manager from uv-version.txt, then provisions the
   requested CPython version in working-directory.
-
 inputs:
   python-version:
     description: Python version for uv to provision
@@ -10,14 +10,14 @@ inputs:
   working-directory:
     description: Directory passed to subsequent steps (caller sets defaults)
     required: false
-    default: "."
+    default: .
   uv-cache-suffix:
     description: >
-      Optional suffix for astral-sh/setup-uv cache keys (e.g. github.job) so parallel jobs
+      Optional suffix for astral-sh/setup-uv cache keys (e.g. github.job) so parallel
+      jobs
       do not race on saving the same uv tool cache entry.
     required: false
-    default: ""
-
+    default: ''
 runs:
   using: composite
   steps:
@@ -25,18 +25,16 @@ runs:
       name: Read pinned installer version file
       shell: bash
       run: bash "${GITHUB_ACTION_PATH}/../../dependencies/emit-uv-version.sh"
-
     - name: Install pinned dependency tooling
       uses: astral-sh/setup-uv@v8.0.0
       with:
         version: ${{ steps.uv_version.outputs.version }}
         cache-suffix: ${{ inputs.uv-cache-suffix }}
-
     - name: Install requested Python interpreter
       shell: bash
       env:
         INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
         INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      run: |
+      run: |-
         cd "$INPUT_WORKING_DIRECTORY"
         uv python install "$INPUT_PYTHON_VERSION"

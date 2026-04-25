@@ -46,7 +46,8 @@ from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct, ruff
 
 
 def collect_gate_results(  # pylint: disable=too-many-locals
-    root: Path, strictness: str
+    root: Path,
+    strictness: str,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Run all gate checks and return (rows, failure labels)."""
     sn = normalized_strictness_level(strictness)
@@ -130,8 +131,8 @@ def evaluate(root: Path, strictness: str) -> tuple[bool, list[dict[str, Any]]]:
     rows, failures = collect_gate_results(root, strictness)
     passed = len(failures) == 0
     root.mkdir(parents=True, exist_ok=True)
-    (root / "gates.json").write_text(
-        json.dumps({"passed": passed, "failures": failures, "rows": rows}, indent=2),
-        encoding="utf-8",
+    (root / 'gates.json').write_text(
+        json.dumps({'passed': passed, 'failures': failures, 'rows': rows}, indent=2),
+        encoding='utf-8',
     )
     return passed, rows

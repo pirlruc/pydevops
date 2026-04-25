@@ -1,18 +1,15 @@
+---
 # Minimal example: call the reusable Python quality workflow from an application repository.
 # Copy to your app repo as `.github/workflows/quality.yml` and adjust tag.
 #
 # See docs/workflows.md for inputs, secrets, and required caller permissions.
-
 name: Quality (QaaS)
-
 on:
   pull_request:
   push:
     branches: [main, master]
-
 # Narrow the default token; the reusable workflow requests its own job-level permissions.
 permissions: {}
-
 jobs:
   python-quality:
     uses: pirlruc/pydevops/.github/workflows/python-quality.yml@v1.0.0
@@ -21,7 +18,7 @@ jobs:
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false
-      license_deny_list: "[]"
-      working_directory: "."
-      python_version: "3.13"
+      license_deny_list: '[]'
+      working_directory: .
+      python_version: '3.13'
     secrets: inherit

@@ -1,41 +1,35 @@
+---
 # Weekly maintenance: workflow lint, mutation testing (with score gate), Python EOL watch.
 # (Previously split across reusable-workflows-quality, mutmut-nightly, python-eol-watch.)
-
 name: DevOps scheduled
-
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 on:
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: 0 6 * * 1
   workflow_dispatch:
   push:
     branches: [main, master]
     paths:
-      - ".github/config/python-support-versions.json"
-      - ".github/workflows/devops-scheduled.yml"
-
+      - .github/config/python-support-versions.json
+      - .github/workflows/devops-scheduled.yml
 permissions: {}
-
 jobs:
   scheduled-workflow-lint:
-    name: "Scheduled — workflow lint (actionlint + zizmor)"
+    name: Scheduled — workflow lint (actionlint + zizmor)
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Download and install workflow linter
         env:
           ACTIONLINT_VERSION: 1.7.7
@@ -43,7 +37,6 @@ jobs:
           set -euo pipefail
           curl -sSL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash" | bash -s -- "${ACTIONLINT_VERSION}"
           sudo mv actionlint /usr/local/bin/
-
       - id: actionlint
         name: Lint workflow and action files
         continue-on-error: true
@@ -60,14 +53,12 @@ jobs:
             echo "actionlint: OK (no findings)." | tee -a _diag/actionlint.txt
           fi
           exit "$al"
-
       - name: Install workflow scanner from pins
         env:
           REPO_ROOT: ${{ github.workspace }}
         run: |
           python3 -m pip install --user -r "${REPO_ROOT}/.github/dependencies/zizmor/requirements.txt"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
       - id: zizmor
         name: Scan workflows for unsafe patterns
         continue-on-error: true
@@ -89,7 +80,6 @@ jobs:
           zm=${PIPESTATUS[0]}
           set -e
           exit "$zm"
-
       - name: Workflow lint — job summary
         if: always()
         run: |
@@ -110,7 +100,6 @@ jobs:
             echo '```'
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"
-
       - name: Gate — scheduled workflow lint job
         if: always()
         env:
@@ -130,9 +119,8 @@ jobs:
             exit 1
           fi
           echo "Scheduled workflow lint job passed."
-
   scheduled-openssf-scorecard:
-    name: "Scheduled — OpenSSF Scorecard"
+    name: Scheduled — OpenSSF Scorecard
     if: github.event_name != 'push' && github.event.repository.fork == false
     runs-on: ubuntu-latest
     permissions:
@@ -141,15 +129,13 @@ jobs:
       id-token: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - id: scorecard
         name: Run repository security scorecard
         continue-on-error: true
@@ -158,14 +144,12 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-
       - name: Summarize scorecard for job log
         continue-on-error: true
         run: |
           set -euo pipefail
           python3 scripts/scorecard_summary.py --repo "github.com/${{ github.repository }}" results.sarif \
             | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
-
       - name: Gate — Scorecard job
         if: always()
         env:
@@ -177,9 +161,8 @@ jobs:
             exit 1
           fi
           echo "Scorecard job passed."
-
   scheduled-mutmut:
-    name: "Scheduled — mutation testing (Mutmut)"
+    name: Scheduled — mutation testing (Mutmut)
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -187,44 +170,36 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Install pinned package tooling
         uses: ./.github/actions/install-uv
-
       - name: Install mutation testing runner
         run: |
           MUT=$(grep -v '^#' .github/dependencies/mutmut/requirements.txt | head -1 | tr -d ' \n\r')
           uv tool install "${MUT}"
-
       - name: Sync project and test dependencies
         run: |
           if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; fi
-
       - name: Run mutation testing suite
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           mutmut run
-
       - name: Export Mutmut CI stats
         run: |
           set -euo pipefail
           export PATH="$HOME/.local/bin:$PATH"
           mutmut export-cicd-stats
-
       - name: Gate — mutation score (min 85%)
         env:
-          MUTMUT_MIN_SCORE: "85"
+          MUTMUT_MIN_SCORE: '85'
         run: python3 scripts/mutmut_score_gate.py
-
       - name: Upload mutation results artifact
         if: always()
         uses: actions/upload-artifact@v7
@@ -235,9 +210,8 @@ jobs:
             .mutmut
             mutmut-results*
             mutants
-
   scheduled-eol:
-    name: "Scheduled — Python EOL watch"
+    name: Scheduled — Python EOL watch
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -247,11 +221,10 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - id: eol
         name: Open or skip EOL tracking issues
         continue-on-error: true
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
@@ -263,7 +236,6 @@ jobs:
               core.setFailed('interpreter_versions missing in python-support-versions.json');
               return;
             }
-
             const res = await fetch('https://endoflife.date/api/python.json');
             if (!res.ok) {
               core.setFailed(`endoflife.date HTTP ${res.status}`);
@@ -273,7 +245,6 @@ jobs:
             const table = await res.json();
             const today = new Date();
             const msPerDay = 86400000;
-
             const { owner, repo } = context.repo;
             const listOpen = async (titlePrefix) => {
               const { data } = await github.rest.issues.listForRepo({
@@ -284,10 +255,8 @@ jobs:
               });
               return data.filter((i) => i.title.startsWith(titlePrefix));
             };
-
             const pastIssues = await listOpen('[Python EOL]');
             const warnIssues = await listOpen('[Python EOL warning]');
-
             for (const v of versions) {
               const row = table.find((x) => x.cycle === v);
               if (!row) {
@@ -302,9 +271,7 @@ jobs:
                 core.warning(`Bad EOL date for Python ${v}: ${row.eol}`);
                 continue;
               }
-
               const daysToEol = Math.ceil((eol.getTime() - today.getTime()) / msPerDay);
-
               if (today > eol) {
                 const title = `[Python EOL] Interpreter ${v} is past end-of-life (${row.eol})`;
                 if (pastIssues.some((i) => i.title === title)) {
@@ -322,7 +289,6 @@ jobs:
                 core.info(`Created EOL issue for Python ${v}`);
                 continue;
               }
-
               if (daysToEol <= 90 && daysToEol >= 0) {
                 const title = `[Python EOL warning] Interpreter ${v} reaches EOL on ${row.eol}`;
                 if (warnIssues.some((i) => i.title === title)) {
@@ -340,12 +306,11 @@ jobs:
                 core.info(`Created EOL warning issue for Python ${v}`);
               }
             }
-
       - name: Gate — EOL watch job
         if: always()
         env:
           EOL_OUTCOME: ${{ steps.eol.outcome }}
-        run: |
+        run: |-
           set -euo pipefail
           if [ "${EOL_OUTCOME}" != "success" ]; then
             echo "::error::Python EOL watch step did not succeed."

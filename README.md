@@ -1,6 +1,9 @@
 # DevOps Quality-as-a-Service
 
-Reusable GitHub Actions workflows and scripts for high-performance Python CI/CD: **uv**, **Ruff**, **Pylint**, **Mypy**, **pydoclint**, **jscpd**, **Radon**, **Gitleaks**, **Semgrep**, **Bandit**, **deptry**, **pip-audit**, **Syft**, **Grype**, **pytest**/**coverage**, optional **DAST** (ZAP + Locust) and **Mutmut** (scheduled).
+Reusable GitHub Actions workflows and scripts for high-performance Python CI/CD: **uv**, **Ruff**,
+**Pylint**, **Mypy**, **pydoclint**, **jscpd**, **Radon**, **Gitleaks**, **Semgrep**, **Bandit**,
+**deptry**, **pip-audit**, **Syft**, **Grype**, **pytest**/**coverage**, optional **DAST** (ZAP +
+Locust) and **Mutmut** (scheduled).
 
 ## Documentation
 
@@ -15,11 +18,15 @@ Central reference material lives under **[`docs/`](./docs/README.md)**:
 
 ## Example app integration
 
-See **[`examples/call-python-quality.yml`](./examples/call-python-quality.yml)** and [`examples/README.md`](./examples/README.md).
+See **[`examples/call-python-quality.yml`](./examples/call-python-quality.yml)** and
+[`examples/README.md`](./examples/README.md).
 
 ## Versioning
 
-Pin callers to SemVer tags, for example `@v1.2.0`. The reusable workflow checks out **`.devops`** from the **same repo and ref** as that `uses:` pin (via `github.workflow_ref`) when **`devops_repository`** / **`devops_ref`** are omitted; set those inputs only to override (forks, drift).
+Pin callers to SemVer tags, for example `@v1.2.0`. The reusable workflow checks out **`.devops`**
+from the **same repo and ref** as that `uses:` pin (via `github.workflow_ref`) when
+**`devops_repository`** / **`devops_ref`** are omitted; set those inputs only to override (forks,
+drift).
 
 ```yaml
 jobs:
@@ -35,23 +42,23 @@ jobs:
 
 ## Repository layout
 
-| Path | Purpose |
-| --- | --- |
-| `.github/workflows/README.md` | **App vs DevOps** workflow index |
-| `.github/workflows/python-quality.yml` | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
-| `.github/workflows/publish-pypi.yml` | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`) |
-| `.github/workflows/devops-ci.yml` | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
-| `.github/workflows/devops-scheduled.yml` | **This repo:** weekly lint/Scorecard/Mutmut/EOL; EOL on policy push |
-| `.github/dependabot.yml` | uv, pip/npm under `dependencies/`, GitHub Actions |
-| `.github/dependencies/` | Pinned tools, `uv-version.txt`, jscpd npm package |
-| `.github/config/` | zizmor, Semgrep rules, `python-support-versions.json` |
-| `.github/actions/install-uv` | Composite: uv CLI from `uv-version.txt` |
-| `.github/actions/setup-uv-python` | Composite: uv + `uv python install` (callers from `.devops`) |
-| `.github/actions/qa-*` | Composites: secrets/SAST, toolchain, app+Ruff, phased `ci_run_quality.sh` |
-| `.github/config/semgrep/python-custom.yml` | Custom Semgrep rules |
-| `scripts/` | Metrics, gates, CI bundle shell script |
-| `docs/` | Workflow and security tooling documentation |
-| `examples/` | Minimal caller workflow samples |
+| Path                                       | Purpose                                                                           |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `.github/workflows/README.md`              | **App vs DevOps** workflow index                                                  |
+| `.github/workflows/python-quality.yml`     | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
+| `.github/workflows/publish-pypi.yml`       | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`)             |
+| `.github/workflows/devops-ci.yml`          | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
+| `.github/workflows/devops-scheduled.yml`   | **This repo:** weekly lint/Scorecard/Mutmut/EOL; EOL on policy push               |
+| `.github/dependabot.yml`                   | uv, pip/npm under `dependencies/`, GitHub Actions                                 |
+| `.github/dependencies/`                    | Pinned tools, `uv-version.txt`, jscpd npm package                                 |
+| `.github/config/`                          | zizmor, Semgrep rules, `python-support-versions.json`                             |
+| `.github/actions/install-uv`               | Composite: uv CLI from `uv-version.txt`                                           |
+| `.github/actions/setup-uv-python`          | Composite: uv + `uv python install` (callers from `.devops`)                      |
+| `.github/actions/qa-*`                     | Composites: secrets/SAST, toolchain, app+Ruff, phased `ci_run_quality.sh`         |
+| `.github/config/semgrep/python-custom.yml` | Custom Semgrep rules                                                              |
+| `scripts/`                                 | Metrics, gates, CI bundle shell script                                            |
+| `docs/`                                    | Workflow and security tooling documentation                                       |
+| `examples/`                                | Minimal caller workflow samples                                                   |
 
 ## Local tooling (uv)
 
@@ -65,4 +72,7 @@ Set `QUALITY_OUTPUT_DIR` to your artifact directory when running gates locally.
 
 ## PyPI publishing
 
-Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on PyPI, create a **`pypi`** [environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment) with any required approvals, then run **Publish to PyPI** via **`workflow_dispatch`**.
+Configure [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) for this repository on
+PyPI, create a **`pypi`**
+[environment](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment)
+with any required approvals, then run **Publish to PyPI** via **`workflow_dispatch`**.

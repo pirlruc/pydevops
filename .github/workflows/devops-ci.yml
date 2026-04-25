@@ -1,56 +1,52 @@
+---
 # Consolidated CI: path filter → three lanes (separate jobs):
 #   1) Workflow static analysis — actionlint + zizmor (same job: one checkout/setup, same scope).
 #   2) Python scripts quality — pytest, pylint, interrogate, Radon CC/MI (one job: one uv sync).
 #   3) Supply chain — OpenSSF Scorecard (workflows / dispatch) + dependency review (PRs only).
-
 name: DevOps CI
-
 # Prefer Node 24 for JavaScript actions until all upstream actions ship node24 runtimes.
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 on:
   pull_request:
     paths:
-      - "scripts/**"
-      - "tests/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".github/**"
-      - "examples/**"
-      - "docs/**"
-      - "**/uv.lock"
-      - "**/package-lock.json"
-      - "**/pnpm-lock.yaml"
-      - "**/yarn.lock"
-      - "**/requirements*.txt"
-      - "**/poetry.lock"
-      - "**/Pipfile.lock"
-      - ".github/dependencies/jscpd/package.json"
-      - ".github/dependabot.yml"
+      - scripts/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/**
+      - examples/**
+      - docs/**
+      - '**/uv.lock'
+      - '**/package-lock.json'
+      - '**/pnpm-lock.yaml'
+      - '**/yarn.lock'
+      - '**/requirements*.txt'
+      - '**/poetry.lock'
+      - '**/Pipfile.lock'
+      - .github/dependencies/jscpd/package.json
+      - .github/dependabot.yml
   push:
     branches: [main, master]
     paths:
-      - "scripts/**"
-      - "tests/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".github/**"
-      - "examples/**"
-      - "docs/**"
-      - "**/uv.lock"
-      - "**/package-lock.json"
-      - "**/pnpm-lock.yaml"
-      - "**/yarn.lock"
-      - "**/requirements*.txt"
-      - "**/poetry.lock"
-      - "**/Pipfile.lock"
-      - ".github/dependencies/jscpd/package.json"
-      - ".github/dependabot.yml"
+      - scripts/**
+      - tests/**
+      - pyproject.toml
+      - uv.lock
+      - .github/**
+      - examples/**
+      - docs/**
+      - '**/uv.lock'
+      - '**/package-lock.json'
+      - '**/pnpm-lock.yaml'
+      - '**/yarn.lock'
+      - '**/requirements*.txt'
+      - '**/poetry.lock'
+      - '**/Pipfile.lock'
+      - .github/dependencies/jscpd/package.json
+      - .github/dependabot.yml
   workflow_dispatch:
-
 permissions: {}
-
 jobs:
   changes:
     name: Detect changed paths
@@ -68,7 +64,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Filter paths
         if: github.event_name != 'workflow_dispatch'
         id: filter
@@ -84,7 +79,6 @@ jobs:
               - '.github/**'
               - 'examples/**'
               - 'docs/**'
-
       - name: Expose path flags
         id: flags
         env:
@@ -100,25 +94,23 @@ jobs:
             echo "scripts=${FILTER_SCRIPTS}" >> "$GITHUB_OUTPUT"
             echo "workflows=${FILTER_WORKFLOWS}" >> "$GITHUB_OUTPUT"
           fi
-
   ci-workflow-lint:
-    name: "CI — workflow lint (actionlint + zizmor)"
+    name: CI — workflow lint (actionlint + zizmor)
     needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
+      == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Download and install workflow linter
         env:
           ACTIONLINT_VERSION: 1.7.7
@@ -126,7 +118,6 @@ jobs:
           set -euo pipefail
           curl -sSL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash" | bash -s -- "${ACTIONLINT_VERSION}"
           sudo mv actionlint /usr/local/bin/
-
       - id: actionlint
         name: Lint workflow and action files
         continue-on-error: true
@@ -145,14 +136,12 @@ jobs:
             echo "actionlint: OK (no findings)." | tee -a _diag/actionlint.txt
           fi
           exit "$al"
-
       - name: Install workflow scanner from pins
         env:
           REPO_ROOT: ${{ github.workspace }}
         run: |
           python3 -m pip install --user -r "${REPO_ROOT}/.github/dependencies/zizmor/requirements.txt"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
       - id: zizmor
         name: Scan workflows for unsafe patterns
         continue-on-error: true
@@ -175,7 +164,6 @@ jobs:
           zm=${PIPESTATUS[0]}
           set -e
           exit "$zm"
-
       - name: Workflow lint — job summary
         if: always()
         run: |
@@ -196,7 +184,6 @@ jobs:
             echo '```'
             echo ""
           } >> "${GITHUB_STEP_SUMMARY}"
-
       - name: Gate — workflow lint job
         if: always()
         env:
@@ -216,14 +203,14 @@ jobs:
             exit 1
           fi
           echo "Workflow lint job passed."
-
   ci-supply-chain:
-    name: "CI — supply chain (Scorecard & dependency review)"
+    name: CI — supply chain (Scorecard & dependency review)
     needs: changes
     if: >
       github.event_name == 'pull_request' ||
       (
-        (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true') &&
+        (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
+      == 'true') &&
         github.event.repository.fork == false &&
         (github.event_name != 'pull_request' ||
          github.event.pull_request.head.repo.full_name == github.repository)
@@ -237,19 +224,18 @@ jobs:
       id-token: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - id: scorecard
         name: Run OpenSSF Scorecard (repository)
         if: >
-          (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows == 'true') &&
+          (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
+          == 'true') &&
           github.event.repository.fork == false &&
           (github.event_name != 'pull_request' ||
            github.event.pull_request.head.repo.full_name == github.repository)
@@ -259,7 +245,6 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-
       - name: Supply chain — open summary section
         if: always()
         env:
@@ -270,7 +255,6 @@ jobs:
           if [ "${EVENT_NAME}" = "pull_request" ] || [ "${SCORECARD_STEP_OUTCOME}" != "skipped" ]; then
             printf '%s\n\n' "## Supply chain" >> "${GITHUB_STEP_SUMMARY}"
           fi
-
       - name: Summarize Scorecard for job log
         if: always() && steps.scorecard.outcome != 'skipped'
         continue-on-error: true
@@ -280,7 +264,6 @@ jobs:
           set -euo pipefail
           python3 scripts/scorecard_summary.py --repo "github.com/${REPO_FULL}" results.sarif \
             | tee -a "${GITHUB_STEP_SUMMARY}"
-
       - id: review
         name: Dependency review (pull request)
         if: github.event_name == 'pull_request'
@@ -288,7 +271,6 @@ jobs:
         uses: actions/dependency-review-action@v4.9.0
         with:
           show-openssf-scorecard: false
-
       - name: Gate — supply chain job
         if: always()
         env:
@@ -308,31 +290,28 @@ jobs:
             exit 1
           fi
           echo "Supply chain job passed."
-
   ci-scripts:
-    name: "CI — scripts (pytest, pylint, interrogate, Radon)"
+    name: CI — scripts (pytest, pylint, interrogate, Radon)
     needs: changes
-    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts
+      == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Install pinned package tooling and Python
         uses: ./.github/actions/setup-uv-python
         with:
-          python-version: "3.13"
+          python-version: '3.13'
           uv-cache-suffix: ${{ github.job }}
-
       - name: Restore dependency install cache
         uses: actions/cache@v5
         with:
@@ -340,20 +319,16 @@ jobs:
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-
-
       - name: Sync dependencies from lockfile
         run: uv sync
-
       - name: Verify pin manifests (pyproject ↔ quality-tools, Actions JSON ↔ workflows)
         run: |
           set -euo pipefail
           python3 scripts/export_quality_tools_requirements.py
           git diff --exit-code -- .github/dependencies/quality-tools/requirements.txt
           python3 scripts/github_actions_pins.py --check
-
       - name: Prepare log capture for job summary
         run: mkdir -p _ci_summary
-
       - id: pytest
         name: Run automated test suite
         continue-on-error: true
@@ -361,7 +336,6 @@ jobs:
           set -euo pipefail
           set -o pipefail
           uv run pytest 2>&1 | tee _ci_summary/pytest.txt
-
       - id: pylint
         name: Lint scripts directory
         continue-on-error: true
@@ -369,7 +343,6 @@ jobs:
           set -euo pipefail
           set -o pipefail
           uv run pylint scripts 2>&1 | tee _ci_summary/pylint.txt
-
       - id: docstrings
         name: Check docstring coverage on scripts
         continue-on-error: true
@@ -377,7 +350,6 @@ jobs:
           set -euo pipefail
           set -o pipefail
           uv run interrogate scripts -vv --fail-under 95 2>&1 | tee _ci_summary/interrogate.txt
-
       - id: radon_cc
         name: Enforce complexity limits on gates
         continue-on-error: true
@@ -389,13 +361,11 @@ jobs:
           import subprocess
           import sys
           from pathlib import Path
-
           root = Path("scripts/quality_gates")
           py_files = sorted(p.name for p in root.glob("*.py"))
           print("Radon CC — scope: scripts/quality_gates/*.py")
           print(f"Modules scanned ({len(py_files)}): {', '.join(py_files)}")
           print()
-
           raw = subprocess.check_output(
               ["uv", "run", "radon", "cc", "-j", str(root)],
               text=True,
@@ -417,7 +387,6 @@ jobs:
                   rel = str(Path(path).as_posix())
                   rows.append((rel, max_c, n))
                   overall_max = max(overall_max, max_c)
-
           print(f"{'File':<48} {'Max CC':>8}  {'Blocks':>8}")
           print("-" * 68)
           for rel, max_c, n in rows:
@@ -429,7 +398,6 @@ jobs:
               sys.exit(1)
           print("PASS: cyclomatic complexity within limit.")
           PY
-
       - id: radon_mi
         name: Enforce maintainability floor on gates
         continue-on-error: true
@@ -441,14 +409,12 @@ jobs:
           import subprocess
           import sys
           from pathlib import Path
-
           root = Path("scripts/quality_gates")
           files = sorted(root.glob("*.py"))
           paths = [str(p) for p in files]
           print("Radon MI — scope: scripts/quality_gates/*.py")
           print(f"Modules scanned ({len(paths)}): {', '.join(p.name for p in files)}")
           print()
-
           raw = subprocess.check_output(["uv", "run", "radon", "mi", "-j", *paths], text=True)
           data = json.loads(raw)
           floor = 40.0
@@ -461,7 +427,6 @@ jobs:
               rnk = meta.get("rank", "?")
               rnk_s = rnk if isinstance(rnk, str) else "?"
               rows.append((str(Path(path).as_posix()), mi, rnk_s))
-
           print(f"{'File':<48} {'MI':>10}  {'Rank':>6}")
           print("-" * 70)
           for rel, mi, rnk_s in rows:
@@ -476,11 +441,9 @@ jobs:
               sys.exit(1)
           print("PASS: maintainability index above floor for all files.")
           PY
-
       - name: Scripts quality — job summary
         if: always()
         run: uv run python scripts/ci_scripts_job_summary.py >> "${GITHUB_STEP_SUMMARY}"
-
       - name: Gate — scripts job
         if: always()
         env:
@@ -489,7 +452,7 @@ jobs:
           DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
           RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
           RADON_MI_OUTCOME: ${{ steps.radon_mi.outcome }}
-        run: |
+        run: |-
           set -euo pipefail
           failed=()
           if [ "${PYTEST_OUTCOME}" != "success" ]; then failed+=("pytest"); fi

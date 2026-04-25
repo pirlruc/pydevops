@@ -1,17 +1,13 @@
+---
 name: Publish to PyPI
-
 # Manual publish for this repository or for callers that copy this workflow pattern.
 # Application repos should use their own trusted-publish workflow; tag-driven PyPI
 # publishing was moved off automatic tag push to require explicit approval.
-
 on:
   workflow_dispatch: {}
-
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 permissions: {}
-
 jobs:
   publish:
     name: Build and publish release artifacts
@@ -22,23 +18,19 @@ jobs:
       id-token: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-
       - name: Install tooling without local cache
         uses: ./.github/actions/install-uv
         with:
-          enable-cache: "false"
-
+          enable-cache: 'false'
       - name: Build wheel and source distribution
         run: uv build
-
       - name: Publish with trusted registry OIDC
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
