@@ -1,8 +1,8 @@
 # AI agent handoff — pydevops repository context
 
-This document summarizes **what has been implemented and refined** on the `feature-ci` line of work
-(and related commits) so another agent can continue without re-deriving context. It merges **recent
-git history** with **conversation-level detail** where useful.
+This document summarizes **what has been implemented and refined** on the current CI / workflow line
+of work so another agent can continue without re-deriving context. It merges **recent git history**
+with **conversation-level detail** where useful.
 
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI: static analysis, tests/coverage, SBOM, secret/SAST scans, optional DAST, and quality
@@ -175,7 +175,8 @@ ______________________________________________________________________
   block. No **`dependency-review-config.yml`** — use inline **`allow-dependencies-licenses`** on the
   action if needed; **dependency-review-action** does **not** use **`retry-on-snapshot-warnings`**.
   **`setup-uv-python`** optional **`uv-cache-suffix`** ( **`ci-scripts`** uses
-  **`${{ github.job }}`**). **`astral-sh/setup-uv`** pin **`v8`** in **`github-actions-pins.json`**.
+  **`${{ github.job }}`**). **`astral-sh/setup-uv`** pin **`v8.0.0`** in
+  **`github-actions-pins.json`**.
 - **`devops-scheduled.yml`** (this repo only): Weekly **Monday 06:00 UTC** +
   **`workflow_dispatch`**; merges former **lint**, **Scorecard**, **Mutmut**, **EOL** workflows. On
   **push** that only touches EOL policy / this workflow, **only** the EOL job runs
@@ -210,6 +211,10 @@ ______________________________________________________________________
   alongside gates.
 - [`docs/improvements.md`](improvements.md): now tracks only not-yet-implemented backlog items,
   grouped as High / Medium / Low priority; implemented items were removed.
+- [`test-plan.md`](test-plan.md): local validation already passed (pre-commit/pre-push, pytest
+  + coverage, pylint, radon, interrogate, pins/requirements drift, zizmor, actionlint). Manual
+  coverage now explicitly includes fork token-scope behavior, `gates_passed` workflow output
+  checks, negative release tag checks, DAST enable/disable behavior, and EOL-only push path tests.
 - [`README.md`](../README.md): versioning with optional **`devops_*`** overrides; PyPI manual
   dispatch + **`pypi`** environment.
 - **Version pins:** **`pyproject.toml`** `[dependency-groups].quality-tools` is the source for

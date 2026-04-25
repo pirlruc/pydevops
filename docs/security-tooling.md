@@ -47,7 +47,8 @@ Tighten to full SHA pinning when you adopt a pin-updater (for example
 ```bash
 python3 -m pip install --user -r .github/dependencies/zizmor/requirements.txt
 cd /path/to/devops-repo
-zizmor -c .github/config/zizmor.yml --format plain .github/workflows/ examples/
+zizmor -c .github/config/zizmor.yml --format plain \
+  .github/workflows .github/actions .github/dependabot.yml examples
 ```
 
 Run from the repository root and pass `-c .github/config/zizmor.yml` (or set `ZIZMOR_CONFIG`) so the

@@ -41,3 +41,6 @@ behavior.
 3. **OIDC guidance for external cloud pulls/pushes** — If future workflows publish images, SBOMs, or
    attestations to AWS/GCP/Azure, prefer workload identity over long-lived secrets and document the
    expected cloud roles.
+4. **Add lightweight documentation drift checks** — A small script or CI step could scan docs for
+   stale tool versions, removed hook names, and outdated action refs after dependency or workflow
+   pin updates.

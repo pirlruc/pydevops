@@ -38,9 +38,9 @@ file; avoid duplicating the same version string in workflow `run:` blocks.
 Workflows set **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** so actions that still declare a Node
 20 runtime run on Node 24 on the runner (see
 [GitHub’s Node 20 deprecation timeline](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/)).
-**`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8`** ship Node 24–compatible runtimes.
-**`ci-supply-chain`** does **not** override this; **`actions/dependency-review-action`** may still
-log a deprecation notice until the action ships a Node 24 runtime.
+**`dorny/paths-filter@v4.0.1`** and **`astral-sh/setup-uv@v8.0.0`** ship Node 24–compatible
+runtimes. **`ci-supply-chain`** does **not** override this; **`actions/dependency-review-action`**
+may still log a deprecation notice until the action ships a Node 24 runtime.
 
 ## Dependency review vs OpenSSF Scorecard (repository)
 
