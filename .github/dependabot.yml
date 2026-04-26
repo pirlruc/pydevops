@@ -9,23 +9,39 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: '06:15'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
     open-pull-requests-limit: 10
+    groups:
+      github-actions:
+        patterns: ['*']
   - package-ecosystem: uv
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
       semver-minor-days: 3
       semver-patch-days: 1
     open-pull-requests-limit: 10
+    groups:
+      python-dev-tooling:
+        dependency-type: development
+        patterns: ['*']
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
     schedule:
       interval: weekly
+      day: monday
+      time: '06:30'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
@@ -36,6 +52,9 @@ updates:
     directory: /.github/dependencies/semgrep
     schedule:
       interval: weekly
+      day: monday
+      time: '06:35'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
@@ -46,6 +65,9 @@ updates:
     directory: /.github/dependencies/zizmor
     schedule:
       interval: weekly
+      day: monday
+      time: '06:40'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
@@ -56,6 +78,9 @@ updates:
     directory: /.github/dependencies/mutmut
     schedule:
       interval: weekly
+      day: monday
+      time: '06:45'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
@@ -66,9 +91,28 @@ updates:
     directory: /.github/dependencies/jscpd
     schedule:
       interval: weekly
+      day: monday
+      time: '06:50'
+      timezone: Europe/Lisbon
     cooldown:
       default-days: 7
       semver-major-days: 7
       semver-minor-days: 3
       semver-patch-days: 1
     open-pull-requests-limit: 5
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:55'
+      timezone: Europe/Lisbon
+    cooldown:
+      default-days: 7
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    open-pull-requests-limit: 5
+    groups:
+      pre-commit-hooks:
+        patterns: ['*']

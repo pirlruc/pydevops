@@ -1,0 +1,34 @@
+---
+name: Dependabot Metadata (Dependabot PRs only)
+on:
+  pull_request:
+    branches: [main, master]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  metadata:
+    name: Summarize Dependabot dependency update
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Summarize dependency update
+        env:
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          DEP_TYPE: ${{ steps.metadata.outputs.dependency-type }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          DEP_ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
+          DEP_DIRECTORY: ${{ steps.metadata.outputs.directory }}
+        run: |-
+          {
+            echo "## Dependabot update"
+            echo
+            echo "- Dependency names: ${DEP_NAMES}"
+            echo "- Dependency type: ${DEP_TYPE}"
+            echo "- Update type: ${UPDATE_TYPE}"
+            echo "- Package ecosystem: ${DEP_ECOSYSTEM}"
+            echo "- Directory: ${DEP_DIRECTORY}"
+          } >> "$GITHUB_STEP_SUMMARY"

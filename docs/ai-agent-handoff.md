@@ -212,6 +212,14 @@ ______________________________________________________________________
 - **`cooldown`** on update entries: **`default-days: 7`** (zizmor policy).
 - **`github-actions`** ecosystem: only **`default-days`** (semver cooldown keys are **not**
   supported for that ecosystem — Dependabot parse error if included).
+- Dependabot config now includes **explicit Monday schedule windows** (`day` / `time` /
+  `timezone: Europe/Lisbon`) for each ecosystem block, plus update **groups** for
+  `github-actions`, `uv` development dependencies, and `pre-commit` hooks.
+- New ecosystem block: **`pre-commit`** at repo root so `.pre-commit-config.yaml` hook revs are
+  updated by Dependabot.
+- New workflow **`.github/workflows/dependabot-metadata.yml`** summarizes Dependabot PR metadata in
+  the job summary (Dependabot actor only), using pinned
+  **`dependabot/fetch-metadata`** from `github-actions-pins.json`.
 
 ### 5. Documentation
 

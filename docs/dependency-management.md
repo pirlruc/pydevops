@@ -21,6 +21,7 @@
 | `pip`            | `/.github/dependencies/zizmor`      | zizmor constraint for workflow QA                                                                                                                                                                                                                                                                                     |
 | `pip`            | `/.github/dependencies/mutmut`      | Mutmut constraint for **`devops-scheduled.yml`**                                                                                                                                                                                                                                                                      |
 | `npm`            | `/.github/dependencies/jscpd`       | `jscpd` used from [`scripts/ci_run_quality.sh`](../scripts/ci_run_quality.sh) via `npx`                                                                                                                                                                                                                               |
+| `pre-commit`     | `/`                                 | `.pre-commit-config.yaml` hooks and revs                                                                                                                                                                                                                                                                                |
 
 ### Resolver note (Semgrep vs pip-audit)
 
