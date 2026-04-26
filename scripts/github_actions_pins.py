@@ -131,9 +131,12 @@ def _drift_for_structured_pin(path: Path, name: str, have: str, comment: str, pi
     want_sha = pin['sha']
     if have.lower() != want_sha.lower():
         return f'{path}: {name}@{have} expected @{want_sha}'
-    if comment:
-        return None
-    return f"{path}: {name}@{have} should keep a trailing version comment like '# {pin['tag']}'"
+    want_tag = pin['tag']
+    if not comment:
+        return f"{path}: {name}@{have} should keep a trailing version comment like '# {want_tag}'"
+    if want_tag not in comment:
+        return f"{path}: {name}@{have} should include '{want_tag}' in trailing comment"
+    return None
 
 
 def _uses_spec_drift(path: Path, spec_and_comment: str, pins: dict[str, str | PinEntry]) -> str | None:

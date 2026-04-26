@@ -11,14 +11,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from scripts.scorecard_summary_core import (
+from scripts.scorecard_summary_core import (  # noqa: E402
     _rule_name,
     main,
     render_markdown,
     sarif_to_payload,
 )
 
-__all__ = ["_rule_name", "main", "render_markdown", "sarif_to_payload"]
+__all__ = ['_rule_name', 'main', 'render_markdown', 'sarif_to_payload']
 
 
 if __name__ == '__main__':

@@ -181,6 +181,25 @@ def test_check_file_rejects_structured_entry_with_wrong_sha(tmp_path: Path) -> N
     assert 'expected @de0fac2e4500dabe0009e67214ff5f5447ce83dd' in errs[0]
 
 
+def test_check_file_rejects_structured_entry_with_wrong_comment_tag(tmp_path: Path) -> None:
+    wf = tmp_path / 'w.yml'
+    wf.write_text(
+        '  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5\n',
+        encoding='utf-8',
+    )
+    errs = _check_file(
+        wf,
+        {
+            'actions/checkout': {
+                'tag': 'v6',
+                'sha': 'de0fac2e4500dabe0009e67214ff5f5447ce83dd',
+            },
+        },
+    )
+    assert len(errs) == 1
+    assert "should include 'v6' in trailing comment" in errs[0]
+
+
 def test_main_check_argv(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
