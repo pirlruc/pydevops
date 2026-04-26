@@ -10,25 +10,25 @@ requires = ["hatchling"]
 # live in .github/dependencies/semgrep/requirements.txt and dast-python/requirements.txt.
 [dependency-groups]
 dev = [
-  {include-group = "quality-tools"},
-  {include-group = "scripts"},
+    {include-group = "quality-tools"},
+    {include-group = "scripts"},
 ]
 quality-tools = [
-  "bandit==1.9.4",
-  "deptry==0.25.1",
-  "interrogate==1.7.0",
-  "mypy==1.20.2",
-  "pip-audit==2.10.0",
-  "pre-commit==4.6.0",
-  "pydoclint==0.8.3",
-  "pylint-json2html==0.5.0",
-  "pylint==4.0.5",
-  "pytest-cov==7.1.0",
-  "pytest==9.0.3",
-  "ruff==0.15.11",
+    "bandit==1.9.4",
+    "deptry==0.25.1",
+    "interrogate==1.7.0",
+    "mypy==1.20.2",
+    "pip-audit==2.10.0",
+    "pre-commit==4.6.0",
+    "pydoclint==0.8.3",
+    "pylint-json2html==0.5.0",
+    "pylint==4.0.5",
+    "pytest-cov==7.1.0",
+    "pytest==9.0.3",
+    "ruff==0.15.11",
 ]
 scripts = [
-  "radon>=6.0,<7",
+    "radon>=6.0,<7",
 ]
 
 [project]
@@ -69,16 +69,16 @@ max-line-length = 100
 
 [tool.pylint."messages control"]
 disable = [
-  "import-error",
-  "no-name-in-module",
+    "import-error",
+    "no-name-in-module",
 ]
 
 [tool.pytest.ini_options]
 addopts = [
-  "--cov-fail-under=95",
-  "--cov-report=term-missing",
-  "--cov=scripts",
-  "--cov=src/devops_quality",
+    "--cov-fail-under=95",
+    "--cov-report=term-missing",
+    "--cov=scripts",
+    "--cov=src/devops_quality",
 ]
 pythonpath = ["."]
 testpaths = ["tests"]
