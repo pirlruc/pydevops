@@ -48,6 +48,11 @@ ______________________________________________________________________
   reports are absent; **High** requires the report files (see **`HIGH_REQUIRED_FILES`**) with
   parseable totals. Thresholds: **Low** coverage `≥85%`, imprecision `<5%`, density `<5/KLoC`;
   **Medium** `≥90%`, `<2%`, `<2/KLoC`; **High** `≥95%`, `<1%`, `<1/KLoC`.
+- Maintainability refactor: heavy mypy parsing/rule-builder code moved out of
+  `scripts/quality_gates/` into shared helpers (`scripts/mypy_report_lineprecision.py`,
+  `scripts/mypy_report_anyexprs.py`, `scripts/mypy_gate_rules.py`), while
+  `scripts/quality_gates/readers_mypy*.py` and `gates_mypy.py` are now thin adapters. This keeps
+  MI safely above 40 in the gated `scripts/quality_gates` package.
 - **High** tier additionally requires artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if
   tools skipped); includes **`pydoclint.txt`** so a missing pydoclint run cannot be confused with
   zero findings. **`pydoclint.txt`** may be **empty** when there are zero violations (still counts
@@ -292,7 +297,9 @@ ______________________________________________________________________
   **ASCII table** (fenced **`text`**) adds a **Package / ref** column from SARIF
   **`locations[].physicalLocation.region.snippet.text`** (e.g. **`uses:`** action pins); JSON-only
   Scorecard payloads show **—** there. Caption **Scope: GitHub repository `…`** when a repo URI is
-  known.
+  known. Helper extraction split rendering and SARIF traversal into `scripts/scorecard_table.py`
+  and `scripts/scorecard_sarif_utils.py`; `scripts/scorecard_summary.py` is now a thin
+  compatibility/CLI proxy and core behavior lives in `scripts/scorecard_summary_core.py`.
 - **`scripts/ci_scripts_job_summary.py`**: Reads **`_ci_summary/*.txt`** and prints a **two-column**
   Markdown table (**Analysis** / **Result**) with **thresholds inlined** in the result column:
   **Tests** (**N** successful / **M** failed, no duration), **Code Coverage**, **Code Quality**
