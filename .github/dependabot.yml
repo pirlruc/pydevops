@@ -1,5 +1,7 @@
 ---
 # Dependency updates. Manifests live under .github/dependencies/ (see docs/dependency-management.md).
+# For GitHub Actions, use SHA pins in workflows (`uses: owner/repo@<sha> # vX.Y.Z`);
+# Dependabot keeps those refs updated while preserving version context in comments.
 # Python interpreter EOL issues are opened by devops-scheduled.yml (not Dependabot).
 version: 2
 updates:

@@ -61,13 +61,13 @@ jobs:
     steps:
       - name: Check out repository
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Filter paths
         if: github.event_name != 'workflow_dispatch'
         id: filter
-        uses: dorny/paths-filter@v4.0.1
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
         with:
           filters: |
             scripts:
@@ -104,11 +104,11 @@ jobs:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Download and install workflow linter
@@ -224,11 +224,11 @@ jobs:
       id-token: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - id: scorecard
@@ -240,7 +240,7 @@ jobs:
           (github.event_name != 'pull_request' ||
            github.event.pull_request.head.repo.full_name == github.repository)
         continue-on-error: true
-        uses: ossf/scorecard-action@v2.4.3
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2 # v2.4.3
         with:
           results_file: results.sarif
           results_format: sarif
@@ -268,7 +268,7 @@ jobs:
         name: Dependency review (pull request)
         if: github.event_name == 'pull_request'
         continue-on-error: true
-        uses: actions/dependency-review-action@v4.9.0
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           show-openssf-scorecard: false
       - name: Gate — supply chain job
@@ -300,11 +300,11 @@ jobs:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Install pinned package tooling and Python
@@ -313,7 +313,7 @@ jobs:
           python-version: '3.13'
           uv-cache-suffix: ${{ github.job }}
       - name: Restore dependency install cache
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}

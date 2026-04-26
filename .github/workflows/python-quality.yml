@@ -168,16 +168,16 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application full history
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -212,7 +212,7 @@ jobs:
             python -m scripts.quality_gates --semgrep-shield-only
       - name: Upload shield artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-shield-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -225,23 +225,23 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock',
@@ -279,7 +279,7 @@ jobs:
           strictness-level: ${{ inputs.strictness_level }}
       - name: Upload static analysis artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-static-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -292,23 +292,23 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock',
@@ -346,7 +346,7 @@ jobs:
           strictness-level: ${{ inputs.strictness_level }}
       - name: Upload supply-chain artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-security-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -359,23 +359,23 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ~/.cache/uv
           key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock',
@@ -413,7 +413,7 @@ jobs:
           strictness-level: ${{ inputs.strictness_level }}
       - name: Upload test artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-test-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -433,16 +433,16 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -462,25 +462,25 @@ jobs:
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
       - name: Download shield artifacts
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: quality-shield-artifacts
           path: _merge/shield
       - name: Download static artifacts
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: quality-static-artifacts
           path: _merge/static
       - name: Download supply-chain artifacts
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: quality-security-artifacts
           path: _merge/security
       - name: Download test artifacts
         continue-on-error: true
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: quality-test-artifacts
           path: _merge/test
@@ -525,7 +525,7 @@ jobs:
             python scripts/consolidate_artifacts.py
       - name: Upload quality bundle artifact
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
@@ -542,7 +542,7 @@ jobs:
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name
           == github.repository
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pr-quality-comment
           path: quality-pr-comment.md
@@ -585,18 +585,18 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Download staged comment artifact
         id: download
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         continue-on-error: true
         with:
           name: pr-quality-comment
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
-        uses: actions/github-script@v9
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           github-token: ${{ secrets.caller_pat || github.token }}
           script: |
@@ -620,15 +620,15 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -656,7 +656,7 @@ jobs:
             echo "No locustfile.py; skipping Locust." > "${{ github.workspace }}/quality-output/locust_skip.txt"
           fi
       - name: Run baseline web security scan
-        uses: zaproxy/action-baseline@v0.15.0
+        uses: zaproxy/action-baseline@6c5a007541891231cd9e0ddec25d4f25c59c9874 # v0.15.0
         with:
           target: ${{ inputs.dast_target_url }}
           rules_file_name: .zap/rules.tsv
@@ -676,7 +676,7 @@ jobs:
         run: docker compose -f "$COMPOSE_FILE" down -v || true
       - name: Upload dynamic test artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: dast-reports
           path: |
@@ -704,7 +704,7 @@ jobs:
       contents: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.18.0
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
 
@@ -717,11 +717,11 @@ jobs:
             exit 1
           fi
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
       - name: Download quality bundle
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: quality-bundle
           path: bundle

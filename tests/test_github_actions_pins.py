@@ -24,7 +24,7 @@ def test_uses_spec_drift_skips_local() -> None:
 
 def test_uses_spec_drift_detects_mismatch(tmp_path: Path) -> None:
     pins = {'actions/checkout': 'v6'}
-    msg = _uses_spec_drift(tmp_path / 'a.yml', 'actions/checkout@v5', pins)
+    msg = _uses_spec_drift(tmp_path / 'a.yml', 'actions/checkout@v5 # old', pins)
     assert msg is not None
     assert 'v5' in msg
     assert 'v6' in msg
@@ -87,9 +87,79 @@ def test_run_check_raises_on_drift(tmp_path: Path) -> None:
 
 def test_load_pins_skips_non_string_entries(tmp_path: Path) -> None:
     p = tmp_path / 'pins.json'
-    p.write_text('{"actions/checkout": "v6", "skip": 1}', encoding='utf-8')
+    p.write_text(
+        (
+            '{"actions/checkout": "v6",'
+            ' "dorny/paths-filter": {"tag": "v4.0.1",'
+            ' "sha": "fbd0ab8f3e69293af611ebaee6363fc25e6d187d"},'
+            ' "skip": 1}'
+        ),
+        encoding='utf-8',
+    )
     got = _load_pins(p)
-    assert got == {'actions/checkout': 'v6'}
+    assert got == {
+        'actions/checkout': 'v6',
+        'dorny/paths-filter': {
+            'tag': 'v4.0.1',
+            'sha': 'fbd0ab8f3e69293af611ebaee6363fc25e6d187d',
+        },
+    }
+
+
+def test_load_pins_skips_invalid_sha_entry(tmp_path: Path) -> None:
+    p = tmp_path / 'pins.json'
+    p.write_text('{"actions/checkout": {"tag": "v6", "sha": "v6"}}', encoding='utf-8')
+    assert _load_pins(p) == {}
+
+
+def test_apply_file_writes_sha_pin_with_version_comment(tmp_path: Path) -> None:
+    wf = tmp_path / 'w.yml'
+    wf.write_text('  - uses: actions/checkout@v6\n', encoding='utf-8')
+    assert _apply_file(
+        wf,
+        {
+            'actions/checkout': {
+                'tag': 'v6',
+                'sha': 'de0fac2e4500dabe0009e67214ff5f5447ce83dd',
+            },
+        },
+    )
+    txt = wf.read_text(encoding='utf-8')
+    assert 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6' in txt
+
+
+def test_check_file_allows_sha_pin_for_structured_entry(tmp_path: Path) -> None:
+    wf = tmp_path / 'w.yml'
+    wf.write_text(
+        '  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6\n',
+        encoding='utf-8',
+    )
+    errs = _check_file(
+        wf,
+        {
+            'actions/checkout': {
+                'tag': 'v6',
+                'sha': 'de0fac2e4500dabe0009e67214ff5f5447ce83dd',
+            },
+        },
+    )
+    assert errs == []
+
+
+def test_check_file_rejects_structured_entry_without_comment(tmp_path: Path) -> None:
+    wf = tmp_path / 'w.yml'
+    wf.write_text('  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd\n', encoding='utf-8')
+    errs = _check_file(
+        wf,
+        {
+            'actions/checkout': {
+                'tag': 'v6',
+                'sha': 'de0fac2e4500dabe0009e67214ff5f5447ce83dd',
+            },
+        },
+    )
+    assert len(errs) == 1
+    assert 'trailing version comment' in errs[0]
 
 
 def test_main_check_argv(

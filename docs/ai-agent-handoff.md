@@ -260,6 +260,11 @@ ______________________________________________________________________
   **Tests** (**N** successful / **M** failed, no duration), **Code Coverage**, **Code Quality**
   (pylint score), **Documentation Coverage**, **Cyclomatic Complexity** (`≤5.0 required`),
   **Maintainability Index** (`≥40.0 required`), plus raw log tails in **`<details>`**.
+- **`scripts/github_actions_pins.py`**: `github-actions-pins.json` now supports structured entries
+  (`{"tag": "vX.Y.Z", "sha": "<40-hex>"}`) in addition to legacy string refs. Apply mode writes
+  readable SHA pins as `uses: owner/repo@<sha> # vX.Y.Z`; check mode enforces SHA refs (40 hex) plus
+  a trailing version comment for structured pins, while still allowing Dependabot/Renovate to move
+  digests without requiring pin-file edits on every bump.
 - **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file
   exists; user-facing text refers to **`gates.json`** (code-formatted in Markdown). **GFM gate
   tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py)

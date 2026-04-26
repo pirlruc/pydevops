@@ -51,7 +51,7 @@ runs:
         fi
     - name: Upload secret scan SARIF results
       if: always()
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
       with:
         sarif_file: ${{ inputs.quality-output-dir }}/gitleaks.sarif
       continue-on-error: true
@@ -83,7 +83,7 @@ runs:
           --sarif --output "$OUT/semgrep.sarif" .
     - name: Upload pattern scan SARIF results
       if: always()
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
       with:
         sarif_file: ${{ inputs.quality-output-dir }}/semgrep.sarif
       continue-on-error: true
