@@ -155,7 +155,8 @@ ______________________________________________________________________
 - **`publish-pypi.yml`**: **`workflow_dispatch` only**; job uses **`environment: pypi`** (manual
   PyPI publish with OIDC). It now requires a **`tag`** input, checks out that tag
   (`ref: refs/tags/<tag>`, `fetch-depth: 0`), validates **`vX.Y.Z`**, verifies the tag exists via
-  `git rev-parse`, then publishes with **`attestations: true`**.
+  `git rev-parse`, then publishes with **`attestations: true`**. Tag validation uses an anchored
+  regex (`^v[0-9]+\.[0-9]+\.[0-9]+$`) so prerelease/extra-segment tags are rejected.
 - **`devops-ci.yml`** (this repo only): Path filter → three lanes: **`ci-workflow-lint`**
   (**actionlint** + **zizmor** in one job — same **`.github/`** scope, one checkout/harden/install
   cycle; splitting would duplicate setup unless a reusable workflow is introduced), **`ci-scripts`**
@@ -285,8 +286,9 @@ ______________________________________________________________________
 - **`scripts/github_actions_pins.py`**: `github-actions-pins.json` now supports structured entries
   (`{"tag": "vX.Y.Z", "sha": "<40-hex>"}`) in addition to legacy string refs. Apply mode writes
   readable SHA pins as `uses: owner/repo@<sha> # vX.Y.Z`; check mode enforces SHA refs (40 hex) plus
-  a trailing version comment for structured pins, while still allowing Dependabot/Renovate to move
-  digests without requiring pin-file edits on every bump.
+  a trailing version comment for structured pins. `--check` now also fails on SHA drift for
+  structured entries (workflow SHA must match `pin['sha']`), so arbitrary 40-char SHAs are no longer
+  accepted.
 - **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file
   exists; user-facing text refers to **`gates.json`** (code-formatted in Markdown). **GFM gate
   tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py)
