@@ -125,6 +125,9 @@ def _drift_for_structured_pin(path: Path, name: str, have: str, comment: str, pi
     """Validate one structured ``{tag, sha}`` pin entry against a uses spec."""
     if not _is_sha_ref(have):
         return f'{path}: {name}@{have} must be pinned to a 40-char commit SHA'
+    want_sha = pin['sha']
+    if have.lower() != want_sha.lower():
+        return f'{path}: {name}@{have} expected @{want_sha}'
     if comment:
         return None
     return f"{path}: {name}@{have} should keep a trailing version comment like '# {pin['tag']}'"
