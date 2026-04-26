@@ -36,8 +36,25 @@ name = "devops-quality-tooling"
 version = "0.1.0"
 dependencies = []
 requires-python = ">=3.13"
+authors = [{name = "Nuno Monteiro"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
 description = "Scripts and tooling for Quality-as-a-Service reusable workflows"
+keywords = ["devops", "github-actions", "quality-gates", "python", "ci"]
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
+
+[project.urls]
+Documentation = "https://github.com/pirlruc/pydevops/blob/main/docs/workflows.md"
+Issues = "https://github.com/pirlruc/pydevops/issues"
+Repository = "https://github.com/pirlruc/pydevops"
 
 [tool.coverage.run]
 omit = ["tests/*"]

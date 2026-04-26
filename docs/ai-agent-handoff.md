@@ -157,6 +157,8 @@ ______________________________________________________________________
   (`ref: refs/tags/<tag>`, `fetch-depth: 0`), validates **`vX.Y.Z`**, verifies the tag exists via
   `git rev-parse`, then publishes with **`attestations: true`**. Tag validation uses an anchored
   regex (`^v[0-9]+\.[0-9]+\.[0-9]+$`) so prerelease/extra-segment tags are rejected.
+- **`pyproject.toml`** PEP 621 metadata was enriched for publishing provenance and index metadata:
+  `authors`, `classifiers`, `keywords`, `license`, `license-files`, and `project.urls`.
 - **`devops-ci.yml`** (this repo only): Path filter → three lanes: **`ci-workflow-lint`**
   (**actionlint** + **zizmor** in one job — same **`.github/`** scope, one checkout/harden/install
   cycle; splitting would duplicate setup unless a reusable workflow is introduced), **`ci-scripts`**
