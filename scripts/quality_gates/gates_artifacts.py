@@ -9,11 +9,15 @@ from scripts.quality_gates.artifact_rules import first_missing_required_path, js
 from scripts.quality_gates.config import HIGH_REQUIRED_FILES, normalized_strictness_level
 from scripts.quality_gates.jsonutil import read_json
 from scripts.quality_gates.readers_cloc_docs import interrogate_coverage, pydoclint_txt_present
+from scripts.quality_gates.readers_mypy import (
+    mypy_any_exprs_report_usable,
+    mypy_lineprecision_report_usable,
+)
 from scripts.quality_gates.readers_py_coverage import pylint_score
 
 RowList = list[dict[str, Any]]
 
-# High tier: these files may be size 0 when the tool legitimately produced no text (e.g. zero pydoclint hits).
+# High tier: these files may be size 0 when the tool produced no text (e.g. zero pydoclint hits).
 _ALLOW_EMPTY_HIGH_ARTIFACTS: frozenset[str] = frozenset({'pydoclint.txt'})
 
 
@@ -21,6 +25,14 @@ SPECIAL_TEXT_CHECKS: dict[str, tuple[Any, str]] = {
     'pylint_score.txt': (pylint_score, 'pylint_score.txt missing rated at X/10 line'),
     'interrogate.txt': (interrogate_coverage, 'interrogate.txt missing parseable coverage line'),
     'pydoclint.txt': (pydoclint_txt_present, 'pydoclint.txt missing'),
+    'mypy-reports/lineprecision/lineprecision.txt': (
+        mypy_lineprecision_report_usable,
+        'mypy lineprecision report missing parseable totals',
+    ),
+    'mypy-reports/anyexprs/any-exprs.txt': (
+        mypy_any_exprs_report_usable,
+        'mypy any-exprs report missing parseable totals',
+    ),
 }
 
 

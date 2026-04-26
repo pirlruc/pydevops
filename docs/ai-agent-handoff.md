@@ -40,7 +40,14 @@ ______________________________________________________________________
   `STRICTNESS_LEVEL`), writes **`gates.json`**.
 - **Strictness tiers** (`Low` / `Medium` / `High`) map to **`Thresholds`** in
   [`scripts/quality_gates/config.py`](../scripts/quality_gates/config.py) (coverage, Pylint, Radon
-  CC/MI, duplication, vulns, **Bandit finding counts**, docstrings, etc.).
+  CC/MI, duplication, vulns, **Bandit finding counts**, docstrings, **mypy report metrics**, etc.).
+- **Mypy metrics** (from `ci_run_quality.sh` static phase): **`--lineprecision-report`** and
+  **`--any-exprs-report`** write under **`mypy-reports/`**; **`gate_mypy`** enforces type coverage
+  (any-exprs total), imprecision share (imprecise / analyzed lines), and any-expression density
+  (**anys × 1000 / Python SLOC** from **`cloc.json`**). **Low**/**Medium** skip mypy gates when both
+  reports are absent; **High** requires the report files (see **`HIGH_REQUIRED_FILES`**) with
+  parseable totals. Thresholds: **Low** coverage `≥85%`, imprecision `<5%`, density `<5/KLoC`;
+  **Medium** `≥90%`, `<2%`, `<2/KLoC`; **High** `≥95%`, `<1%`, `<1/KLoC`.
 - **High** tier additionally requires artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if
   tools skipped); includes **`pydoclint.txt`** so a missing pydoclint run cannot be confused with
   zero findings. **`pydoclint.txt`** may be **empty** when there are zero violations (still counts
@@ -145,9 +152,9 @@ ______________________________________________________________________
   - **`workflow_dispatch`** input limit (**10**): **`app_install_command`** exists only on
     **`workflow_call`**; use **`${{ inputs.app_install_command || '' }}`**. Do not read undefined
     **`github.event.inputs`** for undeclared dispatch keys (**actionlint**).
-  - Optional type-check gate: **`enable_mypy`** (default **`false`**) is available on
-    `workflow_call` and `workflow_dispatch`; when enabled, `quality-static` runs
-    **`uv run mypy .`** before the static quality phase.
+  - Type-checking: the static bundle (**`ci_run_quality.sh`**) runs **mypy** with
+    **`--lineprecision-report`** and **`--any-exprs-report`** (exit code ignored; gates use
+    reports + **cloc** SLOC). No separate **`uv run mypy`** step in **`python-quality.yml`**.
   - **`docstring_format: Pep257`**: Ruff **`convention = "pep257"`**; pydoclint
     **`--style=sphinx`**.
   - **Tag releases**: Callers must run the reusable workflow on **tag pushes** (e.g. `on.push.tags`)

@@ -118,7 +118,10 @@ def _split_action_ref(spec: str) -> tuple[str, str] | None:
         return None
     if spec.startswith(('./', '../')):
         return None
-    return spec.rsplit('@', 1)
+    head, sep, tail = spec.rpartition('@')
+    if sep == '':
+        return None
+    return head, tail
 
 
 def _drift_for_structured_pin(path: Path, name: str, have: str, comment: str, pin: PinEntry) -> str | None:

@@ -55,6 +55,23 @@ def tmp_out(tmp_path: Path) -> Path:
     )
     (d / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     (d / 'pytest_exit_code.txt').write_text('0\n', encoding='utf-8')
+    lp_dir = d / 'mypy-reports' / 'lineprecision'
+    lp_dir.mkdir(parents=True)
+    (lp_dir / 'lineprecision.txt').write_text(
+        'Name                                          Lines  Precise  Imprecise  Any  Empty  Unanalyzed\n'
+        '-----------------------------------------------------------------------------------------------\n'
+        'mod                                             100      100          0    0      0           0\n',
+        encoding='utf-8',
+    )
+    ae_dir = d / 'mypy-reports' / 'anyexprs'
+    ae_dir.mkdir(parents=True)
+    (ae_dir / 'any-exprs.txt').write_text(
+        '                                        Name   Anys   Exprs   Coverage\n'
+        '----------------------------------------------------------------------\n'
+        '                                       mod      0     100    100.00%\n'
+        '                                      Total      0     100    100.00%\n',
+        encoding='utf-8',
+    )
     return d
 
 
@@ -380,3 +397,117 @@ def test_duplication_gate_fails_when_jscpd_report_missing(tmp_out: Path) -> None
     passed, rows = qg.evaluate(tmp_out, 'Low')
     assert not passed
     assert any(r.get('gate') == 'Duplication (jscpd)' and r.get('ok') is False for r in rows)
+
+
+def test_mypy_low_skips_when_reports_absent(tmp_out: Path) -> None:
+    """Low tier skips mypy gates when no mypy report artifacts exist."""
+    import shutil
+
+    shutil.rmtree(tmp_out / 'mypy-reports')
+    passed, rows = qg.evaluate(tmp_out, 'Low')
+    assert passed
+    assert not any('Mypy' in str(r.get('gate', '')) for r in rows)
+
+
+def test_mypy_medium_fails_low_type_coverage(tmp_out: Path) -> None:
+    """Medium tier enforces mypy any-exprs coverage floor."""
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    ae = tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt'
+    ae.write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'm 50 100 50.00%\n'
+        'Total 50 100 50.00%\n',
+        encoding='utf-8',
+    )
+    passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert not passed
+    assert any(r.get('gate') == 'Mypy type coverage (any-exprs)' and r.get('ok') is False for r in rows)
+
+
+def test_mypy_medium_fails_any_density(tmp_out: Path) -> None:
+    """Medium tier caps any-expression density per KLoC (cloc SLOC)."""
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    ae = tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt'
+    ae.write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'm 5 100 95.00%\n'
+        'Total 5 100 95.00%\n',
+        encoding='utf-8',
+    )
+    passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert not passed
+    assert any(r.get('gate') == 'Mypy any-expression density' and r.get('ok') is False for r in rows)
+
+
+def test_mypy_high_fails_imprecision(tmp_out: Path) -> None:
+    """High tier requires imprecision share below 1%."""
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    lp = tmp_out / 'mypy-reports' / 'lineprecision' / 'lineprecision.txt'
+    lp.write_text(
+        'Name                                          Lines  Precise  Imprecise  Any  Empty  Unanalyzed\n'
+        '-----------------------------------------------------------------------------------------------\n'
+        'm                                               100       90         10    0      0           0\n',
+        encoding='utf-8',
+    )
+    passed, rows = qg.evaluate(tmp_out, 'High')
+    assert not passed
+    assert any(r.get('gate') == 'Mypy imprecision (lineprecision)' and r.get('ok') is False for r in rows)
+
+
+def test_high_fails_missing_mypy_any_exprs_report(tmp_out: Path) -> None:
+    """High tier requires parseable mypy any-exprs report artifact."""
+    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').unlink()
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'High')
+    assert not passed
+    assert any('mypy-reports/anyexprs/any-exprs.txt' in str(r.get('gate', '')) for r in rows)
+
+
+def test_high_fails_unparseable_mypy_any_exprs_substance(tmp_out: Path) -> None:
+    """High tier rejects any-exprs report that exists but cannot be parsed."""
+    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').write_text('not-a-valid-report\n', encoding='utf-8')
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'High')
+    assert not passed
+    assert any('mypy any-exprs report missing parseable totals' in str(r.get('actual', '')) for r in rows)
+
+
+def test_mypy_low_skips_type_coverage_when_any_exprs_missing(tmp_out: Path) -> None:
+    """Low tier skips mypy type coverage when only lineprecision exists."""
+    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').unlink()
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'Low')
+    assert passed
+    assert not any(r.get('gate') == 'Mypy type coverage (any-exprs)' for r in rows)
+
+
+def test_mypy_medium_skips_imprecision_when_lineprecision_missing(tmp_out: Path) -> None:
+    """Medium tier skips imprecision gate when lineprecision report is absent."""
+    (tmp_out / 'mypy-reports' / 'lineprecision' / 'lineprecision.txt').unlink()
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert passed
+    assert not any(r.get('gate') == 'Mypy imprecision (lineprecision)' for r in rows)
+
+
+def test_mypy_medium_skips_density_when_any_exprs_missing(tmp_out: Path) -> None:
+    """Medium tier skips any-density when any-exprs report is absent."""
+    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').unlink()
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert passed
+    assert not any(r.get('gate') == 'Mypy any-expression density' for r in rows)
+
+
+def test_mypy_medium_fails_zero_slocs_for_density(tmp_out: Path) -> None:
+    """Mypy density is undefined when cloc reports zero Python SLOC."""
+    (tmp_out / 'cloc.json').write_text(
+        json.dumps({'Python': {'code': 0, 'comment': 10}}),
+        encoding='utf-8',
+    )
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert not passed
+    assert any('SLOC is 0' in str(r.get('actual', '')) for r in rows)

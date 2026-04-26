@@ -238,3 +238,141 @@ def test_main_failure_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(sys, 'argv', ['scripts.quality_gates'])
     # no artifacts -> high fails
     assert qg.main() == 1
+
+
+def test_mypy_lineprecision_sums_rows_without_total(tmp_path: Path) -> None:
+    """lineprecision totals aggregate per-module rows when Total is absent."""
+    from scripts.quality_gates.readers_mypy import mypy_imprecision_pct, mypy_lineprecision_totals
+
+    d = tmp_path / 'mypy-reports' / 'lineprecision'
+    d.mkdir(parents=True)
+    (d / 'lineprecision.txt').write_text(
+        'Name Lines Precise Imprecise Any Empty Unanalyzed\n'
+        '---\n'
+        'a 10 9 1 0 0 0\n'
+        'b 20 18 2 0 0 0\n',
+        encoding='utf-8',
+    )
+    assert mypy_lineprecision_totals(tmp_path) == (30, 27, 3)
+    assert mypy_imprecision_pct(tmp_path) == pytest.approx(10.0)
+
+
+def test_mypy_any_exprs_sums_rows_without_total(tmp_path: Path) -> None:
+    """any-exprs totals aggregate rows when Total is absent."""
+    from scripts.quality_gates.readers_mypy import mypy_any_exprs_totals
+
+    d = tmp_path / 'mypy-reports' / 'anyexprs'
+    d.mkdir(parents=True)
+    (d / 'any-exprs.txt').write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'a 1 10 90.00%\n'
+        'b 1 10 90.00%\n',
+        encoding='utf-8',
+    )
+    anys, exprs, cov = mypy_any_exprs_totals(tmp_path) or (0, 0, 0.0)
+    assert anys == 2
+    assert exprs == 20
+    assert cov == pytest.approx(90.0)
+
+
+def test_mypy_lineprecision_prefers_total_row(tmp_path: Path) -> None:
+    """When a Total row exists, it wins over per-module rows."""
+    from scripts.quality_gates.readers_mypy import mypy_lineprecision_totals
+
+    d = tmp_path / 'mypy-reports' / 'lineprecision'
+    d.mkdir(parents=True)
+    (d / 'lineprecision.txt').write_text(
+        'Name Lines Precise Imprecise Any Empty Unanalyzed\n'
+        '---\n'
+        'noise 999 0 999 0 0 0\n'
+        'Total 100 99 1 0 0 0\n',
+        encoding='utf-8',
+    )
+    assert mypy_lineprecision_totals(tmp_path) == (100, 99, 1)
+
+
+def test_mypy_lineprecision_skips_bad_numeric_row(tmp_path: Path) -> None:
+    """Non-integer cells in a seven-token row are skipped."""
+    from scripts.quality_gates.readers_mypy import mypy_lineprecision_totals
+
+    d = tmp_path / 'mypy-reports' / 'lineprecision'
+    d.mkdir(parents=True)
+    (d / 'lineprecision.txt').write_text(
+        'Name Lines Precise Imprecise Any Empty Unanalyzed\n'
+        '---\n'
+        'bad 10 x 1 0 0 0\n'
+        'm 10 9 1 0 0 0\n',
+        encoding='utf-8',
+    )
+    assert mypy_lineprecision_totals(tmp_path) == (10, 9, 1)
+
+
+def test_mypy_any_exprs_total_bad_coverage_token(tmp_path: Path) -> None:
+    """Invalid coverage token on Total row falls back / yields None."""
+    from scripts.quality_gates.readers_mypy import mypy_any_exprs_totals
+
+    d = tmp_path / 'mypy-reports' / 'anyexprs'
+    d.mkdir(parents=True)
+    (d / 'any-exprs.txt').write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'Total 1 2 bad%\n',
+        encoding='utf-8',
+    )
+    assert mypy_any_exprs_totals(tmp_path) is None
+
+
+def test_mypy_any_exprs_row_value_error_skipped(tmp_path: Path) -> None:
+    """Rows with non-integer Anys/Exprs are skipped during aggregation."""
+    from scripts.quality_gates.readers_mypy import mypy_any_exprs_totals
+
+    d = tmp_path / 'mypy-reports' / 'anyexprs'
+    d.mkdir(parents=True)
+    (d / 'any-exprs.txt').write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'bad 1 x 90.00%\n'
+        'm 0 10 100.00%\n',
+        encoding='utf-8',
+    )
+    assert mypy_any_exprs_totals(tmp_path) == (0, 10, 100.0)
+
+
+def test_mypy_imprecision_zero_lines(tmp_path: Path) -> None:
+    """Imprecision is undefined when Total lines is zero."""
+    from scripts.quality_gates.readers_mypy import mypy_imprecision_pct
+
+    d = tmp_path / 'mypy-reports' / 'lineprecision'
+    d.mkdir(parents=True)
+    (d / 'lineprecision.txt').write_text(
+        'Name Lines Precise Imprecise Any Empty Unanalyzed\n'
+        '---\n'
+        'Total 0 0 0 0 0 0\n',
+        encoding='utf-8',
+    )
+    assert mypy_imprecision_pct(tmp_path) is None
+
+
+def test_mypy_any_exprs_prefers_total_row(tmp_path: Path) -> None:
+    """When a Total row exists, it wins over per-module rows."""
+    from scripts.quality_gates.readers_mypy import mypy_any_exprs_totals
+
+    d = tmp_path / 'mypy-reports' / 'anyexprs'
+    d.mkdir(parents=True)
+    (d / 'any-exprs.txt').write_text(
+        'Name Anys Exprs Coverage\n'
+        '---\n'
+        'noise 9 10 10.00%\n'
+        'Total 0 100 100.00%\n',
+        encoding='utf-8',
+    )
+    assert mypy_any_exprs_totals(tmp_path) == (0, 100, 100.0)
+
+
+def test_mypy_report_usable_helpers(tmp_path: Path) -> None:
+    """Artifact substance helpers return None when reports are missing."""
+    from scripts.quality_gates.readers_mypy import mypy_any_exprs_report_usable, mypy_lineprecision_report_usable
+
+    assert mypy_lineprecision_report_usable(tmp_path) is None
+    assert mypy_any_exprs_report_usable(tmp_path) is None

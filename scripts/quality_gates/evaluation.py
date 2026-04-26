@@ -24,6 +24,7 @@ from scripts.quality_gates.gates_docstrings import (
     gate_docstring_coverage,
     gate_docstring_issue_rate,
 )
+from scripts.quality_gates.gates_mypy import gate_mypy
 from scripts.quality_gates.gates_security import (
     gate_bandit,
     gate_gitleaks,
@@ -45,7 +46,7 @@ from scripts.quality_gates.readers_radon import radon_cc_max, radon_mi_min
 from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct, ruff_issue_count
 
 
-def collect_gate_results(  # pylint: disable=too-many-locals
+def collect_gate_results(  # pylint: disable=too-many-locals,too-many-statements
     root: Path,
     strictness: str,
 ) -> tuple[list[dict[str, Any]], list[str]]:
@@ -89,6 +90,10 @@ def collect_gate_results(  # pylint: disable=too-many-locals
 
     sloc, cloc = cloc_slocs_comments(root)
     r, f = gate_issues_per_kloc(sloc, pylint_issue_count(root), ruff_issue_count(root), t)
+    rows.extend(r)
+    failures.extend(f)
+
+    r, f = gate_mypy(root, sloc, t, sn)
     rows.extend(r)
     failures.extend(f)
 
