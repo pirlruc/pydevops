@@ -6,6 +6,7 @@ from typing import Any
 
 
 def _snippet_text_from_physical_location(pl: dict[str, Any]) -> str:
+    """Return trimmed `region.snippet.text` from a SARIF physical location object."""
     region = pl.get("region")
     if not isinstance(region, dict):
         return ""
@@ -17,6 +18,7 @@ def _snippet_text_from_physical_location(pl: dict[str, Any]) -> str:
 
 
 def _snippet_from_one_location(loc: object) -> str:
+    """Extract snippet text from one SARIF location object."""
     if not isinstance(loc, dict):
         return ""
     pl = loc.get("physicalLocation")
@@ -26,6 +28,7 @@ def _snippet_from_one_location(loc: object) -> str:
 
 
 def _first_snippet_among_locations(locs: list[Any]) -> str:
+    """Return the first non-empty snippet found in SARIF locations."""
     for loc in locs:
         got = _snippet_from_one_location(loc)
         if got:

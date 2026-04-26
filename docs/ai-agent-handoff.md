@@ -299,7 +299,9 @@ ______________________________________________________________________
   Scorecard payloads show **—** there. Caption **Scope: GitHub repository `…`** when a repo URI is
   known. Helper extraction split rendering and SARIF traversal into `scripts/scorecard_table.py`
   and `scripts/scorecard_sarif_utils.py`; `scripts/scorecard_summary.py` is now a thin
-  compatibility/CLI proxy and core behavior lives in `scripts/scorecard_summary_core.py`.
+  compatibility/CLI proxy and core behavior lives in `scripts/scorecard_summary_core.py`. The proxy
+  now prepends the repo root to `sys.path` when run as `python3 scripts/scorecard_summary.py`, so
+  `from scripts...` imports work in GitHub Actions shell steps.
 - **`scripts/ci_scripts_job_summary.py`**: Reads **`_ci_summary/*.txt`** and prints a **two-column**
   Markdown table (**Analysis** / **Result**) with **thresholds inlined** in the result column:
   **Tests** (**N** successful / **M** failed, no duration), **Code Coverage**, **Code Quality**

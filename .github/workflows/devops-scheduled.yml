@@ -158,7 +158,8 @@ jobs:
           results_file: results.sarif
           results_format: sarif
           publish_results: true
-      - name: Summarize scorecard for job log
+      - id: scorecard_summary
+        name: Summarize scorecard for job log
         continue-on-error: true
         run: |
           set -euo pipefail
@@ -168,10 +169,15 @@ jobs:
         if: always()
         env:
           SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
+          SCORECARD_SUMMARY_OUTCOME: ${{ steps.scorecard_summary.outcome }}
         run: |
           set -euo pipefail
           if [ "${SCORECARD_OUTCOME}" != "success" ]; then
             echo "::error::OpenSSF Scorecard step did not succeed."
+            exit 1
+          fi
+          if [ "${SCORECARD_SUMMARY_OUTCOME}" != "success" ]; then
+            echo "::error::Scorecard summary step did not succeed."
             exit 1
           fi
           echo "Scorecard job passed."

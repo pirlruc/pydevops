@@ -269,7 +269,8 @@ jobs:
           if [ "${EVENT_NAME}" = "pull_request" ] || [ "${SCORECARD_STEP_OUTCOME}" != "skipped" ]; then
             printf '%s\n\n' "## Supply chain" >> "${GITHUB_STEP_SUMMARY}"
           fi
-      - name: Summarize Scorecard for job log
+      - id: scorecard_summary
+        name: Summarize Scorecard for job log
         if: always() && steps.scorecard.outcome != 'skipped'
         continue-on-error: true
         env:
@@ -289,12 +290,16 @@ jobs:
         if: always()
         env:
           SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
+          SCORECARD_SUMMARY_OUTCOME: ${{ steps.scorecard_summary.outcome }}
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
         run: |
           set -euo pipefail
           failed=()
           if [ "${SCORECARD_OUTCOME}" = "failure" ]; then
             failed+=("OpenSSF Scorecard")
+          fi
+          if [ "${SCORECARD_OUTCOME}" != "skipped" ] && [ "${SCORECARD_SUMMARY_OUTCOME}" != "success" ]; then
+            failed+=("scorecard summary")
           fi
           if [ "${REVIEW_OUTCOME}" = "failure" ]; then
             failed+=("dependency review")

@@ -20,10 +20,12 @@ _SCORE_PREFIX = re.compile(r"^score is (-?\d+):\s*")
 
 
 def _is_real_number(v: object) -> TypeGuard[int | float]:
+    """True for int/float values only (exclude bool)."""
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
 def _non_negative_score_value(v: object) -> float | None:
+    """Normalize numeric score values; return None for invalid/negative."""
     if not _is_real_number(v):
         return None
     x = float(v)
@@ -31,6 +33,7 @@ def _non_negative_score_value(v: object) -> float | None:
 
 
 def _aggregate_overall_score(data: dict) -> float | None:
+    """Extract score from aggregateScore.overall.score when present."""
     agg = data.get("aggregateScore")
     if not isinstance(agg, dict):
         return None
@@ -41,6 +44,7 @@ def _aggregate_overall_score(data: dict) -> float | None:
 
 
 def _checks(data: dict) -> list[dict]:
+    """Return normalized check dicts from Scorecard JSON payload."""
     raw = data.get("checks")
     if not isinstance(raw, list):
         return []
@@ -48,6 +52,7 @@ def _checks(data: dict) -> list[dict]:
 
 
 def _overall_score(data: dict, checks: list[dict]) -> float | None:
+    """Compute aggregate score using check mean, top-level score, or aggregate fallback."""
     scores = [x for c in checks if (x := _non_negative_score_value(c.get("score"))) is not None]
     if scores:
         return sum(scores) / len(scores)
@@ -58,6 +63,7 @@ def _overall_score(data: dict, checks: list[dict]) -> float | None:
 
 
 def _needs_action(checks: list[dict], overall: float | None, threshold: float = 6.0) -> bool:
+    """True when aggregate/check score is below review threshold."""
     if overall is not None and overall < threshold:
         return True
     for c in checks:
@@ -68,6 +74,7 @@ def _needs_action(checks: list[dict], overall: float | None, threshold: float = 
 
 
 def _rule_name(rule: dict[str, Any]) -> str:
+    """Resolve human-readable rule name from SARIF rule object."""
     name = rule.get("name")
     if isinstance(name, str) and name.strip():
         return name.strip()
@@ -84,6 +91,7 @@ def _sarif_result_to_check(
     res: dict[str, Any],
     rule_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
+    """Map one SARIF result entry into a Scorecard check row."""
     rid = str(res.get("ruleId", ""))
     msg_obj = res.get("message")
     text = msg_obj.get("text", "") if isinstance(msg_obj, dict) else ""
@@ -188,6 +196,7 @@ def render_markdown(data: dict, reason_max: int = 100) -> str:
 
 
 def _parse_input(path: Path, repo_display: str | None) -> dict[str, Any]:
+    """Load Scorecard JSON/SARIF from file and normalize to summary payload shape."""
     raw_txt = path.read_text(encoding="utf-8")
     data = json.loads(raw_txt)
     if not isinstance(data, dict):

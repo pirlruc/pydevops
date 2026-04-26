@@ -12,16 +12,19 @@ _RE_LINEPRECISION_TOTAL = re.compile(
 
 
 def _read_report_lines(path: Path) -> list[str]:
+    """Return report lines, or an empty list when file is missing."""
     if not path.is_file():
         return []
     return path.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
 def _skip_noise_line(line: str) -> bool:
+    """True when line is header/separator noise."""
     return not line or line.startswith("-") or line.lower().startswith("name ")
 
 
 def _counts_from_seven_tokens(parts: list[str]) -> tuple[int, int, int] | None:
+    """Parse one lineprecision row into (lines, precise, imprecise)."""
     if len(parts) != 7:
         return None
     try:
@@ -31,12 +34,14 @@ def _counts_from_seven_tokens(parts: list[str]) -> tuple[int, int, int] | None:
 
 
 def _row_triplet(line: str) -> tuple[int, int, int] | None:
+    """Return parsed metrics for one non-noise lineprecision row."""
     if _skip_noise_line(line):
         return None
     return _counts_from_seven_tokens(line.split())
 
 
 def _totals_from_total_line(lines: list[str]) -> tuple[int, int, int] | None:
+    """Parse metrics from trailing Total row when available."""
     for raw in reversed(lines):
         m = _RE_LINEPRECISION_TOTAL.match(raw.strip())
         if not m:
@@ -49,6 +54,7 @@ def _totals_from_total_line(lines: list[str]) -> tuple[int, int, int] | None:
 
 
 def _totals_from_rows(lines: list[str]) -> tuple[int, int, int] | None:
+    """Aggregate metrics from per-module rows when Total row is absent."""
     total_lines = 0
     precise = 0
     imprecise = 0

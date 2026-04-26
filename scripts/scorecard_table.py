@@ -32,11 +32,13 @@ def truncate(s: str, max_len: int) -> str:
 
 
 def _ascii_hline_widths(widths: tuple[int, ...]) -> str:
+    """Return horizontal separator line for ASCII table widths."""
     inner = "+".join("-" * (w + 2) for w in widths)
     return f"+{inner}+"
 
 
 def _ascii_row_widths(row: tuple[str, ...], widths: tuple[int, ...]) -> str:
+    """Format one ASCII table row (score column right-aligned)."""
     parts: list[str] = []
     for i, (cell, w) in enumerate(zip(row, widths, strict=True)):
         parts.append(f"{cell:>{w}}" if i == _SCORE_COL_INDEX else f"{cell:<{w}}")
@@ -47,6 +49,7 @@ def _ascii_column_widths_multi(
     headers: tuple[str, ...],
     body: Sequence[tuple[str, ...]],
 ) -> tuple[int, ...]:
+    """Compute max width per column using headers and row values."""
     n = len(headers)
     widths = [len(headers[i]) for i in range(n)]
     for r in body:
@@ -56,6 +59,7 @@ def _ascii_column_widths_multi(
 
 
 def _text_fence_open(repo_caption: str | None) -> list[str]:
+    """Return opening fenced-block lines, optionally with scope caption."""
     if not repo_caption:
         return ["```text"]
     return ["```text", repo_caption, ""]
