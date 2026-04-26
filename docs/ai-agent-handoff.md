@@ -126,7 +126,9 @@ ______________________________________________________________________
     \+ full **`scripts.quality_gates`**, consolidate, bundle; final step fails job if license/gates
     failed after uploads) → **`pr-quality-comment`** → optional **`quality-dast`** →
     **`release-github`** (only on **`refs/tags/v*.*.*`**, **`environment: production`**, requires
-    **`gates_passed`**, supply + test + report success, DAST success or skipped). **`workflow_call`
+    **`gates_passed`**, supply + test + report success, DAST success or skipped). Release assets now
+    include both **`dist/*`** (wheel/sdist built in `quality-report` for tag runs and uploaded as
+    `release-dist`) and the zipped **quality bundle**. **`workflow_call`
     outputs** include **`gates_passed`**. **`~/.cache/uv`** restored via **`actions/cache`** on
     static/supply/test jobs.
   - **`quality-shield`** and **`quality-report`** use **`setup-uv-python`** (not **`install-uv`
@@ -151,7 +153,9 @@ ______________________________________________________________________
     **`matches()`** — not a supported expression function); a **bash** step enforces strict
     **`vMAJOR.MINOR.PATCH`** (digits only).
 - **`publish-pypi.yml`**: **`workflow_dispatch` only**; job uses **`environment: pypi`** (manual
-  PyPI publish with OIDC).
+  PyPI publish with OIDC). It now requires a **`tag`** input, checks out that tag
+  (`ref: refs/tags/<tag>`, `fetch-depth: 0`), validates **`vX.Y.Z`**, verifies the tag exists via
+  `git rev-parse`, then publishes with **`attestations: true`**.
 - **`devops-ci.yml`** (this repo only): Path filter → three lanes: **`ci-workflow-lint`**
   (**actionlint** + **zizmor** in one job — same **`.github/`** scope, one checkout/harden/install
   cycle; splitting would duplicate setup unless a reusable workflow is introduced), **`ci-scripts`**
