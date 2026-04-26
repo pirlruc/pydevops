@@ -31,10 +31,18 @@ jobs:
         with:
           persist-credentials: false
       - name: Download and install workflow linter
+        env:
+          REPO_ROOT: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          ACTIONLINT_VERSION="$(tr -d '\r\n' < .github/dependencies/actionlint/version.txt)"
-          ACTIONLINT_SHA256="$(tr -d '\r\n' < .github/dependencies/actionlint/linux-amd64.sha256)"
+          ACTIONLINT_VERSION_FILE="${REPO_ROOT}/.github/dependencies/actionlint/version.txt"
+          ACTIONLINT_SHA256_FILE="${REPO_ROOT}/.github/dependencies/actionlint/linux-amd64.sha256"
+          if [ ! -f "${ACTIONLINT_VERSION_FILE}" ] || [ ! -f "${ACTIONLINT_SHA256_FILE}" ]; then
+            echo "::error::Missing actionlint pin files under ${REPO_ROOT}/.github/dependencies/actionlint."
+            exit 1
+          fi
+          ACTIONLINT_VERSION="$(tr -d '\r\n' < "${ACTIONLINT_VERSION_FILE}")"
+          ACTIONLINT_SHA256="$(tr -d '\r\n' < "${ACTIONLINT_SHA256_FILE}")"
           ASSET="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           URL="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${ASSET}"
           curl -fsSLO "${URL}"
