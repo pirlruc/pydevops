@@ -180,6 +180,13 @@ ______________________________________________________________________
   **`setup-uv-python`** / underlying setup-uv cache wiring to avoid post-job “path does not exist”
   warnings when uv uses temp cache dirs. **`astral-sh/setup-uv`** pin **`v8.0.0`** in
   **`github-actions-pins.json`**.
+- **Scorecard Pinned-Dependencies hardening (workflow shell steps)**:
+  `devops-ci.yml` and `devops-scheduled.yml` workflow-lint jobs no longer use
+  `curl ... | bash` for actionlint nor `python -m pip install -r` for zizmor.
+  They now install actionlint from a pinned release tarball with SHA256 verification
+  (`.github/dependencies/actionlint/version.txt` + `linux-amd64.sha256`), and run zizmor via
+  `uv run --with-requirements .github/dependencies/zizmor/requirements.txt ...` after
+  `./.github/actions/install-uv`.
 - **`devops-scheduled.yml`** (this repo only): Weekly **Monday 06:00 UTC** +
   **`workflow_dispatch`**; merges former **lint**, **Scorecard**, **Mutmut**, **EOL** workflows. On
   **push** that only touches EOL policy / this workflow, **only** the EOL job runs

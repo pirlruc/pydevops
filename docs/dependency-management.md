@@ -4,7 +4,7 @@
 
 | Path                                                                      | Role                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`.github/dependencies/`](../.github/dependencies/)                       | **Pins:** `github-actions-pins.json` (canonical `uses:` map; supports `tag -> sha` entries for SHA pinning with readable version comments), `quality-tools/requirements.txt` (**generated** from `pyproject.toml`), `semgrep` / `dast-python` requirements (isolated; see below), `jscpd/package.json`, `uv-version.txt`, `syft-version.txt` / `grype-version.txt`, `emit-uv-version.sh` |
+| [`.github/dependencies/`](../.github/dependencies/)                       | **Pins:** `github-actions-pins.json` (canonical `uses:` map; supports `tag -> sha` entries for SHA pinning with readable version comments), `quality-tools/requirements.txt` (**generated** from `pyproject.toml`), `semgrep` / `dast-python` requirements (isolated; see below), `jscpd/package.json`, `uv-version.txt`, `syft-version.txt` / `grype-version.txt`, `actionlint/version.txt` + `actionlint/linux-amd64.sha256`, `emit-uv-version.sh` |
 | **[`pyproject.toml`](../pyproject.toml)**                                 | **Single source** for Ruff, Pylint, Mypy, pytest, Bandit, pip-audit, etc. (`[dependency-groups].quality-tools`). Regenerate the committed requirements file with **`bash scripts/export_pinned_requirements.sh`** (runs `uv lock` + `scripts/export_quality_tools_requirements.py`).                                                     |
 | **[`scripts/github_actions_pins.py`](../scripts/github_actions_pins.py)** | Applies or verifies `uses:` pins from `github-actions-pins.json` (`python3 scripts/github_actions_pins.py` or `--check`). Structured entries write `uses: owner/repo@<sha> # vX.Y.Z` so Scorecard gets immutable refs and humans keep version context. CI runs `--check` in **`devops-ci.yml`**.                                    |
 | [`.github/config/`](../.github/config/)                                   | **Tool configuration** only (zizmor policy, Semgrep rules, Python interpreter list for EOL watch) — not package manifests                                                                                                                                                                                                                |
@@ -79,8 +79,10 @@ file automatically.
 - **Syft** / **Grype** release versions in `syft-version.txt` and `grype-version.txt` (bump when you
   want new scanner behavior; composite installs pinned GitHub release tarballs).
 - **Gitleaks** install URL / version in `qa-secrets-sast` / `python-quality.yml`.
-- **actionlint** download version in `devops-ci.yml` and `devops-scheduled.yml`
-  (`ACTIONLINT_VERSION`).
+- **actionlint** is installed from pinned release assets in `devops-ci.yml` /
+  `devops-scheduled.yml`, with version + checksum in
+  `.github/dependencies/actionlint/version.txt` and
+  `.github/dependencies/actionlint/linux-amd64.sha256`.
 - Numeric **`with:`** inputs on third-party actions other than what composites centralize.
 
 ## Python interpreter policy
