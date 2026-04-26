@@ -312,13 +312,6 @@ jobs:
         with:
           python-version: '3.13'
           uv-cache-suffix: ${{ github.job }}
-      - name: Restore dependency install cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
       - name: Sync dependencies from lockfile
         run: uv sync
       - name: Verify pin manifests (pyproject ↔ quality-tools, Actions JSON ↔ workflows)

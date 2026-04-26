@@ -175,7 +175,10 @@ ______________________________________________________________________
   block. No **`dependency-review-config.yml`** — use inline **`allow-dependencies-licenses`** on the
   action if needed; **dependency-review-action** does **not** use **`retry-on-snapshot-warnings`**.
   **`setup-uv-python`** optional **`uv-cache-suffix`** ( **`ci-scripts`** uses
-  **`${{ github.job }}`**). **`astral-sh/setup-uv`** pin **`v8.0.0`** in
+  **`${{ github.job }}`**). In **`ci-scripts`**, a previously redundant manual
+  **`actions/cache`** step for `~/.cache/uv` was removed; caching is now delegated to
+  **`setup-uv-python`** / underlying setup-uv cache wiring to avoid post-job “path does not exist”
+  warnings when uv uses temp cache dirs. **`astral-sh/setup-uv`** pin **`v8.0.0`** in
   **`github-actions-pins.json`**.
 - **`devops-scheduled.yml`** (this repo only): Weekly **Monday 06:00 UTC** +
   **`workflow_dispatch`**; merges former **lint**, **Scorecard**, **Mutmut**, **EOL** workflows. On
