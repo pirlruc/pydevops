@@ -145,6 +145,9 @@ ______________________________________________________________________
   - **`workflow_dispatch`** input limit (**10**): **`app_install_command`** exists only on
     **`workflow_call`**; use **`${{ inputs.app_install_command || '' }}`**. Do not read undefined
     **`github.event.inputs`** for undeclared dispatch keys (**actionlint**).
+  - Optional type-check gate: **`enable_mypy`** (default **`false`**) is available on
+    `workflow_call` and `workflow_dispatch`; when enabled, `quality-static` runs
+    **`uv run mypy .`** before the static quality phase.
   - **`docstring_format: Pep257`**: Ruff **`convention = "pep257"`**; pydoclint
     **`--style=sphinx`**.
   - **Tag releases**: Callers must run the reusable workflow on **tag pushes** (e.g. `on.push.tags`)
@@ -174,7 +177,9 @@ ______________________________________________________________________
   **`dorny/paths-filter`** (workflow default is **`permissions: {}`**). **`changes`** omits
   **`harden-runner`**. **`workflow_dispatch`** enables all groups. Workflow default
   **`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"`** (including **`ci-supply-chain`** — aligns with
-  GitHub’s Node 20 deprecation guidance). **`ci-workflow-lint`**: **no** problem matcher /
+  GitHub’s Node 20 deprecation guidance). Workflow-level **`concurrency`** is now enabled with
+  **`${{ github.workflow }}-${{ github.ref }}`** and **`cancel-in-progress: true`**.
+  **`ci-workflow-lint`**: **no** problem matcher /
   **`github`** SARIF annotations; **`actionlint -no-color`** tees to **`_diag/actionlint.txt`** and
   appends **`actionlint: OK (no findings).`** on success; **zizmor** **`tee`** keeps ANSI in the
   scan step log and **`_diag/zizmor.txt`**; **Workflow lint — job summary** appends both tools to
@@ -202,7 +207,8 @@ ______________________________________________________________________
   (fails workflow below 85%). **Scheduled workflow lint** mirrors **`ci-workflow-lint`** (plain logs
   \+ **job summary**, no annotations). **Zizmor**: build a bash array of paths that **exist**
   (workflows, actions, dependabot, examples), run **once**; avoid empty input sets (zizmor exit 3
-  “no inputs collected”).
+  “no inputs collected”). Workflow-level **`concurrency`** now mirrors `devops-ci.yml`
+  (`${{ github.workflow }}-${{ github.ref }}`, `cancel-in-progress: true`).
 - **`qa-install-toolchain`**: **Syft / Grype** installed to **`/usr/local/bin`** with `sudo tar`
   (avoids **`GITHUB_PATH`** writes flagged by zizmor; tools still on default PATH).
 - **`setup-uv-python`** used where Python **3.13** must exist before **`uv sync`** (matches

@@ -21,6 +21,10 @@ on:
         description: Run OWASP ZAP + Locust via docker compose
         type: boolean
         default: false
+      enable_mypy:
+        description: Run mypy type checking during static analysis
+        type: boolean
+        default: false
       license_deny_list:
         description: JSON array of license substrings to forbid (SPDX SBOM), e.g.
           ["GPL-3.0"]
@@ -83,6 +87,9 @@ on:
         options: [Google, Numpy, Pep257]
         default: Google
       enable_dast:
+        type: boolean
+        default: false
+      enable_mypy:
         type: boolean
         default: false
       license_deny_list:
@@ -268,6 +275,12 @@ jobs:
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.app_install_command || '' }}
+      - name: Run mypy (optional)
+        if: inputs.enable_mypy == true
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          uv run mypy .
       - name: Run static analysis quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
