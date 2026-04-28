@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 _RE_LINEPRECISION_TOTAL = re.compile(
-    r"^\s*Total\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$",
+    r'^\s*Total\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$',
     re.I,
 )
 
@@ -15,12 +15,12 @@ def _read_report_lines(path: Path) -> list[str]:
     """Return report lines, or an empty list when file is missing."""
     if not path.is_file():
         return []
-    return path.read_text(encoding="utf-8", errors="replace").splitlines()
+    return path.read_text(encoding='utf-8', errors='replace').splitlines()
 
 
 def _skip_noise_line(line: str) -> bool:
     """True when line is header/separator noise."""
-    return not line or line.startswith("-") or line.lower().startswith("name ")
+    return not line or line.startswith('-') or line.lower().startswith('name ')
 
 
 def _counts_from_seven_tokens(parts: list[str]) -> tuple[int, int, int] | None:
@@ -75,7 +75,7 @@ def _totals_from_rows(lines: list[str]) -> tuple[int, int, int] | None:
 
 def mypy_lineprecision_totals(root: Path) -> tuple[int, int, int] | None:
     """Return (lines, precise, imprecise) from lineprecision report, or None."""
-    lines = _read_report_lines(root / "mypy-reports" / "lineprecision" / "lineprecision.txt")
+    lines = _read_report_lines(root / 'mypy-reports' / 'lineprecision' / 'lineprecision.txt')
     if not lines:
         return None
     from_total = _totals_from_total_line(lines)

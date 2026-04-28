@@ -170,8 +170,9 @@ ______________________________________________________________________
     **`vMAJOR.MINOR.PATCH`** (digits only).
 - **`publish-pypi.yml`**: **`workflow_dispatch` only**; job uses **`environment: pypi`** (manual
   PyPI publish with OIDC). It now requires a **`tag`** input, checks out that tag
-  (`ref: refs/tags/<tag>`, `fetch-depth: 0`), validates **`vX.Y.Z`**, verifies the tag exists via
-  `git rev-parse`, then publishes with **`attestations: true`**. Tag validation uses an anchored
+  (full history with `fetch-depth: 0`), validates **`vX.Y.Z`**, verifies the tag exists via
+  `git rev-parse`, explicitly checks out `refs/tags/<tag>` with detached HEAD, then publishes with
+  **`attestations: true`**. Tag validation uses an anchored
   regex (`^v[0-9]+\.[0-9]+\.[0-9]+$`) so prerelease/extra-segment tags are rejected.
 - **`pyproject.toml`** PEP 621 metadata was enriched for publishing provenance and index metadata:
   `authors`, `classifiers`, `keywords`, `license`, `license-files`, and `project.urls`.

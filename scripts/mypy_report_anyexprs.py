@@ -7,15 +7,15 @@ from pathlib import Path
 
 from scripts.quality_gates.jsonutil import parse_float_or_none
 
-_RE_ANY_EXPRS_TOTAL = re.compile(r"^\s*Total\s+(\d+)\s+(\d+)\s+([\d.]+)%\s*$", re.I)
-_RE_ANY_EXPRS_ROW = re.compile(r"^\s*(\S+)\s+(\d+)\s+(\d+)\s+([\d.]+)%\s*$")
+_RE_ANY_EXPRS_TOTAL = re.compile(r'^\s*Total\s+(\d+)\s+(\d+)\s+([\d.]+)%\s*$', re.I)
+_RE_ANY_EXPRS_ROW = re.compile(r'^\s*(\S+)\s+(\d+)\s+(\d+)\s+([\d.]+)%\s*$')
 
 
 def _read_report_lines(path: Path) -> list[str]:
     """Return report lines, or an empty list when file is missing."""
     if not path.is_file():
         return []
-    return path.read_text(encoding="utf-8", errors="replace").splitlines()
+    return path.read_text(encoding='utf-8', errors='replace').splitlines()
 
 
 def _totals_from_total_line(lines: list[str]) -> tuple[int, int, float] | None:
@@ -39,7 +39,7 @@ def _totals_from_total_line(lines: list[str]) -> tuple[int, int, float] | None:
 def _row_counts(line: str) -> tuple[int, int] | None:
     """Parse one module row into (any_count, expr_count)."""
     m = _RE_ANY_EXPRS_ROW.match(line.strip())
-    if not m or m.group(1).lower() == "total":
+    if not m or m.group(1).lower() == 'total':
         return None
     try:
         return int(m.group(2)), int(m.group(3))
@@ -50,7 +50,7 @@ def _row_counts(line: str) -> tuple[int, int] | None:
 def _row_pair(line: str) -> tuple[int, int] | None:
     """Skip headers/separators and parse one any-exprs data row."""
     stripped = line.strip()
-    if not stripped or stripped.startswith("-") or stripped.lower().startswith("name "):
+    if not stripped or stripped.startswith('-') or stripped.lower().startswith('name '):
         return None
     return _row_counts(stripped)
 
@@ -76,7 +76,7 @@ def _totals_from_rows(lines: list[str]) -> tuple[int, int, float] | None:
 
 def mypy_any_exprs_totals(root: Path) -> tuple[int, int, float] | None:
     """Return (anys, exprs, coverage_pct) from any-exprs report, or None."""
-    lines = _read_report_lines(root / "mypy-reports" / "anyexprs" / "any-exprs.txt")
+    lines = _read_report_lines(root / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt')
     if not lines:
         return None
     from_total = _totals_from_total_line(lines)
