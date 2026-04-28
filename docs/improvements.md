@@ -10,17 +10,15 @@ behavior.
    `egress-policy: audit`. Build job-specific allow lists for GitHub APIs, PyPI, npm, Semgrep,
    Anchore/Syft/Grype downloads, ZAP/Locust dependencies, and any release endpoints before switching
    to `egress-policy: block`.
-2. **Pin third-party GitHub Actions to full-length commit SHAs** — The repository currently uses
-   centrally managed ref pins in
-   [`.github/dependencies/github-actions-pins.json`](../.github/dependencies/github-actions-pins.json).
-   Full SHA pinning would reduce tag-moving risk, but needs an update process that still keeps
-   Dependabot or a pin refresh workflow practical.
+2. **Add branch protection required-check policy docs** — Define and document the exact required
+   status checks for `main`/`master` (for example, workflow lint, scripts quality, and supply chain)
+   so policy is explicit and reproducible across repository settings changes.
 
 ## Medium priority
 
-1. **Generate release provenance** — Add SLSA provenance for release artifacts and document how app
-   repositories should consume or verify it. [`versioning.md`](./versioning.md) already notes this
-   as future supply-chain hardening.
+1. **Document and verify attestation consumption** — Artifact attestations are now emitted in release
+   publishing flows; add a short verification playbook (CLI commands + expected outputs) and an
+   optional CI check for tag builds that validates generated attestations can be resolved.
 2. **Decide whether Scorecard should gate PRs** — Scheduled Scorecard already runs with
    `publish_results: true`, and PR/push Scorecard currently participates in the supply-chain gate.
    Consider making PR Scorecard report-only if branch-protection noise outweighs the value of
@@ -28,6 +26,9 @@ behavior.
 3. **Add policy tests for Harden-Runner endpoint allow lists** — Once egress block mode is designed,
    add a lightweight verification step or documented checklist so endpoint drift is caught when
    tools are upgraded.
+4. **Bind manual PyPI publish to a validated tag commit** — Add an explicit guard in
+   `publish-pypi.yml` to verify that the requested tag commit has passed the required quality checks
+   before allowing publication.
 
 ## Low priority
 
@@ -44,3 +45,6 @@ behavior.
 4. **Add lightweight documentation drift checks** — A small script or CI step could scan docs for
    stale tool versions, removed hook names, and outdated action refs after dependency or workflow
    pin updates.
+5. **Track and review security-lint suppressions periodically** — Add a small scheduled reminder or
+   checklist item to revisit suppressed findings (for example, zizmor suppressions) and prune entries
+   that are no longer needed.
