@@ -81,14 +81,17 @@ def _yaml_files(root: Path) -> list[Path]:
 
 def _uses_pattern(action: str) -> re.Pattern[str]:
     """Build regex that matches a ``uses: <action>@<ref>`` line, with optional comment."""
-    return re.compile(rf'(^\s*(?:-\s*)?uses:\s*){re.escape(action)}@[^\s#]+(?:\s+#.*)?$', re.MULTILINE)
+    return re.compile(
+        rf'(^\s*(?:-\s*)?uses:\s*){re.escape(action)}@[^\s#]+(?:[ \t]+#.*)?[ \t]*$',
+        re.MULTILINE,
+    )
 
 
 def _render_pin_spec(name: str, pin: str | PinEntry) -> str:
     """Return canonical ``uses:`` target string for an action pin entry."""
     if isinstance(pin, str):
         return f'{name}@{pin}'
-    return f"{name}@{pin['sha']} # {pin['tag']}"
+    return f'{name}@{pin["sha"]} # {pin["tag"]}'
 
 
 def _apply_file(path: Path, pins: dict[str, str | PinEntry]) -> bool:
@@ -124,7 +127,9 @@ def _split_action_ref(spec: str) -> tuple[str, str] | None:
     return head, tail
 
 
-def _drift_for_structured_pin(path: Path, name: str, have: str, comment: str, pin: PinEntry) -> str | None:
+def _drift_for_structured_pin(
+    path: Path, name: str, have: str, comment: str, pin: PinEntry
+) -> str | None:
     """Validate one structured ``{tag, sha}`` pin entry against a uses spec."""
     if not _is_sha_ref(have):
         return f'{path}: {name}@{have} must be pinned to a 40-char commit SHA'
@@ -139,7 +144,9 @@ def _drift_for_structured_pin(path: Path, name: str, have: str, comment: str, pi
     return None
 
 
-def _uses_spec_drift(path: Path, spec_and_comment: str, pins: dict[str, str | PinEntry]) -> str | None:
+def _uses_spec_drift(
+    path: Path, spec_and_comment: str, pins: dict[str, str | PinEntry]
+) -> str | None:
     """Return an error line when ``uses`` entry drifts from policy; else None."""
     spec, comment = _split_uses_spec_and_comment(spec_and_comment)
     action_ref = _split_action_ref(spec)

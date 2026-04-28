@@ -414,15 +414,14 @@ def test_mypy_medium_fails_low_type_coverage(tmp_out: Path) -> None:
     (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     ae = tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt'
     ae.write_text(
-        'Name Anys Exprs Coverage\n'
-        '---\n'
-        'm 50 100 50.00%\n'
-        'Total 50 100 50.00%\n',
+        'Name Anys Exprs Coverage\n---\nm 50 100 50.00%\nTotal 50 100 50.00%\n',
         encoding='utf-8',
     )
     passed, rows = qg.evaluate(tmp_out, 'Medium')
     assert not passed
-    assert any(r.get('gate') == 'Mypy type coverage (any-exprs)' and r.get('ok') is False for r in rows)
+    assert any(
+        r.get('gate') == 'Mypy type coverage (any-exprs)' and r.get('ok') is False for r in rows
+    )
 
 
 def test_mypy_medium_fails_any_density(tmp_out: Path) -> None:
@@ -430,15 +429,14 @@ def test_mypy_medium_fails_any_density(tmp_out: Path) -> None:
     (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     ae = tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt'
     ae.write_text(
-        'Name Anys Exprs Coverage\n'
-        '---\n'
-        'm 5 100 95.00%\n'
-        'Total 5 100 95.00%\n',
+        'Name Anys Exprs Coverage\n---\nm 5 100 95.00%\nTotal 5 100 95.00%\n',
         encoding='utf-8',
     )
     passed, rows = qg.evaluate(tmp_out, 'Medium')
     assert not passed
-    assert any(r.get('gate') == 'Mypy any-expression density' and r.get('ok') is False for r in rows)
+    assert any(
+        r.get('gate') == 'Mypy any-expression density' and r.get('ok') is False for r in rows
+    )
 
 
 def test_mypy_high_fails_imprecision(tmp_out: Path) -> None:
@@ -453,7 +451,9 @@ def test_mypy_high_fails_imprecision(tmp_out: Path) -> None:
     )
     passed, rows = qg.evaluate(tmp_out, 'High')
     assert not passed
-    assert any(r.get('gate') == 'Mypy imprecision (lineprecision)' and r.get('ok') is False for r in rows)
+    assert any(
+        r.get('gate') == 'Mypy imprecision (lineprecision)' and r.get('ok') is False for r in rows
+    )
 
 
 def test_high_fails_missing_mypy_any_exprs_report(tmp_out: Path) -> None:
@@ -467,11 +467,15 @@ def test_high_fails_missing_mypy_any_exprs_report(tmp_out: Path) -> None:
 
 def test_high_fails_unparseable_mypy_any_exprs_substance(tmp_out: Path) -> None:
     """High tier rejects any-exprs report that exists but cannot be parsed."""
-    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').write_text('not-a-valid-report\n', encoding='utf-8')
+    (tmp_out / 'mypy-reports' / 'anyexprs' / 'any-exprs.txt').write_text(
+        'not-a-valid-report\n', encoding='utf-8'
+    )
     (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     passed, rows = qg.evaluate(tmp_out, 'High')
     assert not passed
-    assert any('mypy any-exprs report missing parseable totals' in str(r.get('actual', '')) for r in rows)
+    assert any(
+        'mypy any-exprs report missing parseable totals' in str(r.get('actual', '')) for r in rows
+    )
 
 
 def test_mypy_low_skips_type_coverage_when_any_exprs_missing(tmp_out: Path) -> None:
@@ -501,13 +505,25 @@ def test_mypy_medium_skips_density_when_any_exprs_missing(tmp_out: Path) -> None
     assert not any(r.get('gate') == 'Mypy any-expression density' for r in rows)
 
 
-def test_mypy_medium_fails_zero_slocs_for_density(tmp_out: Path) -> None:
-    """Mypy density is undefined when cloc reports zero Python SLOC."""
+def test_mypy_medium_skips_zero_slocs_for_density(tmp_out: Path) -> None:
+    """Low/Medium skip mypy density when cloc reports zero Python SLOC."""
     (tmp_out / 'cloc.json').write_text(
         json.dumps({'Python': {'code': 0, 'comment': 10}}),
         encoding='utf-8',
     )
     (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     passed, rows = qg.evaluate(tmp_out, 'Medium')
+    assert passed
+    assert not any(r.get('gate') == 'Mypy any-expression density' for r in rows)
+
+
+def test_mypy_high_fails_zero_slocs_for_density(tmp_out: Path) -> None:
+    """High strictness fails when SLOC is zero and density cannot be computed."""
+    (tmp_out / 'cloc.json').write_text(
+        json.dumps({'Python': {'code': 0, 'comment': 10}}),
+        encoding='utf-8',
+    )
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'High')
     assert not passed
     assert any('SLOC is 0' in str(r.get('actual', '')) for r in rows)

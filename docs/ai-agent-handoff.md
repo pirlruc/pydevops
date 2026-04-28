@@ -45,8 +45,9 @@ ______________________________________________________________________
   **`--any-exprs-report`** write under **`mypy-reports/`**; **`gate_mypy`** enforces type coverage
   (any-exprs total), imprecision share (imprecise / analyzed lines), and any-expression density
   (**anys × 1000 / Python SLOC** from **`cloc.json`**). **Low**/**Medium** skip mypy gates when both
-  reports are absent; **High** requires the report files (see **`HIGH_REQUIRED_FILES`**) with
-  parseable totals. Thresholds: **Low** coverage `≥85%`, imprecision `<5%`, density `<5/KLoC`;
+  reports are absent; when **SLOC ≤ 0**, Low/Medium also skip the density gate while **High fails
+  closed**. **High** requires the report files (see **`HIGH_REQUIRED_FILES`**) with parseable
+  totals. Thresholds: **Low** coverage `≥85%`, imprecision `<5%`, density `<5/KLoC`;
   **Medium** `≥90%`, `<2%`, `<2/KLoC`; **High** `≥95%`, `<1%`, `<1/KLoC`.
 - Maintainability refactor: heavy mypy parsing/rule-builder code moved out of
   `scripts/quality_gates/` into shared helpers (`scripts/mypy_report_lineprecision.py`,
@@ -312,7 +313,8 @@ ______________________________________________________________________
   readable SHA pins as `uses: owner/repo@<sha> # vX.Y.Z`; check mode enforces SHA refs (40 hex) plus
   a trailing version comment for structured pins. `--check` now also fails on SHA drift for
   structured entries (workflow SHA must match `pin['sha']`), so arbitrary 40-char SHAs are no longer
-  accepted.
+  accepted. `uses:` matching also tolerates trailing spaces with no comment, so apply/check do not
+  miss lines like `uses: owner/repo@v1 `.
 - **`scripts/pr_comment_markdown.py`**: Invalid JSON message does not claim “missing” when file
   exists; user-facing text refers to **`gates.json`** (code-formatted in Markdown). **GFM gate
   tables** sanitize cell text via [`scripts/mdutil.py`](../scripts/mdutil.py)

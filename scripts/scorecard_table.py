@@ -13,7 +13,7 @@ def _is_real_number(v: object) -> bool:
 
 
 def fmt_score(v: object) -> str:
-    """Format a numeric score for Markdown; non-numeric or negative -> placeholder."""
+    """Format a numeric score for Markdown: non-numeric -> '—', negative -> 'n/a'."""
     if not _is_real_number(v):
         return '—'
     if v < 0:
