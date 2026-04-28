@@ -200,7 +200,7 @@ def _raw_details_sections(py: str, pl: str, iq: str, cc: str, mi: str, pa: str) 
         ('interrogate', iq, 25),
         ('Radon CC', cc, 30),
         ('Radon MI', mi, 30),
-        ('pip-audit', pa, 30),
+        ('pip-audit', pa, 80),
     )
     for title, content, n in blocks:
         out.extend(

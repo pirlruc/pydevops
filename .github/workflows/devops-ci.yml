@@ -502,16 +502,26 @@ jobs:
                       out.append(m.group(1).lower())
               return out
           total = 0
+          findings = []
           for dep in rows:
               if not isinstance(dep, dict):
                   continue
+              pkg = dep.get("name") if isinstance(dep.get("name"), str) else "unknown-package"
+              ver = dep.get("version") if isinstance(dep.get("version"), str) else "?"
               vulns = dep.get("vulns")
               if not isinstance(vulns, list):
                   continue
               for vuln in vulns:
                   total += 1
                   seen = set()
+                  vuln_id = "unknown-vuln"
+                  fix_versions = []
                   if isinstance(vuln, dict):
+                      if isinstance(vuln.get("id"), str):
+                          vuln_id = vuln["id"]
+                      fx = vuln.get("fix_versions")
+                      if isinstance(fx, list):
+                          fix_versions = [str(x) for x in fx if isinstance(x, (str, int, float))]
                       for key in ("severity", "severity_level"):
                           b = bucket(vuln.get(key))
                           if b:
@@ -530,15 +540,28 @@ jobs:
                       for b in from_osv(vuln):
                           seen.add(b)
                   if not seen:
+                      sev_label = "unknown"
                       sev_counts["unknown"] += 1
                   else:
+                      sev_label = ",".join(sorted(seen))
                       for b in seen:
                           sev_counts[b] += 1
+                  fix_txt = ", ".join(fix_versions) if fix_versions else "none-reported"
+                  findings.append((pkg, ver, vuln_id, sev_label, fix_txt))
           print(
               "PIP-AUDIT SUMMARY: "
               f"total={total} low={sev_counts['low']} medium={sev_counts['medium']} "
               f"high={sev_counts['high']} critical={sev_counts['critical']} unknown={sev_counts['unknown']}"
           )
+          if findings:
+              print("PIP-AUDIT FINDINGS:")
+              for pkg, ver, vuln_id, sev_label, fix_txt in findings:
+                  print(
+                      f" - package={pkg}@{ver} vuln={vuln_id} "
+                      f"severity={sev_label} fix_versions={fix_txt}"
+                  )
+          else:
+              print("PIP-AUDIT FINDINGS: none")
           if sev_counts["medium"] > 0 or sev_counts["high"] > 0 or sev_counts["critical"] > 0:
               print(
                   "FAIL: pip-audit found medium/high/critical vulnerabilities "

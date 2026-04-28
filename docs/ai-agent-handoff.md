@@ -184,7 +184,9 @@ ______________________________________________________________________
   **`uv sync`**; logs under **`_ci_summary/`**; **`scripts/ci_scripts_job_summary.py`** appends a
   **two-column** job summary (Analysis / Result, thresholds inlined); **pip-audit** runs as
   non-blocking step and fails only at the final gate when Medium/High/Critical dependency
-  vulnerabilities are present; **gate** lists failed tools; trades parallel wall time for fewer
+  vulnerabilities are present; pip-audit detail output now includes per-finding package/version,
+  vulnerability ID, severity, and reported fix versions in the raw log section; **gate** lists
+  failed tools; trades parallel wall time for fewer
   runners), **`ci-supply-chain`** (**OpenSSF Scorecard** when workflow/dispatch rules
   match + **dependency review** on PRs; step-level **`if:`**; **gate** lists **Scorecard** /
   **dependency review** failures). **`ci-supply-chain`** job permissions are **`contents: read`**,
