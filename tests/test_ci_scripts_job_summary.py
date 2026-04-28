@@ -13,6 +13,7 @@ from scripts.ci_scripts_job_summary import (
     _interrogate_actual_pct,
     _log_tail_fence,
     _passed_failed_from_summary_line,
+    _pip_audit_summary,
     _pylint_rating_value,
     _pytest_coverage_pct,
     _pytest_counts_phrase,
@@ -49,6 +50,10 @@ def _write_ci_summary_fixture(d: Path) -> None:
     )
     (d / 'radon_mi.txt').write_text(
         'Minimum MI (worst file)                            55.00  (must be > 40.0)\n',
+        encoding='utf-8',
+    )
+    (d / 'pip_audit.txt').write_text(
+        'PIP-AUDIT SUMMARY: total=1 low=1 medium=0 high=0 critical=0 unknown=0\n',
         encoding='utf-8',
     )
 
@@ -94,6 +99,7 @@ def test_build_summary_table_analysis_headers(summary_dir: Path) -> None:
         '| **Documentation Coverage** |',
         '| **Cyclomatic Complexity** |',
         '| **Maintainability Index** |',
+        '| **Dependency Vulnerabilities (pip-audit)** |',
     )
     for p in prefixes:
         assert _row_starting_with(md, p), f'missing row {p}'
@@ -163,6 +169,17 @@ def test_radon_cc_for_summary_missing() -> None:
 
 def test_radon_mi_for_summary_missing() -> None:
     assert _radon_mi_for_summary('no mi line') == '—'
+
+
+def test_pip_audit_summary_missing() -> None:
+    assert _pip_audit_summary('no pip-audit summary') is None
+
+
+def test_pip_audit_summary_parse() -> None:
+    got = _pip_audit_summary(
+        'PIP-AUDIT SUMMARY: total=4 low=1 medium=2 high=1 critical=0 unknown=0\n',
+    )
+    assert got == (4, 1, 2, 1, 0, 0)
 
 
 def test_log_tail_fence_empty() -> None:

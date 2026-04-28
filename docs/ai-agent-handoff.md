@@ -180,10 +180,12 @@ ______________________________________________________________________
 - **`devops-ci.yml`** (this repo only): Path filter → three lanes: **`ci-workflow-lint`**
   (**actionlint** + **zizmor** in one job — same **`.github/`** scope, one checkout/harden/install
   cycle; splitting would duplicate setup unless a reusable workflow is introduced), **`ci-scripts`**
-  (single job: **pytest**, **pylint**, **interrogate**, Radon CC/MI after one **`uv sync`**; logs
-  under **`_ci_summary/`**; **`scripts/ci_scripts_job_summary.py`** appends a **two-column** job
-  summary (Analysis / Result, thresholds inlined); **gate** lists failed tools; trades parallel wall
-  time for fewer runners), **`ci-supply-chain`** (**OpenSSF Scorecard** when workflow/dispatch rules
+  (single job: **pytest**, **pylint**, **interrogate**, Radon CC/MI, and **pip-audit** after one
+  **`uv sync`**; logs under **`_ci_summary/`**; **`scripts/ci_scripts_job_summary.py`** appends a
+  **two-column** job summary (Analysis / Result, thresholds inlined); **pip-audit** runs as
+  non-blocking step and fails only at the final gate when Medium/High/Critical dependency
+  vulnerabilities are present; **gate** lists failed tools; trades parallel wall time for fewer
+  runners), **`ci-supply-chain`** (**OpenSSF Scorecard** when workflow/dispatch rules
   match + **dependency review** on PRs; step-level **`if:`**; **gate** lists **Scorecard** /
   **dependency review** failures). **`ci-supply-chain`** job permissions are **`contents: read`**,
   **`security-events: write`**, and **`id-token: write`** only (no **`pull-requests: write`**;

@@ -453,6 +453,101 @@ jobs:
               sys.exit(1)
           print("PASS: maintainability index above floor for all files.")
           PY
+      - id: pip_audit
+        name: Audit Python dependencies (pip-audit)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          set -o pipefail
+          uv run pip-audit --format=json > _ci_summary/pip_audit.json 2> _ci_summary/pip_audit.stderr || true
+          uv run python << 'PY' | tee _ci_summary/pip_audit.txt
+          import json
+          import re
+          import sys
+          from pathlib import Path
+          payload = []
+          p = Path("_ci_summary/pip_audit.json")
+          try:
+              payload = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+          except (json.JSONDecodeError, OSError):
+              print("PIP-AUDIT SUMMARY: total=0 low=0 medium=0 high=0 critical=0 unknown=0")
+              print("FAIL: pip-audit did not produce parseable JSON output.", file=sys.stderr)
+              sys.exit(1)
+          rows = payload if isinstance(payload, list) else payload.get("dependencies", [])
+          if not isinstance(rows, list):
+              rows = []
+          sev_counts = {"low": 0, "medium": 0, "high": 0, "critical": 0, "unknown": 0}
+          sev_levels = tuple(sev_counts.keys())
+          def bucket(v):
+              if not isinstance(v, str):
+                  return None
+              s = v.strip().lower()
+              if s in sev_levels:
+                  return s
+              if re.fullmatch(r"cvssv?3?:(none|low|medium|high|critical)", s):
+                  return s.rsplit(":", 1)[-1]
+              return None
+          def from_osv(vuln):
+              if not isinstance(vuln, dict):
+                  return []
+              out = []
+              aliases = vuln.get("aliases")
+              if not isinstance(aliases, list):
+                  return out
+              for a in aliases:
+                  if not isinstance(a, str):
+                      continue
+                  m = re.search(r"\b(CRITICAL|HIGH|MEDIUM|LOW)\b", a, re.IGNORECASE)
+                  if m:
+                      out.append(m.group(1).lower())
+              return out
+          total = 0
+          for dep in rows:
+              if not isinstance(dep, dict):
+                  continue
+              vulns = dep.get("vulns")
+              if not isinstance(vulns, list):
+                  continue
+              for vuln in vulns:
+                  total += 1
+                  seen = set()
+                  if isinstance(vuln, dict):
+                      for key in ("severity", "severity_level"):
+                          b = bucket(vuln.get(key))
+                          if b:
+                              seen.add(b)
+                      sev = vuln.get("severities")
+                      if isinstance(sev, list):
+                          for entry in sev:
+                              if isinstance(entry, dict):
+                                  b = bucket(entry.get("severity"))
+                                  if b:
+                                      seen.add(b)
+                              else:
+                                  b = bucket(entry)
+                                  if b:
+                                      seen.add(b)
+                      for b in from_osv(vuln):
+                          seen.add(b)
+                  if not seen:
+                      sev_counts["unknown"] += 1
+                  else:
+                      for b in seen:
+                          sev_counts[b] += 1
+          print(
+              "PIP-AUDIT SUMMARY: "
+              f"total={total} low={sev_counts['low']} medium={sev_counts['medium']} "
+              f"high={sev_counts['high']} critical={sev_counts['critical']} unknown={sev_counts['unknown']}"
+          )
+          if sev_counts["medium"] > 0 or sev_counts["high"] > 0 or sev_counts["critical"] > 0:
+              print(
+                  "FAIL: pip-audit found medium/high/critical vulnerabilities "
+                  f"(M={sev_counts['medium']} H={sev_counts['high']} C={sev_counts['critical']}).",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+          print("PASS: no medium/high/critical pip-audit vulnerabilities.")
+          PY
       - name: Scripts quality — job summary
         if: always()
         run: uv run python scripts/ci_scripts_job_summary.py >> "${GITHUB_STEP_SUMMARY}"
@@ -464,6 +559,7 @@ jobs:
           DOCSTRINGS_OUTCOME: ${{ steps.docstrings.outcome }}
           RADON_CC_OUTCOME: ${{ steps.radon_cc.outcome }}
           RADON_MI_OUTCOME: ${{ steps.radon_mi.outcome }}
+          PIP_AUDIT_OUTCOME: ${{ steps.pip_audit.outcome }}
         run: |-
           set -euo pipefail
           failed=()
@@ -472,6 +568,7 @@ jobs:
           if [ "${DOCSTRINGS_OUTCOME}" != "success" ]; then failed+=("interrogate"); fi
           if [ "${RADON_CC_OUTCOME}" != "success" ]; then failed+=("Radon CC"); fi
           if [ "${RADON_MI_OUTCOME}" != "success" ]; then failed+=("Radon MI"); fi
+          if [ "${PIP_AUDIT_OUTCOME}" != "success" ]; then failed+=("pip-audit"); fi
           if [ "${#failed[@]}" -gt 0 ]; then
             echo "::error::Scripts quality failed: ${failed[*]} (see prior steps)."
             exit 1

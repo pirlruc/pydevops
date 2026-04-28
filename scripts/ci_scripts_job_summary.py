@@ -128,6 +128,31 @@ def _row_two_col(analysis: str, result: str) -> str:
     return f'| {analysis} | {esc} |'
 
 
+def _pip_audit_summary(text: str) -> tuple[int, int, int, int, int, int] | None:
+    """Parse ``PIP-AUDIT SUMMARY`` line into counts."""
+    m = re.search(
+        r'PIP-AUDIT SUMMARY:\s*total=(\d+)\s+low=(\d+)\s+medium=(\d+)\s+high=(\d+)'
+        r'\s+critical=(\d+)\s+unknown=(\d+)',
+        text,
+    )
+    if not m:
+        return None
+    return tuple(int(m.group(i)) for i in range(1, 7))
+
+
+def _result_pip_audit(pa: str) -> str:
+    """Pip-audit severity summary and gate policy phrasing."""
+    got = _pip_audit_summary(pa)
+    if got is None:
+        return '— (medium/high/critical must be 0)'
+
+    total, low, medium, high, critical, unknown = got
+    return (
+        f'**{total}** total: L={low}, M={medium}, H={high}, C={critical}, unknown={unknown} '
+        '(M/H/C must be 0)'
+    )
+
+
 def _result_pytest(py: str) -> str:
     """Successful / failed counts only, plus pass requirement."""
     phrase = _pytest_counts_phrase(py)
@@ -166,7 +191,7 @@ def _log_tail_fence(text: str, max_lines: int) -> str:
     return '\n'.join(lines[-max_lines:])
 
 
-def _raw_details_sections(py: str, pl: str, iq: str, cc: str, mi: str) -> list[str]:
+def _raw_details_sections(py: str, pl: str, iq: str, cc: str, mi: str, pa: str) -> list[str]:
     """Markdown ``<details>`` blocks with fenced raw log tails."""
     out: list[str] = ['<details><summary>Raw log tails</summary>', '']
     blocks = (
@@ -175,6 +200,7 @@ def _raw_details_sections(py: str, pl: str, iq: str, cc: str, mi: str) -> list[s
         ('interrogate', iq, 25),
         ('Radon CC', cc, 30),
         ('Radon MI', mi, 30),
+        ('pip-audit', pa, 30),
     )
     for title, content, n in blocks:
         out.extend(
@@ -199,6 +225,7 @@ def build_summary() -> str:
     iq = _read('interrogate.txt')
     cc = _read('radon_cc.txt')
     mi = _read('radon_mi.txt')
+    pa = _read('pip_audit.txt')
 
     body: list[str] = [
         '## Scripts quality (CI)',
@@ -211,8 +238,9 @@ def build_summary() -> str:
         _row_two_col('**Documentation Coverage**', _result_interrogate(iq)),
         _row_two_col('**Cyclomatic Complexity**', _radon_cc_for_summary(cc)),
         _row_two_col('**Maintainability Index**', _radon_mi_for_summary(mi)),
+        _row_two_col('**Dependency Vulnerabilities (pip-audit)**', _result_pip_audit(pa)),
         '',
-        *_raw_details_sections(py, pl, iq, cc, mi),
+        *_raw_details_sections(py, pl, iq, cc, mi, pa),
     ]
     return '\n'.join(body)
 
