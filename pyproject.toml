@@ -47,7 +47,7 @@ classifiers = [
 ]
 description = "Scripts and tooling for Quality-as-a-Service reusable workflows"
 keywords = ["devops", "github-actions", "quality-gates", "python", "ci"]
-license = "MIT"
+license = {text = "MIT"}
 license-files = ["LICENSE"]
 readme = "README.md"
 

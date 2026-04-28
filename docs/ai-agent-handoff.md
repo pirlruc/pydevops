@@ -274,6 +274,11 @@ ______________________________________________________________________
   Locust stay in separate **`requirements.txt`** (tomli vs pip-audit conflict with root lock).
   **`pylint-json2html`** is pinned for **`pylint_report.html`** in the quality bundle (see
   **`ci_run_quality.sh`**).
+- **Formatting policy alignment:** `.pre-commit-config.yaml` no longer includes
+  `double-quote-string-fixer` because Ruff formatter is configured with single-quote style in
+  `pyproject.toml` (`[tool.ruff.format].quote-style = "single"`), avoiding formatter tug-of-war.
+- **PEP 621 license metadata:** `[project].license` in `pyproject.toml` now uses a compliant table
+  (`{text = "MIT"}`) rather than a bare string, while keeping `license-files = ["LICENSE"]`.
 
 ### 6. Tests / tooling
 

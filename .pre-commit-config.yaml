@@ -11,7 +11,6 @@ repos:
       - id: check-yaml
       - id: check-json
         exclude: ^(.devcontainer/devcontainer.json|.vscode/launch.json)$
-      - id: double-quote-string-fixer
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: detect-private-key
