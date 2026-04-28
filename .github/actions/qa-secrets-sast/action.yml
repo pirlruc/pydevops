@@ -1,9 +1,10 @@
+---
 name: Secrets scan and static pattern analysis
 description: >
-  Shield phase: find leaked credentials, upload SARIF to GitHub code scanning, and enforce
+  Shield phase: find leaked credentials, upload SARIF to GitHub code scanning, and
+  enforce
   static rules on Python. Expects the application at workspace root and DevOps at
   devops-checkout-path.
-
 inputs:
   workspace:
     description: Absolute path to application repository root (e.g. github.workspace)
@@ -14,7 +15,6 @@ inputs:
   devops-checkout-path:
     description: Absolute path to the DevOps clone (…/workspace/.devops)
     required: true
-
 runs:
   using: composite
   steps:
@@ -25,7 +25,6 @@ runs:
         sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends jq
         GITLEAKS_VERSION=8.21.2
         curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
-
     - name: Write secret scan report files
       shell: bash
       env:
@@ -39,7 +38,6 @@ runs:
           --report-format json --report-path "$OUT/gitleaks.json" --exit-code 0
         gitleaks detect --source . --no-banner --verbose --redact \
           --report-format sarif --report-path "$OUT/gitleaks.sarif" --exit-code 0
-
     - name: Fail when secrets are reported
       shell: bash
       env:
@@ -51,14 +49,12 @@ runs:
           echo "::error::Gitleaks reported ${n} finding(s). See gitleaks.json in artifacts."
           exit 1
         fi
-
     - name: Upload secret scan SARIF results
       if: always()
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
       with:
         sarif_file: ${{ inputs.quality-output-dir }}/gitleaks.sarif
       continue-on-error: true
-
     - name: Install pattern scanner for Python
       shell: bash
       env:
@@ -69,7 +65,6 @@ runs:
         sudo apt-get update && sudo apt-get install -y --no-install-recommends pipx
         pipx ensurepath
         pipx install "$SPEC"
-
     - name: Run Semgrep (SARIF; policy enforced later via quality gates)
       continue-on-error: true
       shell: bash
@@ -86,10 +81,9 @@ runs:
           --config "$DEVOPS/.github/config/semgrep/python-custom.yml" \
           --exclude .devops \
           --sarif --output "$OUT/semgrep.sarif" .
-
     - name: Upload pattern scan SARIF results
       if: always()
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@865f5f5c36632f18690a3d569fa0a764f2da0c3e # v3
       with:
         sarif_file: ${{ inputs.quality-output-dir }}/semgrep.sarif
       continue-on-error: true

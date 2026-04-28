@@ -1,27 +1,50 @@
 # Suggestions and improvements
 
-Optional hardening and UX ideas. **Status** notes what is already reflected in this repository.
+Backlog of optional improvements that are **not yet fully implemented** in this repository.
+Completed items have been removed; see [`ai-agent-handoff.md`](./ai-agent-handoff.md) for current
+behavior.
 
-## Workflow / runner hardening
+## High priority
 
-1. **Tighten Harden-Runner egress** — Move from `audit` to `block` per job using StepSecurity allow lists (GitHub API, PyPI, Semgrep CDN, Anchore install scripts, etc.). **Status:** still `audit` on heavy jobs until lists are validated per environment.
-2. **Pin third-party actions to full-length commit SHAs** — Reduces tag-moving risk; pair with Dependabot version updates. **Status:** partial; semver tags in use; SHA pinning can be adopted incrementally.
-3. **OIDC for cloud pulls** — If you later push images or SBOMs to AWS/GCP, prefer workload identity over long-lived secrets. **Status:** documentation only.
-4. **Separate “report only” Scorecard** — Run Scorecard on a schedule with `publish_results: true`, and use a stricter PR job that fails only on actionlint/zizmor. **Status:** deferred; current **Reusable workflows quality** runs Scorecard on PR/push when not a fork.
+1. **Move Harden-Runner from audit to block mode per job** — Current workflows use
+   `egress-policy: audit`. Build job-specific allow lists for GitHub APIs, PyPI, npm, Semgrep,
+   Anchore/Syft/Grype downloads, ZAP/Locust dependencies, and any release endpoints before switching
+   to `egress-policy: block`.
+2. **Add branch protection required-check policy docs** — Define and document the exact required
+   status checks for `main`/`master` (for example, workflow lint, scripts quality, and supply chain)
+   so policy is explicit and reproducible across repository settings changes.
 
-## Quality pipeline
+## Medium priority
 
-5. **Require artifacts for High strictness** — **Done:** `HIGH_REQUIRED_FILES` in `scripts/quality_gates` fails High when outputs are missing or empty.
-6. **Semgrep tuning** — Replace or supplement `p/python` with a smaller ruleset or `severity` filters if noise blocks merges. **Status:** optional per app.
-7. **Split long jobs** — Break `python-quality` into parallel jobs (lint vs test vs security) with aggregation. **Status:** deferred (large workflow change).
-8. **Caching** — **Partial:** **DevOps scripts CI** caches `~/.cache/uv`. Full `python-quality` caching can follow once egress policies are stable.
+1. **Document and verify attestation consumption** — Artifact attestations are now emitted in release
+   publishing flows; add a short verification playbook (CLI commands + expected outputs) and an
+   optional CI check for tag builds that validates generated attestations can be resolved.
+2. **Decide whether Scorecard should gate PRs** — Scheduled Scorecard already runs with
+   `publish_results: true`, and PR/push Scorecard currently participates in the supply-chain gate.
+   Consider making PR Scorecard report-only if branch-protection noise outweighs the value of
+   gating.
+3. **Add policy tests for Harden-Runner endpoint allow lists** — Once egress block mode is designed,
+   add a lightweight verification step or documented checklist so endpoint drift is caught when
+   tools are upgraded.
+4. **Bind manual PyPI publish to a validated tag commit** — Add an explicit guard in
+   `publish-pypi.yml` to verify that the requested tag commit has passed the required quality checks
+   before allowing publication.
 
-## Supply chain
+## Low priority
 
-9. **Generate provenance** — SLSA provenance for release artifacts. **Status:** noted in [versioning.md](./versioning.md); optional for app repos.
-10. **Dependency review** — **Done:** PR job in [.github/workflows/devops-ci.yml](../.github/workflows/devops-ci.yml) runs [dependency-review-action](https://github.com/actions/dependency-review-action) when the consolidated workflow triggers on lockfile/manifest paths. **Dependabot** covers `uv`/`uv.lock`, `github-actions`, pip/npm manifests under [`.github/dependencies/`](../.github/dependencies/), and the shared **uv CLI** version in `uv-version.txt` (see [dependency-management.md](./dependency-management.md)). **Python EOL** uses [.github/workflows/devops-scheduled.yml](../.github/workflows/devops-scheduled.yml) (Issues), not Dependabot.
-
-## Documentation / operations
-
-11. **Versioning runbook** — **Done:** [versioning.md](./versioning.md).
-12. **Fork PR strategy** — For contributions from forks, avoid unsafe `pull_request_target` + unrestricted checkout; prefer same-repo PRs or a carefully scoped PAT. **Status:** PR comment job already skips forks; document in app playbooks as needed.
+1. **Tune Semgrep defaults per application profile** — The reusable workflow currently uses the
+   pinned Semgrep install plus repository rules. Add optional presets or severity filters only if
+   `p/python`-style noise blocks real consumers.
+2. **Document fork contribution strategy for app repositories** — This repo avoids unsafe
+   `pull_request_target` checkout patterns and the PR comment job can use `github.token` or an
+   optional caller PAT. App playbooks can still document whether fork PRs are supported, same-repo
+   PRs are preferred, or maintainers should rerun trusted workflows manually.
+3. **OIDC guidance for external cloud pulls/pushes** — If future workflows publish images, SBOMs, or
+   attestations to AWS/GCP/Azure, prefer workload identity over long-lived secrets and document the
+   expected cloud roles.
+4. **Add lightweight documentation drift checks** — A small script or CI step could scan docs for
+   stale tool versions, removed hook names, and outdated action refs after dependency or workflow
+   pin updates.
+5. **Track and review security-lint suppressions periodically** — Add a small scheduled reminder or
+   checklist item to revisit suppressed findings (for example, zizmor suppressions) and prune entries
+   that are no longer needed.

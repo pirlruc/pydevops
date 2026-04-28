@@ -1,74 +1,88 @@
 [build-system]
-requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[project]
-name = "devops-quality-tooling"
-version = "0.1.0"
-description = "Scripts and tooling for Quality-as-a-Service reusable workflows"
-readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires = ["hatchling"]
 
 # Pin quality CLI versions here. Regenerate:
-#   bash scripts/export_pinned_requirements.sh
+# bash scripts/export_pinned_requirements.sh
 #
 # Semgrep and Locust are *not* in this lockfile: semgrep requires tomli~=2.0.1 while
 # pip-audit>=2.10 needs tomli>=2.2.1 — same resolution graph is impossible. Their pins
 # live in .github/dependencies/semgrep/requirements.txt and dast-python/requirements.txt.
 [dependency-groups]
+dev = [
+    {include-group = "quality-tools"},
+    {include-group = "scripts"},
+]
+quality-tools = [
+    "bandit==1.9.4",
+    "deptry==0.25.1",
+    "interrogate==1.7.0",
+    "mypy==1.20.2",
+    "pip-audit==2.10.0",
+    "pre-commit==4.6.0",
+    "pydoclint==0.8.3",
+    "pylint-json2html==0.5.0",
+    "pylint==4.0.5",
+    "pytest-cov==7.1.0",
+    "pytest==9.0.3",
+    "ruff==0.15.11",
+]
 scripts = [
     "radon>=6.0,<7",
 ]
-quality-tools = [
-    "ruff==0.15.8",
-    "pylint==4.0.5",
-    "mypy==1.20.0",
-    "pydoclint==0.8.3",
-    "interrogate==1.7.0",
-    "bandit==1.9.4",
-    "deptry==0.25.1",
-    "pip-audit==2.10.0",
-    "pytest==9.0.2",
-    "pytest-cov==7.1.0",
-    "pylint-json2html==0.5.0",
+
+[project]
+name = "devops-quality-tooling"
+version = "0.1.0"
+dependencies = []
+requires-python = ">=3.13"
+authors = [{name = "Nuno Monteiro"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
 ]
-dev = [
-    { include-group = "quality-tools" },
-    { include-group = "scripts" },
-]
+description = "Scripts and tooling for Quality-as-a-Service reusable workflows"
+keywords = ["devops", "github-actions", "quality-gates", "python", "ci"]
+license = {text = "MIT"}
+license-files = ["LICENSE"]
+readme = "README.md"
+
+[project.urls]
+Documentation = "https://github.com/pirlruc/pydevops/blob/main/docs/workflows.md"
+Issues = "https://github.com/pirlruc/pydevops/issues"
+Repository = "https://github.com/pirlruc/pydevops"
+
+[tool.coverage.run]
+omit = ["tests/*"]
+source = ["scripts", "src/devops_quality"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/devops_quality"]
 
-[tool.uv]
-default-groups = ["scripts", "dev"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["."]
-addopts = [
-    "--cov=scripts",
-    "--cov=src/devops_quality",
-    "--cov-report=term-missing",
-    "--cov-fail-under=95",
-]
-
-[tool.coverage.run]
-source = ["scripts", "src/devops_quality"]
-omit = ["tests/*"]
-
 [tool.interrogate]
+exclude = [".git", ".github", ".venv", "build", "dist", "examples", "tests"]
 fail-under = 95
 ignore-init-method = true
 ignore-init-module = false
 verbose = 1
-exclude = [".venv", "tests", ".git", ".github", "examples", "dist", "build"]
+
+[tool.mypy]
+files = ["scripts", "src/devops_quality", "tests"]
+mypy_path = "src"
+python_version = "3.13"
+warn_unused_configs = true
+
+[tool.pylint.design]
+max-args = 8
 
 [tool.pylint.main]
-max-line-length = 100
 fail-under = 9.5
 load-plugins = ["pylint.extensions.docparams"]
+max-line-length = 100
 
 [tool.pylint."messages control"]
 disable = [
@@ -76,5 +90,23 @@ disable = [
     "no-name-in-module",
 ]
 
-[tool.pylint.design]
-max-args = 8
+[tool.pytest.ini_options]
+addopts = [
+    "--cov-fail-under=95",
+    "--cov-report=term-missing",
+    "--cov=scripts",
+    "--cov=src/devops_quality",
+]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["scripts", "src", "tests"]
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.uv]
+default-groups = ["dev", "scripts"]

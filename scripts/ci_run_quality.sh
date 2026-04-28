@@ -106,11 +106,18 @@ if [[ "${want_static}" == "1" ]]; then
     pylint-json2html -f "$OUT/pylint.json" -o "$OUT/pylint_report.html" 2>/dev/null || true
   fi
 
-  # Mypy
+  # Mypy (always produce reports for quality gates; exit code ignored)
   if command -v mypy >/dev/null 2>&1; then
-    mypy . --exclude '\.devops' --show-error-codes >"$OUT/mypy.txt" 2>&1 || true
+    mkdir -p "$OUT/mypy-reports/lineprecision" "$OUT/mypy-reports/anyexprs"
+    mypy . --exclude '\.devops' --show-error-codes \
+      --lineprecision-report "$OUT/mypy-reports/lineprecision" \
+      --any-exprs-report "$OUT/mypy-reports/anyexprs" \
+      >"$OUT/mypy.txt" 2>&1 || true
   else
     echo "mypy not installed" >"$OUT/mypy.txt"
+    if [[ "${_high}" == "1" ]]; then
+      rm -rf "$OUT/mypy-reports"
+    fi
   fi
 
   # pydoclint
@@ -143,10 +150,10 @@ if [[ "${want_static}" == "1" ]]; then
       JSCPD_VER=$(
         python3 -c "import json, re, sys; v=json.load(open(sys.argv[1]))['dependencies']['jscpd']; m=re.search(r'(\d+\.\d+\.\d+)', str(v)); print(m.group(1) if m else str(v).strip())" "${JSCPD_PREFIX}/package.json" 2>/dev/null || true
       )
-      [[ -z "${JSCPD_VER}" ]] && JSCPD_VER="4.0.8"
+      [[ -z "${JSCPD_VER}" ]] && JSCPD_VER="4.0.9"
       npx --yes "jscpd@${JSCPD_VER}" . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     else
-      npx --yes jscpd@4.0.8 . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
+      npx --yes jscpd@4.0.9 . --reporters json --output "$OUT" --pattern "**/*.py" --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     fi
     if [[ -f "$OUT/jscpd-report.json" ]]; then
       :

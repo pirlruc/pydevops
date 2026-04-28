@@ -1,15 +1,14 @@
+---
 name: Pinned dependency tooling setup
 description: >
   Reads .github/dependencies/uv-version.txt and installs that release on the runner.
   Reference as ./.github/actions/install-uv here or ./.devops/.github/actions/install-uv
   from an application checkout.
-
 inputs:
   enable-cache:
     description: Forwarded to astral-sh/setup-uv (string "true" / "false")
     required: false
-    default: "true"
-
+    default: 'true'
 runs:
   using: composite
   steps:
@@ -18,7 +17,7 @@ runs:
       shell: bash
       run: bash "${GITHUB_ACTION_PATH}/../../dependencies/emit-uv-version.sh"
     - name: Install pinned dependency tooling
-      uses: astral-sh/setup-uv@v8.0.0
+      uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
       with:
         version: ${{ steps.uv_version.outputs.version }}
         enable-cache: ${{ inputs.enable-cache }}

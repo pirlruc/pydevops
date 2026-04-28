@@ -1,17 +1,18 @@
+---
 name: Publish to PyPI
-
 # Manual publish for this repository or for callers that copy this workflow pattern.
 # Application repos should use their own trusted-publish workflow; tag-driven PyPI
 # publishing was moved off automatic tag push to require explicit approval.
-
 on:
-  workflow_dispatch: {}
-
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing Git tag to publish (e.g. v0.1.0)
+        required: true
+        type: string
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 permissions: {}
-
 jobs:
   publish:
     name: Build and publish release artifacts
@@ -20,26 +21,36 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      attestations: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@v2.16.1
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
         with:
           egress-policy: audit
-
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          fetch-depth: 0
           persist-credentials: false
-
+      - name: Validate release tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must match vX.Y.Z (received: ${TAG})" >&2
+            exit 1
+          fi
+          git rev-parse --verify "refs/tags/${TAG}"
+          git checkout --detach "refs/tags/${TAG}"
       - name: Install tooling without local cache
         uses: ./.github/actions/install-uv
         with:
-          enable-cache: "false"
-
+          enable-cache: 'false'
       - name: Build wheel and source distribution
         run: uv build
-
       - name: Publish with trusted registry OIDC
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
         with:
+          attestations: true
           packages-dir: dist/
