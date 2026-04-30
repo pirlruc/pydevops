@@ -666,7 +666,7 @@ jobs:
             echo "No locustfile.py; skipping Locust." > "${{ github.workspace }}/quality-output/locust_skip.txt"
           fi
       - name: Run baseline web security scan
-        uses: zaproxy/action-baseline@6c5a007541891231cd9e0ddec25d4f25c59c9874 # v0.15.0
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
           target: ${{ inputs.dast_target_url }}
           rules_file_name: .zap/rules.tsv
