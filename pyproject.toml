@@ -20,7 +20,7 @@ quality-tools = [
     "mypy==1.20.2",
     "pip-audit==2.10.0",
     "pre-commit==4.6.0",
-    "pydoclint==0.8.3",
+    "pydoclint==0.8.6",
     "pylint-json2html==0.5.0",
     "pylint==4.0.5",
     "pytest-cov==7.1.0",
