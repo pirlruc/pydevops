@@ -172,12 +172,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application full history
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -229,12 +229,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -296,12 +296,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -363,12 +363,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -437,12 +437,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -634,11 +634,11 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -727,7 +727,7 @@ jobs:
             exit 1
           fi
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
       - name: Download quality bundle
