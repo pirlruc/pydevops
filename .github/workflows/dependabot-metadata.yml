@@ -1,15 +1,13 @@
 ---
-name: Dependabot Metadata (Dependabot PRs only)
+name: Dependabot Metadata (manual)
 on:
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 permissions:
   contents: read
   pull-requests: read
 jobs:
   metadata:
     name: Summarize Dependabot dependency update
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Fetch Dependabot metadata

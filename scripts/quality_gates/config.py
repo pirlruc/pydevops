@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from scripts.org_thresholds import load_python_floors
+
 
 @dataclass(frozen=True)
 class Thresholds:  # pylint: disable=too-many-instance-attributes
@@ -41,42 +43,10 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _parse_threshold_yaml(text: str) -> dict[str, float]:
-    """Minimal ``key: value`` YAML reader (no PyYAML dependency in this module)."""
-    out: dict[str, float] = {}
-    for raw in text.splitlines():
-        line = raw.split('#', 1)[0].strip()
-        if not line or ':' not in line:
-            continue
-        key, _, rest = line.partition(':')
-        key = key.strip()
-        val = rest.strip().split()[0] if rest.strip() else ''
-        if not key or not val:
-            continue
-        try:
-            out[key] = float(val)
-        except ValueError:
-            continue
-    return out
-
-
 @lru_cache(maxsize=1)
 def load_org_python_floors() -> dict[str, float]:
     """Org floors from the pinned guardrails submodule, or baked-in fallbacks."""
-    path = _repo_root() / 'docs' / 'guardrails' / 'python' / 'profile.thresholds.yml'
-    defaults = {
-        'statement_coverage': 95.0,
-        'branch_coverage': 95.0,
-        'doc_coverage': 95.0,
-        'max_cyclomatic_complexity': 8.0,
-        'avg_cyclomatic_complexity': 5.0,
-        'min_maintainability_index': 40.0,
-        'avg_maintainability_index': 60.0,
-    }
-    if not path.is_file():
-        return defaults
-    parsed = _parse_threshold_yaml(path.read_text(encoding='utf-8'))
-    return {**defaults, **{k: parsed[k] for k in defaults if k in parsed}}
+    return load_python_floors(_repo_root())
 
 
 def _build_strictness() -> dict[str, Thresholds]:

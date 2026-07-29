@@ -1,2 +1,2 @@
 # Mutmut for devops-scheduled.yml. Dependabot: pip, /.github/dependencies/mutmut
-mutmut>=3.5.0,<4
+mutmut>=3.6.0,<4

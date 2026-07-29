@@ -1,3 +1,3 @@
 # zizmor for devops-ci.yml / devops-scheduled.yml. Dependabot: pip, /.github/dependencies/zizmor
 # >=1.24.1: CLI baseline used in CI (--format plain + job summary; SARIF/github format optional).
-zizmor>=1.24.1,<2
+zizmor>=1.26.1,<2

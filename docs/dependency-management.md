@@ -12,6 +12,12 @@
 
 ## Dependabot ([`.github/dependabot.yml`](../.github/dependabot.yml))
 
+Schedule is **`quarterly`** for every ecosystem (Actions minutes). `devops-ci.yml` /
+`devops-scheduled.yml` / `dependabot-metadata.yml` run on **`workflow_dispatch` only** — Dependabot
+is the sole automatic trigger in this repository. Apply GitHub Actions bumps via
+`github-actions-pins.json` + `scripts/github_actions_pins.py`, not by merging Dependabot workflow
+diffs alone.
+
 | Ecosystem        | Directory                           | What it updates                                                                                                                                                                                                                                                                                                       |
 | ---------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `github-actions` | `/`                                 | `uses:` references in `.github/workflows/**` and `.github/actions/**` (Dependabot updates SHA pins; keep trailing `# v...` comments so version context remains visible)                                                                                                                                                            |

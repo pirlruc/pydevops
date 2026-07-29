@@ -7,7 +7,7 @@ milestones:
   - name: Guardrails alignment
     epics:
       - id: PDO-001
-        status: open
+        status: done
         title: High tier reads org Python profile.thresholds.yml
         overview:
           problem: >-
@@ -23,6 +23,9 @@ milestones:
             - scripts/quality_gates/gates_complexity.py
             - scripts/quality_gates/readers_radon.py
             - scripts/quality_gates/evaluation.py
+            - scripts/org_thresholds.py
+            - scripts/radon_metrics.py
+            - scripts/complexity_gate_rules.py
         acceptance_criteria:
           - High CC max/avg and MI min/avg match org YAML when submodule present
           - Avg CC and avg MI rows appear in gates.json
@@ -33,13 +36,16 @@ milestones:
           - PY-DOC-001
         tasks:
           - id: PDO-001-T1
-            status: open
+            status: done
             title: Wire High floors and average complexity gates
             instructions:
               files:
                 - scripts/quality_gates/config.py
                 - scripts/quality_gates/gates_complexity.py
                 - scripts/quality_gates/readers_radon.py
+                - scripts/org_thresholds.py
+                - scripts/radon_metrics.py
+                - scripts/complexity_gate_rules.py
             verification:
               - uv run pytest
             guardrail_refs:

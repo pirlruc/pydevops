@@ -1,6 +1,3 @@
-[submodule "guardrails"]
-	path = docs/guardrails
-	url = https://github.com/pirlruc/guardrails.git
 [submodule "docs/guardrails"]
 	path = docs/guardrails
 	url = https://github.com/pirlruc/guardrails.git
