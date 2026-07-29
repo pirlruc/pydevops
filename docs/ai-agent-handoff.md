@@ -57,9 +57,10 @@ ______________________________________________________________________
   **`scripts/radon_metrics.py`** (CC/MI aggregations), **`scripts/complexity_gate_rules.py`**
   (gate rows). Adapters remain in `config.py`, `readers_radon.py`, `gates_complexity.py`. CI Radon
   steps only scan `scripts/quality_gates/*.py` (max CC ≤ 5, every file MI > 40).
-- **High** floors: `load_org_python_floors()` reads the pinned submodule YAML when present; checkout
-  steps that need floors use **`submodules: true`** (`devops-ci` scripts job; every `.devops`
-  checkout in `python-quality.yml`).
+- **High** floors: `load_org_python_floors()` reads the pinned submodule YAML when present.
+  CI does **not** set `submodules: true` because `pirlruc/guardrails` is **private** and the
+  default `GITHUB_TOKEN` cannot clone it; High floors fall back to the baked-in defaults that
+  match `profile.thresholds.yml`. Local / agent checkouts with credentials get the real YAML.
 - **High** tier additionally requires artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if
   tools skipped); includes **`pydoclint.txt`** so a missing pydoclint run cannot be confused with
   zero findings. **`pydoclint.txt`** may be **empty** when there are zero violations (still counts
@@ -422,13 +423,12 @@ ______________________________________________________________________
 
 ## Known pitfalls
 
-- **Host `uv`**: not on system PATH on some machines. Install the official binary to
-  `~/.local/bin` (`curl -LsSf https://astral.sh/uv/install.sh | sh`). Do **not**
-  `pip install uv` into `.venv` then `uv sync` — sync removes packages absent from the lockfile.
-- **Radon gates only scan `scripts/quality_gates/`**. Put heavy parsing / row builders under
-  `scripts/` (outside that package) or MI/CC will fail CI.
-- **Action pins**: Dependabot PRs that edit workflows directly will fail `github_actions_pins.py
-  --check` unless the JSON pin file is updated and apply is re-run.
+- **Private `docs/guardrails`**: `submodules: true` in Actions fails (`repository not found`)
+  because the default token cannot read the private guardrails repo. Rely on baked-in High floor
+  fallbacks in CI, or a PAT with `contents:read` on guardrails if you need the live YAML there.
+- **Scorecard on feature branches**: `ossf/scorecard-action` only supports the default branch on
+  `workflow_dispatch`. `devops-ci.yml` skips the supply-chain job unless `github.ref` is the
+  default branch.
 
 ______________________________________________________________________
 

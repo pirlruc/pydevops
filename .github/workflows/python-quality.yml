@@ -183,7 +183,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Create quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
       - name: Scan secrets and static patterns
@@ -241,7 +240,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Restore uv cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -309,7 +307,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Restore uv cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -377,7 +374,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Restore uv cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -452,7 +448,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Install uv and Python for reporting scripts
         uses: ./.devops/.github/actions/setup-uv-python
         with:
@@ -649,7 +644,6 @@ jobs:
           ref: ${{ needs.devops-coordinates.outputs.ref }}
           path: .devops
           persist-credentials: false
-          submodules: true
       - name: Install pinned package tooling
         uses: ./.devops/.github/actions/install-uv
       - name: Create dynamic test output directory
