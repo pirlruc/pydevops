@@ -56,6 +56,30 @@ def radon_cc_max(root: Path) -> float | None:
     return max(maxima) if maxima else None
 
 
+def _all_cc_values(data: dict[str, Any]) -> list[float]:
+    """Collect every block complexity value from radon cc -j."""
+    out: list[float] = []
+    for blocks in data.values():
+        if not isinstance(blocks, list):
+            continue
+        for block in blocks:
+            value = _as_complexity(block)
+            if value is not None:
+                out.append(value)
+    return out
+
+
+def radon_cc_avg(root: Path) -> float | None:
+    """Average cyclomatic complexity across all blocks from radon cc -j."""
+    data = read_json(root / 'radon_cc.json')
+    if not data or not isinstance(data, dict):
+        return None
+    values = _all_cc_values(data)
+    if not values:
+        return None
+    return sum(values) / len(values)
+
+
 def _mi_from_dict_entry(v: dict) -> float | None:
     """``mi`` field from a Radon MI object node."""
     if 'mi' not in v:
@@ -97,3 +121,14 @@ def radon_mi_min(root: Path) -> float | None:
 
     values = collect_mi_values(data)
     return min(values) if values else None
+
+
+def radon_mi_avg(root: Path) -> float | None:
+    """Average maintainability index across files from radon mi -j."""
+    data = read_json(root / 'radon_mi.json')
+    if not data or not isinstance(data, dict):
+        return None
+    values = collect_mi_values(data)
+    if not values:
+        return None
+    return sum(values) / len(values)

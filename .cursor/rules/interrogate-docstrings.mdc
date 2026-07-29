@@ -4,17 +4,17 @@ globs: scripts/**/*.py
 alwaysApply: false
 ---
 
-# Docstring coverage (interrogate)
+# Docstring coverage (interrogate) — pydevops
 
-CI (**`devops-ci.yml`** → **`ci-scripts`**) runs **`interrogate scripts -vv --fail-under 95`**, matching **`[tool.interrogate]`** in **`pyproject.toml`** (**`exclude`** includes **`tests/`** — only **`scripts/`** is measured).
+Org docstring coverage floor: **[`python-quality-gates.mdc`](python-quality-gates.mdc)**
+(via `docs/guardrails/python/profile.thresholds.yml`).
 
-When you **add or edit** **`scripts/**/*.py`**, before finishing:
+This repo measures **`scripts/`** only (see `[tool.interrogate]`). When you **add or
+edit** **`scripts/**/*.py`**, before finishing:
 
-1. Run **`uv run interrogate scripts -vv --fail-under 95`** from the repo root (same as CI). If the **`interrogate`** entrypoint is missing, use **`uv run --group quality-tools python -m interrogate scripts -vv --fail-under 95`** after **`uv sync`**.
-2. If it fails, add minimal module/function docstrings until **actual ≥ 95%**; match the style of neighboring modules.
+1. Run **`uv run interrogate scripts -vv --fail-under 95`** (or
+   **`uv run --group quality-tools python -m interrogate …`** after **`uv sync`**).
+2. Add minimal module/function docstrings until the gate passes.
 
-**Always-applied** context: **[`handoff-and-commits.mdc`](handoff-and-commits.mdc)** points here so sessions that touch **`scripts/`** do not skip the gate.
-
-See also **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)** for **pytest** (all green), **line coverage ≥ 95%**, and **pylint ≥ 9.5** on **`scripts/`**.
-
-See also **[`radon-complexity.mdc`](radon-complexity.mdc)** for cyclomatic complexity on **`scripts/`** and **`tests/`**.
+See also **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)** and
+**[`radon-complexity.mdc`](radon-complexity.mdc)**.

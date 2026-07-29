@@ -1,0 +1,81 @@
+# Authored backlog for pydevops.
+#
+# Schema: https://github.com/pirlruc/github-scaffold/blob/main/docs/issues-schema.md
+# Methodology: https://github.com/pirlruc/methodologies/tree/1.1.0/github-issue-adr
+
+milestones:
+  - name: Guardrails alignment
+    epics:
+      - id: PDO-001
+        status: open
+        title: High tier reads org Python profile.thresholds.yml
+        overview:
+          problem: >-
+            Strictness tiers were hardcoded and drifted from org floors; average
+            CC/MI gates were missing.
+          goal: >-
+            High loads docs/guardrails/python/profile.thresholds.yml; avg CC and
+            avg MI gates enforced; below-High consumers document deviations.
+        architecture:
+          target: scripts/quality_gates/config.py
+          modules:
+            - scripts/quality_gates/config.py
+            - scripts/quality_gates/gates_complexity.py
+            - scripts/quality_gates/readers_radon.py
+            - scripts/quality_gates/evaluation.py
+        acceptance_criteria:
+          - High CC max/avg and MI min/avg match org YAML when submodule present
+          - Avg CC and avg MI rows appear in gates.json
+        guardrail_refs:
+          - PY-CPLX-001
+          - PY-CPLX-002
+          - PY-TEST-002
+          - PY-DOC-001
+        tasks:
+          - id: PDO-001-T1
+            status: open
+            title: Wire High floors and average complexity gates
+            instructions:
+              files:
+                - scripts/quality_gates/config.py
+                - scripts/quality_gates/gates_complexity.py
+                - scripts/quality_gates/readers_radon.py
+            verification:
+              - uv run pytest
+            guardrail_refs:
+              - PY-CPLX-001
+
+  - name: Scaffold adoption
+    epics:
+      - id: PDO-002
+        status: open
+        title: Adopt github-scaffold submodule and retire handoff-and-commits.mdc
+        overview:
+          problem: >-
+            handoff-and-commits.mdc duplicates scaffold ai-agent-handoff and
+            conventional-commits rules; no scaffold submodule to sync from.
+          goal: >-
+            Pin .github/scaffold, sync templates, replace the duplicate Cursor
+            rule with the scaffold pair.
+        architecture:
+          target: .github/scaffold submodule
+          modules:
+            - .gitmodules
+            - .cursor/rules/
+        acceptance_criteria:
+          - scaffold submodule pinned
+          - handoff-and-commits.mdc removed after sync
+        guardrail_refs:
+          - CI-008
+        tasks:
+          - id: PDO-002-T1
+            status: open
+            title: Add scaffold submodule and sync Cursor rules
+            instructions:
+              files:
+                - .gitmodules
+                - .cursor/rules/
+            verification:
+              - git submodule status .github/scaffold
+            guardrail_refs:
+              - CI-008

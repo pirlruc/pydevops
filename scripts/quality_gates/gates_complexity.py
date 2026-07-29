@@ -15,19 +15,25 @@ def _missing_metric_row(gate: str, required: str, actual: str) -> dict[str, Any]
 
 
 def _cyclomatic_gate_label(strictness_norm: str) -> str:
-    """Human-readable gate name; High-tier nuance only when applicable."""
-    if strictness_norm == 'High':
-        return 'Cyclomatic complexity (max; High < 6)'
-
+    """Human-readable gate name for max CC."""
+    del strictness_norm
     return 'Cyclomatic complexity (max)'
 
 
-def _maintainability_gate_label(strictness_norm: str) -> str:
-    """Human-readable gate name; High-tier nuance only when applicable."""
-    if strictness_norm == 'High':
-        return 'Maintainability index (min; High targets >= 60)'
+def _cyclomatic_avg_gate_label() -> str:
+    """Human-readable gate name for average CC."""
+    return 'Cyclomatic complexity (avg)'
 
+
+def _maintainability_gate_label(strictness_norm: str) -> str:
+    """Human-readable gate name for min MI."""
+    del strictness_norm
     return 'Maintainability index (min)'
+
+
+def _maintainability_avg_gate_label() -> str:
+    """Human-readable gate name for average MI."""
+    return 'Maintainability index (avg)'
 
 
 def gate_cyclomatic(
@@ -35,7 +41,7 @@ def gate_cyclomatic(
     t: Thresholds,
     strictness_norm: str = 'Medium',
 ) -> tuple[RowList, list[str]]:
-    """Evaluate max cyclomatic complexity (High: max <= 5, strictly below 6)."""
+    """Evaluate max cyclomatic complexity."""
     req = f'<= {t.cyclomatic_max:.0f}'
     label = _cyclomatic_gate_label(strictness_norm)
     if cc is None:
@@ -55,12 +61,36 @@ def gate_cyclomatic(
     return [row], [] if ok else ['cyclomatic complexity']
 
 
+def gate_cyclomatic_avg(
+    cc_avg: float | None,
+    t: Thresholds,
+    strictness_norm: str = 'Medium',
+) -> tuple[RowList, list[str]]:
+    """Evaluate average cyclomatic complexity."""
+    req = f'<= {t.cyclomatic_avg_max:.0f}'
+    label = _cyclomatic_avg_gate_label()
+    if cc_avg is None:
+        if strictness_norm == 'High':
+            row = _missing_metric_row(label, req, 'missing or unparsable radon_cc.json')
+            return [row], ['cyclomatic complexity avg']
+        return [], []
+
+    ok = cc_avg <= t.cyclomatic_avg_max
+    row = {
+        'gate': label,
+        'actual': f'{cc_avg:.2f}',
+        'required': req,
+        'ok': ok,
+    }
+    return [row], [] if ok else ['cyclomatic complexity avg']
+
+
 def gate_maintainability(
     mi: float | None,
     t: Thresholds,
     strictness_norm: str = 'Medium',
 ) -> tuple[RowList, list[str]]:
-    """Evaluate minimum MI across files (High targets >= 60)."""
+    """Evaluate minimum MI across files."""
     mi_label = _maintainability_gate_label(strictness_norm)
     if mi is None:
         if strictness_norm == 'High':
@@ -81,6 +111,30 @@ def gate_maintainability(
         'ok': ok,
     }
     return [row], [] if ok else ['maintainability index']
+
+
+def gate_maintainability_avg(
+    mi_avg: float | None,
+    t: Thresholds,
+    strictness_norm: str = 'Medium',
+) -> tuple[RowList, list[str]]:
+    """Evaluate average MI across files."""
+    label = _maintainability_avg_gate_label()
+    req = f'>= {t.maintainability_index_avg_min:.1f}'
+    if mi_avg is None:
+        if strictness_norm == 'High':
+            row = _missing_metric_row(label, req, 'missing or unparsable radon_mi.json')
+            return [row], ['maintainability index avg']
+        return [], []
+
+    ok = mi_avg >= t.maintainability_index_avg_min
+    row = {
+        'gate': label,
+        'actual': f'{mi_avg:.2f}',
+        'required': req,
+        'ok': ok,
+    }
+    return [row], [] if ok else ['maintainability index avg']
 
 
 def gate_duplication(
