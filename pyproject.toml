@@ -17,7 +17,7 @@ quality-tools = [
     "bandit==1.9.4",
     "deptry==0.25.1",
     "interrogate==1.7.0",
-    "mypy==1.20.2",
+    "mypy==2.3.0",
     "pip-audit==2.10.1",
     "pre-commit==4.6.0",
     "pydoclint==0.8.6",
