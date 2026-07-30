@@ -231,6 +231,62 @@ def test_radon_cc_max_zero_is_valid(tmp_path: Path) -> None:
     assert qg._radon_cc_max(tmp_path) == 0.0
 
 
+def test_radon_cc_avg_and_mi_avg(tmp_path: Path) -> None:
+    """Average CC and MI readers return arithmetic means."""
+    (tmp_path / 'radon_cc.json').write_text(
+        json.dumps({'a.py': [{'complexity': 2}, {'complexity': 4}]}),
+        encoding='utf-8',
+    )
+    (tmp_path / 'radon_mi.json').write_text(
+        json.dumps({'a.py': {'mi': 40}, 'b.py': {'mi': 60}}),
+        encoding='utf-8',
+    )
+    assert qg._radon_cc_avg(tmp_path) == pytest.approx(3.0)
+    assert qg._radon_mi_avg(tmp_path) == pytest.approx(50.0)
+
+
+def test_load_org_python_floors_from_yaml(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Org floors parse from profile.thresholds.yml when present."""
+    from scripts.quality_gates import config as cfg
+
+    root = tmp_path
+    py_dir = root / 'docs' / 'guardrails' / 'python'
+    py_dir.mkdir(parents=True)
+    (py_dir / 'profile.thresholds.yml').write_text(
+        'statement_coverage: 95\n'
+        'branch_coverage: 95\n'
+        'doc_coverage: 95\n'
+        'max_cyclomatic_complexity: 8\n'
+        'avg_cyclomatic_complexity: 5\n'
+        'min_maintainability_index: 40\n'
+        'avg_maintainability_index: 60\n',
+        encoding='utf-8',
+    )
+    monkeypatch.setattr(cfg, '_repo_root', lambda: root)
+    cfg.load_org_python_floors.cache_clear()
+    floors = cfg.load_org_python_floors()
+    assert floors['max_cyclomatic_complexity'] == 8.0
+    assert floors['avg_maintainability_index'] == 60.0
+    high = cfg._build_strictness()['High']
+    assert high.cyclomatic_max == 8.0
+    assert high.maintainability_index_avg_min == 60.0
+    cfg.load_org_python_floors.cache_clear()
+
+
+def test_gate_cyclomatic_avg_and_mi_avg() -> None:
+    """Average gates compare against Thresholds avg fields."""
+    from scripts.quality_gates.config import STRICTNESS
+    from scripts.quality_gates.gates_complexity import gate_cyclomatic_avg, gate_maintainability_avg
+
+    t = STRICTNESS['High']
+    rows, fails = gate_cyclomatic_avg(4.0, t, 'High')
+    assert rows[0]['ok'] is True
+    assert fails == []
+    rows, fails = gate_maintainability_avg(55.0, t, 'High')
+    assert rows[0]['ok'] is False
+    assert fails
+
+
 def test_main_failure_exit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """main returns 1 when gates fail."""
     monkeypatch.setenv('QUALITY_OUTPUT_DIR', str(tmp_path))

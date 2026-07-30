@@ -1,0 +1,3 @@
+[submodule "docs/guardrails"]
+	path = docs/guardrails
+	url = https://github.com/pirlruc/guardrails.git

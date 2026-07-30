@@ -10,9 +10,11 @@ from scripts.quality_gates.config import STRICTNESS, Thresholds, normalized_stri
 from scripts.quality_gates.gates_artifacts import enforce_high_artifact_presence
 from scripts.quality_gates.gates_complexity import (
     gate_cyclomatic,
+    gate_cyclomatic_avg,
     gate_duplication,
     gate_issues_per_kloc,
     gate_maintainability,
+    gate_maintainability_avg,
 )
 from scripts.quality_gates.gates_coverage import (
     gate_coverage_branch,
@@ -42,7 +44,12 @@ from scripts.quality_gates.readers_py_coverage import (
     pylint_score,
     pytest_exit_code,
 )
-from scripts.quality_gates.readers_radon import radon_cc_max, radon_mi_min
+from scripts.quality_gates.readers_radon import (
+    radon_cc_avg,
+    radon_cc_max,
+    radon_mi_avg,
+    radon_mi_min,
+)
 from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct, ruff_issue_count
 
 
@@ -80,7 +87,15 @@ def collect_gate_results(  # pylint: disable=too-many-locals,too-many-statements
     rows.extend(r)
     failures.extend(f)
 
+    r, f = gate_cyclomatic_avg(radon_cc_avg(root), t, sn)
+    rows.extend(r)
+    failures.extend(f)
+
     r, f = gate_maintainability(radon_mi_min(root), t, sn)
+    rows.extend(r)
+    failures.extend(f)
+
+    r, f = gate_maintainability_avg(radon_mi_avg(root), t, sn)
     rows.extend(r)
     failures.extend(f)
 

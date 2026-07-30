@@ -18,7 +18,9 @@ from scripts.quality_gates.readers_py_coverage import pylint_score as _pylint_sc
 from scripts.quality_gates.readers_grype_gitleaks import gitleaks_findings as _gitleaks_findings
 from scripts.quality_gates.readers_grype_gitleaks import grype_severities as _grype_severities
 from scripts.quality_gates.readers_pip import pip_audit_vulns as _pip_audit_vulns
+from scripts.quality_gates.readers_radon import radon_cc_avg as _radon_cc_avg
 from scripts.quality_gates.readers_radon import radon_cc_max as _radon_cc_max
+from scripts.quality_gates.readers_radon import radon_mi_avg as _radon_mi_avg
 from scripts.quality_gates.readers_radon import radon_mi_min as _radon_mi_min
 from scripts.quality_gates.readers_ruff_jscpd import ruff_issue_count as _ruff_issue_count
 
@@ -36,7 +38,9 @@ __all__ = [
     '_pip_audit_vulns',
     '_pylint_issue_count',
     '_pylint_score',
+    '_radon_cc_avg',
     '_radon_cc_max',
+    '_radon_mi_avg',
     '_radon_mi_min',
     '_read_json',
     '_ruff_issue_count',

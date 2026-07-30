@@ -13,20 +13,19 @@ ______________________________________________________________________
 
 ## Branch / state (as of last update)
 
-- Branch: **`feature-restructure`** (verify with `git status` / remote before assuming parity).
+- Branch: **`feature-guardrails-high-floors`** (PR #82). Guardrails submodule pinned to
+  **`docs/guardrails` @ `30eb5a5`** (post [guardrails#24](https://github.com/pirlruc/guardrails/pull/24)).
 
-- Recent commit messages (newest first; illustrative snapshot):
+- Recent themes on this branch:
 
-  - `fix(scripts): anchor quality output dir after cd; dedupe scorecard truncation helper`
-  - `fix(ci): drop redundant grype --fail-on step; rely on quality_gates vuln thresholds`
-  - `fix(ci): clarify quality placeholders, pin jscpd via npx, and install syft/grype to /usr/local/bin`
-  - `fix(ci): align cyclomatic gate text with enforcement; put ~/.local/bin on PATH for Grype`
-  - `fix(ci): stop writing success-shaped artifacts when quality tools are absent`
-  - `ci(devops-scripts): pin Python 3.13 via setup-uv-python; tighten scorecard aggregate test`
-  - `docs(workflows): align strictness docs; clarify gate labels and trim ci shell helpers`
-  - `fix(quality-gates): harden artifact parsers and preserve metric thresholds`
-  - …earlier: cyclomatic/MI refactors, dependabot cooldowns, docstrings, zizmor-related workflow
-    fixes, fail-closed artifacts, radon edge cases, initial QaaS pipeline, etc.
+  - High floors load from `docs/guardrails/python/profile.thresholds.yml` (avg CC / avg MI gates).
+  - Radon CC/MI for `scripts/quality_gates/` fixed by moving YAML / Radon / gate-row logic to
+    `scripts/org_thresholds.py`, `scripts/radon_metrics.py`, `scripts/complexity_gate_rules.py`.
+  - Dependabot schedule **quarterly**; `devops-ci.yml`, `devops-scheduled.yml`, and
+    `dependabot-metadata.yml` are **`workflow_dispatch` only** (Actions minutes).
+  - Action pins bumped via `.github/dependencies/github-actions-pins.json` (checkout v7, cache v6.1,
+    harden-runner v2.20, etc.). Dependency-review step removed (no PR trigger).
+  - Dev tooling bumps in `pyproject.toml` / `uv.lock` (except **mypy 2.x** — left on Dependabot #58).
 
 Use `git log --oneline` for the authoritative list.
 
@@ -54,6 +53,14 @@ ______________________________________________________________________
   `scripts/mypy_report_anyexprs.py`, `scripts/mypy_gate_rules.py`), while
   `scripts/quality_gates/readers_mypy*.py` and `gates_mypy.py` are now thin adapters. This keeps
   MI safely above 40 in the gated `scripts/quality_gates` package.
+- Same pattern for High-floor / Radon work: **`scripts/org_thresholds.py`** (YAML floors),
+  **`scripts/radon_metrics.py`** (CC/MI aggregations), **`scripts/complexity_gate_rules.py`**
+  (gate rows). Adapters remain in `config.py`, `readers_radon.py`, `gates_complexity.py`. CI Radon
+  steps only scan `scripts/quality_gates/*.py` (max CC ≤ 5, every file MI > 40).
+- **High** floors: `load_org_python_floors()` reads the pinned submodule YAML when present.
+  CI does **not** set `submodules: true` because `pirlruc/guardrails` is **private** and the
+  default `GITHUB_TOKEN` cannot clone it; High floors fall back to the baked-in defaults that
+  match `profile.thresholds.yml`. Local / agent checkouts with credentials get the real YAML.
 - **High** tier additionally requires artifacts listed in **`HIGH_REQUIRED_FILES`** (fail-closed if
   tools skipped); includes **`pydoclint.txt`** so a missing pydoclint run cannot be confused with
   zero findings. **`pydoclint.txt`** may be **empty** when there are zero violations (still counts
@@ -232,26 +239,31 @@ ______________________________________________________________________
   (avoids **`GITHUB_PATH`** writes flagged by zizmor; tools still on default PATH).
 - **`setup-uv-python`** used where Python **3.13** must exist before **`uv sync`** (matches
   `pyproject.toml` `requires-python`).
-- **Current April 2026 tool baseline**: Ruff **0.15.11**, Mypy **1.20.2**, pytest **9.0.3**, Semgrep
-  **1.159.0**, Mutmut **>=3.5.0,\<4**, Zizmor **>=1.24.1,\<2**, jscpd **4.0.9**, Locust **2.43.4**,
-  Harden-Runner **v2.18.0**, and `actions/github-script` **v9**.
+- **Current tool baseline** (post Dependabot batch on `feature-guardrails-high-floors`): Ruff
+  **0.15.17**, Mypy **1.20.2** (2.1.0 left open as Dependabot #58), pytest **9.1.0**, Semgrep
+  **1.170.0**, Mutmut **>=3.6.0,\<4**, Zizmor **>=1.26.1,\<2**, jscpd **4.2.3**, Locust **2.46.0**,
+  Harden-Runner **v2.20.0**, checkout **v7.0.0**, cache **v6.1.0**, `actions/github-script`
+  **v9.0.0**.
 - **Requirements pins**: no generic **`requirements-txt-fixer`** pre-commit hook; generated
   **`.github/dependencies/quality-tools/requirements.txt`** is owned by
   **`scripts/export_pinned_requirements.sh`** / **`scripts/export_quality_tools_requirements.py`**.
 
 ### 4. Dependabot (`.github/dependabot.yml`)
 
+- **Schedule: `quarterly`** for every ecosystem (no `day:` — only valid for daily/weekly).
+  Cooldowns and groups unchanged. **Dependabot is the only automatic GitHub Actions trigger** in
+  this repo; `devops-ci.yml`, `devops-scheduled.yml`, and `dependabot-metadata.yml` are
+  **`workflow_dispatch` only**.
 - **`cooldown`** on update entries: **`default-days: 7`** (zizmor policy).
 - **`github-actions`** ecosystem: only **`default-days`** (semver cooldown keys are **not**
   supported for that ecosystem — Dependabot parse error if included).
-- Dependabot config now includes **explicit Monday schedule windows** (`day` / `time` /
-  `timezone: Europe/Lisbon`) for each ecosystem block, plus update **groups** for
-  `github-actions`, `uv` development dependencies, and `pre-commit` hooks.
-- New ecosystem block: **`pre-commit`** at repo root so `.pre-commit-config.yaml` hook revs are
-  updated by Dependabot.
-- New workflow **`.github/workflows/dependabot-metadata.yml`** summarizes Dependabot PR metadata in
-  the job summary (Dependabot actor only), using pinned
-  **`dependabot/fetch-metadata`** from `github-actions-pins.json`.
+- Action bumps must go through **`.github/dependencies/github-actions-pins.json`** +
+  **`python3 scripts/github_actions_pins.py`** (CI `--check`); do not land Dependabot workflow
+  edits that leave stale `# v…` comments.
+- Ecosystem block: **`pre-commit`** at repo root so `.pre-commit-config.yaml` hook revs are updated
+  by Dependabot.
+- **`.github/workflows/dependabot-metadata.yml`** is manual (`workflow_dispatch`); it still uses
+  pinned **`dependabot/fetch-metadata`** from `github-actions-pins.json`.
 
 ### 5. Documentation
 
@@ -409,9 +421,20 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Known pitfalls
+
+- **Private `docs/guardrails`**: `submodules: true` in Actions fails (`repository not found`)
+  because the default token cannot read the private guardrails repo. Rely on baked-in High floor
+  fallbacks in CI, or a PAT with `contents:read` on guardrails if you need the live YAML there.
+- **Scorecard on feature branches**: `ossf/scorecard-action` only supports the default branch on
+  `workflow_dispatch`. `devops-ci.yml` skips the supply-chain job unless `github.ref` is the
+  default branch.
+
+______________________________________________________________________
+
 ## Suggested verification for the next agent
 
-1. `git status` / `git log` vs remote (e.g. **`feature-restructure`**).
+1. `git status` / `git log` vs remote (**`feature-guardrails-high-floors`**).
 2. Run **`uv sync`** then **`uv run pytest`** (enforces **≥ 95%** coverage via **`pyproject.toml`**)
    and **`uv run pylint scripts`** (**≥ 9.5/10**) when you change Python under **`scripts/`** or
    **`tests/`** (see **`.cursor/rules/python-scripts-ci-gates.mdc`**).
@@ -420,7 +443,8 @@ ______________________________________________________________________
 4. **`uv run interrogate scripts -vv --fail-under 95`** when you change **`scripts/**/*.py`** (see
    **`.cursor/rules/interrogate-docstrings.mdc`**).
 5. Scan **`.github/workflows`** and **`action.yml`** files with **actionlint + zizmor** if editing
-   CI (see **`devops-ci.yml`** / **`devops-scheduled.yml`** jobs that run those tools).
+   CI (see **`devops-ci.yml`** / **`devops-scheduled.yml`** — run them via **`workflow_dispatch`**).
+6. Manual CI: **`gh workflow run devops-ci.yml --ref <branch>`**.
 
 ______________________________________________________________________
 
@@ -432,5 +456,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-*Generated for handoff between AI agents and human maintainers. Update this file when making large
-architectural or CI contract changes.*
+*Last updated: 2026-07-30 — feature-guardrails-high-floors Dependabot batch, manual CI, High floors.*

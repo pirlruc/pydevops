@@ -3,13 +3,13 @@
 # For GitHub Actions, use SHA pins in workflows (`uses: owner/repo@<sha> # vX.Y.Z`);
 # Dependabot keeps those refs updated while preserving version context in comments.
 # Python interpreter EOL issues are opened by devops-scheduled.yml (not Dependabot).
+# Quarterly schedule keeps Actions minutes low; run devops-ci / devops-scheduled manually.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:15'
       timezone: Europe/Lisbon
     cooldown:
@@ -21,8 +21,7 @@ updates:
   - package-ecosystem: uv
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:00'
       timezone: Europe/Lisbon
     cooldown:
@@ -38,8 +37,7 @@ updates:
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:30'
       timezone: Europe/Lisbon
     cooldown:
@@ -51,8 +49,7 @@ updates:
   - package-ecosystem: pip
     directory: /.github/dependencies/semgrep
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:35'
       timezone: Europe/Lisbon
     cooldown:
@@ -64,8 +61,7 @@ updates:
   - package-ecosystem: pip
     directory: /.github/dependencies/zizmor
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:40'
       timezone: Europe/Lisbon
     cooldown:
@@ -77,8 +73,7 @@ updates:
   - package-ecosystem: pip
     directory: /.github/dependencies/mutmut
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:45'
       timezone: Europe/Lisbon
     cooldown:
@@ -90,8 +85,7 @@ updates:
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:50'
       timezone: Europe/Lisbon
     cooldown:
@@ -103,8 +97,7 @@ updates:
   - package-ecosystem: pre-commit
     directory: /
     schedule:
-      interval: weekly
-      day: monday
+      interval: quarterly
       time: '06:55'
       timezone: Europe/Lisbon
     cooldown:

@@ -3,18 +3,22 @@ description: Enforce Radon cyclomatic complexity on Python changes under scripts
 alwaysApply: true
 ---
 
-# Cyclomatic complexity (Radon)
+# Cyclomatic complexity (Radon) — pydevops stricter deltas
 
-When you add or edit **Python** (`.py`) files under **`scripts/`** or **`tests/`**, before finishing the task:
+Org floors and shared commands: **[`python-quality-gates.mdc`](python-quality-gates.mdc)**
+(reads `docs/guardrails/python/profile.thresholds.yml`).
 
-1. Run **`uv run --with radon python -m radon cc -s <each-edited-.py-file>`** (or **`radon cc -s scripts/quality_gates`** if you only touched that package).
-2. **Gate code** (`**scripts/quality_gates/**`): Every function must have **cyclomatic complexity ≤ 5** and preferably **grade A** on `radon cc -s`. **Do not leave grade B** (or **C**) on any function you introduced or modified — **extract helpers** until each function is **A** (see **`jsonutil`**, **`gates_artifacts._presence_actual_for_high_artifact`**, **`readers_radon.mi_value_from_entry`**).
-3. Other **`scripts/`** modules: keep complexity reasonable; refactor if radon reports **B** or higher on new/changed functions.
+This repo is **stricter than the org floor** on gate code only (no deviation needed):
 
-Malformed JSON often uses **booleans** where numbers are expected — **`bool`** is a **`int`** subclass in Python, so use **`isinstance(x, (int, float)) and not isinstance(x, bool)`** or shared helpers when reading numeric fields from artifacts.
+1. Run **`uv run --with radon python -m radon cc -s <each-edited-.py-file>`**.
+2. **`scripts/quality_gates/**`**: every function you introduce or modify must be
+   **grade A** on `radon cc -s` (extract helpers — do not leave grade B/C).
+3. Other **`scripts/`** modules: keep complexity reasonable; refactor if radon
+   reports **B** or higher on new/changed functions.
 
-Reference: thresholds in **`scripts/quality_gates/config.py`** and CI Radon checks for this repo’s **`scripts/quality_gates`** package.
+Malformed JSON often uses **booleans** where numbers are expected — **`bool`** is a
+**`int`** subclass; use **`isinstance(x, (int, float)) and not isinstance(x, bool)`**
+when reading numeric fields from artifacts.
 
-For **pytest**, **line coverage (≥ 95%)**, and **pylint (≥ 9.5 on `scripts/`)**, see **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)**.
-
-For **docstring coverage** on **`scripts/`** (separate from Radon), see **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)**.
+See also **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)** and
+**[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)**.
