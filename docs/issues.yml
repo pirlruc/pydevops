@@ -85,3 +85,42 @@ milestones:
               - git submodule status .github/scaffold
             guardrail_refs:
               - CI-008
+
+  - name: Supply-chain reusable gates
+    epics:
+      - id: PDO-003
+        status: open
+        title: Promote license gate and SBOM into a reusable workflow
+        overview:
+          problem: >-
+            scripts/license_gate.py and syft SBOM generation in ci_run_quality.sh
+            work only inside pydevops. Guardrails SC-LIC-* (GR-SC-001) need a
+            citable implementation other Python repos can call.
+          goal: >-
+            Expose license deny-list + SPDX/CycloneDX SBOM as a reusable
+            workflow_call (or documented thin caller) other repos can pin.
+        architecture:
+          target: .github/workflows/ and scripts/license_gate.py
+          modules:
+            - scripts/license_gate.py
+            - scripts/ci_run_quality.sh
+            - .github/workflows/
+        acceptance_criteria:
+          - Reusable workflow or documented entrypoint for license + SBOM
+          - Inputs include license_deny_list
+          - Other Python repos can pin by SHA without copying scripts
+        guardrail_refs:
+          - PY-SEC-001
+          - SC-DEP-001
+        tasks:
+          - id: PDO-003-T1
+            status: open
+            title: Package license_gate and syft SBOM as reusable workflow
+            instructions:
+              files:
+                - scripts/license_gate.py
+                - .github/workflows/
+            verification:
+              - actionlint on new/changed workflow
+            guardrail_refs:
+              - PY-SEC-001
