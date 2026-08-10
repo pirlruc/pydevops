@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Check out repository
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Filter paths
@@ -75,7 +75,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Download and install workflow linter
@@ -184,7 +184,9 @@ jobs:
   ci-supply-chain:
     name: CI — supply chain (Scorecard)
     needs: changes
+    # CI-024: Scorecard needs id-token / security-events
     if: >
+      github.actor != 'dependabot[bot]' &&
       (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
       == 'true') &&
       github.event.repository.fork == false &&
@@ -201,7 +203,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - id: scorecard
@@ -211,7 +213,7 @@ jobs:
           == 'true') &&
           github.event.repository.fork == false
         continue-on-error: true
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
+        uses: ossf/scorecard-action@55891bbd73f2425e97637d96e306fc9d491d0b21 # v2.4.4
         with:
           results_file: results.sarif
           results_format: sarif
@@ -268,7 +270,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install pinned package tooling and Python

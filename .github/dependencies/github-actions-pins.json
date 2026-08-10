@@ -4,8 +4,8 @@
         "sha": "55cc8345863c7cc4c66a329aec7e433d2d1c52a9"
     },
     "actions/checkout": {
-        "tag": "v7.0.0",
-        "sha": "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"
+        "tag": "v7.0.1",
+        "sha": "3d3c42e5aac5ba805825da76410c181273ba90b1"
     },
     "actions/download-artifact": {
         "tag": "v8",
@@ -40,12 +40,12 @@
         "sha": "865f5f5c36632f18690a3d569fa0a764f2da0c3e"
     },
     "ossf/scorecard-action": {
-        "tag": "v2.4.3",
-        "sha": "4eaacf0543bb3f2c246792bd56e8cdeffafb205a"
+        "tag": "v2.4.4",
+        "sha": "55891bbd73f2425e97637d96e306fc9d491d0b21"
     },
     "pypa/gh-action-pypi-publish": {
-        "tag": "release/v1",
-        "sha": "cef221092ed1bacb1cc03d23a2d87d1d172e277b"
+        "tag": "v1.14.2",
+        "sha": "a892a5a61159132606e93a2fa6f4358831b04d26"
     },
     "step-security/harden-runner": {
         "tag": "v2.20.0",

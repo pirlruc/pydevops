@@ -137,7 +137,14 @@ def _pip_audit_summary(text: str) -> tuple[int, int, int, int, int, int] | None:
     )
     if not m:
         return None
-    return tuple(int(m.group(i)) for i in range(1, 7))
+    return (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        int(m.group(4)),
+        int(m.group(5)),
+        int(m.group(6)),
+    )
 
 
 def _result_pip_audit(pa: str) -> str:

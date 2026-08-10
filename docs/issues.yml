@@ -54,7 +54,7 @@ milestones:
   - name: Scaffold adoption
     epics:
       - id: PDO-002
-        status: open
+        status: done
         title: Adopt github-scaffold submodule and retire handoff-and-commits.mdc
         overview:
           problem: >-
@@ -75,7 +75,7 @@ milestones:
           - CI-008
         tasks:
           - id: PDO-002-T1
-            status: open
+            status: done
             title: Add scaffold submodule and sync Cursor rules
             instructions:
               files:
@@ -89,7 +89,7 @@ milestones:
   - name: Supply-chain reusable gates
     epics:
       - id: PDO-003
-        status: open
+        status: done
         title: Promote license gate and SBOM into a reusable workflow
         overview:
           problem: >-
@@ -97,8 +97,8 @@ milestones:
             work only inside pydevops. Guardrails SC-LIC-* (GR-SC-001) need a
             citable implementation other Python repos can call.
           goal: >-
-            Expose license deny-list + SPDX/CycloneDX SBOM as a reusable
-            workflow_call (or documented thin caller) other repos can pin.
+            License deny-list + SPDX/CycloneDX SBOM live in pirlruc/commondevops
+            common-supply-chain.yml (scripts/license_gate.py moved; pin after first push).
         architecture:
           target: .github/workflows/ and scripts/license_gate.py
           modules:
@@ -114,7 +114,7 @@ milestones:
           - SC-DEP-001
         tasks:
           - id: PDO-003-T1
-            status: open
+            status: done
             title: Package license_gate and syft SBOM as reusable workflow
             instructions:
               files:
@@ -124,3 +124,120 @@ milestones:
               - actionlint on new/changed workflow
             guardrail_refs:
               - PY-SEC-001
+
+  - name: Continuous improvement
+    epics:
+      - id: PDO-004
+        status: open
+        title: Adopt and verify multi-ecosystem Dependabot (SC-DEP-*)
+        overview:
+          problem: >-
+            Dependency updates may still use per-ecosystem schedules, missing
+            ecosystems, or shapes that do not produce one monthly multi-ecosystem
+            PR. SC-DEP-001/002/003 require covering every package ecosystem, a
+            single grouped PR, and the org cadence/semver policy.
+          goal: >-
+            Align .github/dependabot.yml with the org multi-ecosystem monthly
+            shape (seed from github-scaffold templates/dependabot.example.yml when
+            needed); confirm Insights grouping after the config is on the default
+            branch; document any justified deviations.
+        architecture:
+          target: .github/dependabot.yml
+          modules:
+            - .github/dependabot.yml
+            - docs/ai-agent-handoff.md
+        acceptance_criteria:
+          - dependabot.yml uses a monthly multi-ecosystem group covering this repo's ecosystems
+          - open-pull-requests-limit and semver policy match SC-DEP-003 / supply-chain thresholds
+          - Insights confirmation recorded in handoff after merge to default branch (or GitHub limitation noted)
+        guardrail_refs:
+          - SC-DEP-001
+          - SC-DEP-002
+          - SC-DEP-003
+        tasks:
+          - id: PDO-004-T1
+            status: done
+            title: Rewrite or confirm Dependabot multi-ecosystem config
+            instructions:
+              files:
+                - .github/dependabot.yml
+            verification:
+              - rg -n "multi-ecosystem|schedule|package-ecosystem" .github/dependabot.yml
+            guardrail_refs:
+              - SC-DEP-001
+              - SC-DEP-002
+          - id: PDO-004-T2
+            status: open
+            title: Record Insights confirmation in handoff after default-branch land
+            instructions:
+              files:
+                - docs/ai-agent-handoff.md
+            verification:
+              - Handoff notes Insights one-PR grouping outcome or documents blocker
+            guardrail_refs:
+              - SC-DEP-003
+
+      - id: PDO-006
+        status: done
+        title: Least-privilege permissions on reusable Python workflows (CI-025)
+        overview:
+          problem: >-
+            Reusable and devops workflows must default-deny GITHUB_TOKEN and use
+            persist-credentials: false on every checkout (CI-025).
+          goal: >-
+            Top-level permissions: {} with minimal per-job scopes; CI-024 Dependabot
+            skips on jobs that need Actions secrets.
+        architecture:
+          target: .github/workflows/
+          modules:
+            - .github/workflows/
+        acceptance_criteria:
+          - Every workflow has top-level permissions default-deny
+          - Every actions/checkout sets persist-credentials: false
+          - Jobs needing secrets skip dependabot[bot]
+        guardrail_refs:
+          - CI-025
+          - CI-024
+        tasks:
+          - id: PDO-006-T1
+            status: done
+            title: Apply CI-025 permissions and persist-credentials across workflows
+            instructions:
+              files:
+                - .github/workflows/
+            verification:
+              - rg -n "permissions:|persist-credentials" .github/workflows/
+            guardrail_refs:
+              - CI-025
+      - id: PDO-005
+        status: open
+        title: Review for improvements, bugs, and design flaws
+        overview:
+          problem: >-
+            Backlog and automation can drift toward process or docs hygiene only.
+            The repo needs a deliberate review of the current implementation that
+            surfaces improvements, bugs, and design flaws — not only polish — and
+            records material follow-ups in docs/issues.yml.
+          goal: >-
+            Run an ai-reviewer (or equivalent) pass against this repository's
+            current code, workflows, scripts, and docs; append only material new
+            epics/tasks under Continuous improvement (or record a justified no-op).
+        architecture:
+          target: Repository review into docs/issues.yml
+          modules:
+            - docs/issues.yml
+            - docs/ai-agent-handoff.md
+        acceptance_criteria:
+          - Review explicitly covers improvements, bugs, and design flaws in shipped implementation
+          - Material findings appended to docs/issues.yml via PR (budget at most 2 epics / 6 tasks) or handoff records justified no-op
+          - Does not re-file work already covered by existing epic/task ids
+        tasks:
+          - id: PDO-005-T1
+            status: open
+            title: Run review pass and append material issues.yml findings
+            instructions:
+              files:
+                - docs/issues.yml
+                - docs/ai-agent-handoff.md
+            verification:
+              - PR appends material findings within budget, or handoff records justified no-op

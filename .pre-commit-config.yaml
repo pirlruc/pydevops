@@ -75,13 +75,13 @@ repos:
       - id: gitlint
         stages: [commit-msg]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.11
+    rev: v0.16.1
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.20.2
+    rev: v2.3.0
     hooks:
       - id: mypy
         additional_dependencies: [pydantic>=2.0, pytest>=9.0]
@@ -100,7 +100,7 @@ repos:
         exclude: ^tests/
         stages: [pre-push]
   - repo: https://github.com/semgrep/pre-commit
-    rev: v1.159.0
+    rev: v1.172.0
     hooks:
       - id: semgrep-ci
         # Pinned ruleset (reproducible, lighter than `auto`). Swap for `auto` or a custom `semgrep.yml` if you prefer.

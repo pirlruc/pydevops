@@ -172,12 +172,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application full history
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -229,12 +229,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -296,12 +296,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -363,12 +363,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -437,12 +437,12 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -586,8 +586,11 @@ jobs:
   pr-quality-comment:
     name: Post quality summary on PR
     needs: quality-report
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name
-      == github.repository
+    # CI-024: may use caller_pat Actions secret
+    if: >
+      always() && github.actor != 'dependabot[bot]' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -634,11 +637,11 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out application
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Check out DevOps into workspace
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
@@ -727,7 +730,7 @@ jobs:
             exit 1
           fi
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Download quality bundle

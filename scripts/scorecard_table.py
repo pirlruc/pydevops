@@ -14,13 +14,13 @@ def _is_real_number(v: object) -> bool:
 
 def fmt_score(v: object) -> str:
     """Format a numeric score for Markdown: non-numeric -> '—', negative -> 'n/a'."""
-    if not _is_real_number(v):
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
         return '—'
     if v < 0:
         return 'n/a'
     if isinstance(v, float):
         return f'{v:.1f}'
-    return str(int(v))
+    return str(v)
 
 
 def truncate(s: str, max_len: int) -> str:

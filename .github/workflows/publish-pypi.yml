@@ -15,6 +15,7 @@ env:
 permissions: {}
 jobs:
   publish:
+    if: github.actor != 'dependabot[bot]'
     name: Build and publish release artifacts
     runs-on: ubuntu-latest
     environment: pypi
@@ -28,7 +29,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -50,7 +51,7 @@ jobs:
       - name: Build wheel and source distribution
         run: uv build
       - name: Publish with trusted registry OIDC
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        uses: pypa/gh-action-pypi-publish@a892a5a61159132606e93a2fa6f4358831b04d26 # v1.14.2
         with:
           attestations: true
           packages-dir: dist/
