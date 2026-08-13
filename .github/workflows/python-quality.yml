@@ -168,7 +168,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application full history
@@ -225,7 +225,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application
@@ -292,7 +292,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application
@@ -359,7 +359,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application
@@ -433,7 +433,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application
@@ -595,7 +595,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Download staged comment artifact
@@ -630,7 +630,7 @@ jobs:
       actions: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
       - name: Check out application
@@ -714,7 +714,7 @@ jobs:
       contents: write
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40 # v2.20.1
         with:
           egress-policy: audit
 
