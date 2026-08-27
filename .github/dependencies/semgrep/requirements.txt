@@ -1,2 +1,2 @@
 # Semgrep installed via pipx in qa-secrets-sast. Pin lives here (not in root uv.lock: tomli vs pip-audit). Dependabot: pip, /.github/dependencies/semgrep
-semgrep==1.170.0
+semgrep==1.174.0
