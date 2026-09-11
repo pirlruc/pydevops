@@ -165,27 +165,32 @@ pipelines. They maintain **this** repo’s workflows, scripts, and supply-chain 
 ### `devops-ci.yml`
 
 **Purpose:** Single entry workflow for most pushes/PRs on this repo: **path-filtered jobs** (via
-`dorny/paths-filter`) for **workflow lint** (**actionlint** + **zizmor** in one job; actionlint uses
-**`continue-on-error: true`** so zizmor still runs; **gate** lists failing tools), **supply chain**
-(**OpenSSF Scorecard** when workflow paths apply + **dependency review** on pull requests; shared
-**gate**), and **one scripts job** (**pytest**, **pylint**, **interrogate**, Radon CC, Radon MI
-after a single **`uv sync`**; **gate** lists failing tools).
+`dorny/paths-filter`) for **workflow lint** ([commondevops `common-infra-lint.yml`](https://github.com/pirlruc/commondevops)
+at the same SHA as [`common-supply-chain.yml`](../.github/workflows/common-supply-chain.yml);
+actionlint + zizmor + shellcheck + hadolint), **supply chain** ([commondevops
+`common-scorecard.yml`](https://github.com/pirlruc/commondevops) at that SHA), and **one scripts job**
+(**pytest**, **pylint**, **interrogate**, Radon CC, Radon MI after a single **`uv sync`**; **gate**
+lists failing tools). `ci-scripts` and `python-quality.yml` stay in-repo.
 
 **Triggers:** Pull request and push to `main`/`master` with a **union** of paths (scripts, tests,
 lockfiles, `.github/`, `examples/`, `docs/`, etc.); **`workflow_dispatch`** runs all path groups.
 
 **`GITHUB_TOKEN` scopes:** Vary by job (`contents`, `pull-requests` on **`changes`** for path
-filtering, `security-events`, `id-token` on **`ci-supply-chain`**; **`ci-supply-chain`** does not
-use **`pull-requests: write`** because **dependency-review-action** is not configured to post PR
-comments).
+filtering, `security-events`, `id-token` on **`ci-supply-chain`**). Nested reusable jobs appear in
+the UI as `ci-workflow-lint / lint` and `ci-supply-chain / scorecard`.
+
+Optional secret **`COMMONDEVOPS_READ_TOKEN`** (`contents:read` on private `pirlruc/commondevops`) is
+passed as `checkout_token`. When unset the reusable falls back to `github.token` and must not fail
+closed solely because the secret is missing.
 
 ______________________________________________________________________
 
 ### `devops-scheduled.yml`
 
 **Purpose:** Weekly **Monday 06:00 UTC** maintenance (and **`workflow_dispatch`**): **workflow
-lint** (actionlint + zizmor + gate), **OpenSSF Scorecard** + gate, **Mutmut** (`mutmut run` →
-`export-cicd-stats` → **`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`**) + artifact
+lint** and **OpenSSF Scorecard** via the same commondevops reusables and pin as
+`common-supply-chain.yml`, **Mutmut** (`mutmut run` → `export-cicd-stats` →
+**`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`**) + artifact
 upload, **Python EOL watch** (issues) + gate.
 
 **Push** to `main`/`master` that only changes

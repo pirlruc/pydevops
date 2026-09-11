@@ -10,7 +10,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | Branch | `feature-dependency-update-policy` |
 | `docs/guardrails` | tag `1.0.0` → `925b9f32659936382c67850ec125a182261710bf` |
 | `.github/scaffold` | `0db5890f808e4a9b9d11eabfc9a95b2b90898fad` (added; templates synced) |
-| commondevops optional caller | `.github/workflows/common-supply-chain.yml` @ **`74695e83a7b79784ee81fd970d9051d8efd711e8`** |
+| commondevops optional caller | `.github/workflows/common-supply-chain.yml` @ **`74695e83a7b79784ee81fd970d9051d8efd711e8`** (also `common-infra-lint.yml` / `common-scorecard.yml` in devops-ci/scheduled) |
 | ci-python image | **Not used** (measurement: skip) |
 
 Retired Cursor rules removed after sync: `handoff-and-commits.mdc`, `radon-complexity.mdc`.
@@ -60,8 +60,13 @@ python3 .github/scaffold/scripts/issues-sync.py \
 
 ## Known pitfalls
 
-- Replace **`74695e83a7b79784ee81fd970d9051d8efd711e8`** after commondevops's first push if using the
-  optional `common-supply-chain.yml` caller.
+- Replace **`74695e83a7b79784ee81fd970d9051d8efd711e8`** after commondevops PR #62
+  merges if using `common-supply-chain.yml` / `common-infra-lint.yml` /
+  `common-scorecard.yml`. Keep a **single** commondevops SHA in this repo.
+  That pin's `common-infra-lint.yml` runs `zizmor .github/workflows` **without**
+  `-c .github/config/zizmor.yml` (added later). A `pipx` zizmor 1.30 may flag
+  `uses: ./` (`self-repository`) until the pin moves. Do not mix a second SHA
+  to pick up the `-c` flag.
 - CI-024: Scorecard, PyPI publish, and PR comment jobs skip `dependabot[bot]`.
 - Private `docs/guardrails` is not checked out in CI with default `GITHUB_TOKEN`; High
   floors fall back to baked-in defaults matching the profile YAML.
@@ -69,15 +74,18 @@ python3 .github/scaffold/scripts/issues-sync.py \
 - **Ruff 0.16.1** is pinned on this branch; `[tool.ruff.lint] select = ["E4", "E7", "E9", "F"]`
   freezes the 0.15 default set so CI does not absorb the ~59→413 rule jump. Do not drop the
   select until a dedicated cleanup PR enables 0.16 rules incrementally.
-- **Zizmor** stays `>=1.28.0,<2` on this branch (do not bump to 1.30 here). `.github/config/zizmor.yml`
-  ignores `self-repository` on `devops-ci.yml`, `devops-scheduled.yml`, `publish-pypi.yml`, and
-  `python-quality.yml` until actionlint accepts `uses: $/...` (rhysd/actionlint#732 unreleased).
-  Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`. The 1.30 pin belongs in PR #129
-  after this branch merges.
+- **Zizmor** in **this repo's lockfile** stays `>=1.28.0,<2` (do not bump to 1.30 here).
+  Workflow lint CI now calls commondevops `common-infra-lint.yml`, which `pipx install`s
+  `zizmor>=1.0` (may resolve 1.30). `.github/config/zizmor.yml` still ignores
+  `self-repository` on `devops-ci.yml`, `devops-scheduled.yml`, `publish-pypi.yml`, and
+  `python-quality.yml` until actionlint accepts `uses: $/...` (rhysd/actionlint#732
+  unreleased). Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`. The 1.30
+  lockfile pin belongs in PR #129 after this branch merges.
 
 ## Suggested next work
 
-1. First commondevops commit → replace placeholder pin on optional supply-chain caller.
+1. After commondevops PR #62 merges, re-pin the single commondevops SHA (supply-chain,
+   infra-lint, scorecard) together.
 2. Merge branch; confirm Dependabot Insights grouping (PDO-004-T2).
 3. PDO-005 ai-reviewer pass into `docs/issues.yml`.
 4. After this branch merges: PR #129 can pin zizmor 1.30; keep the `self-repository` ignore
@@ -88,5 +96,10 @@ python3 .github/scaffold/scripts/issues-sync.py \
 Central evaluation remains **`python -m scripts.quality_gates`**. High floors load from
 `docs/guardrails/python/profile.thresholds.yml` when the submodule is present. See prior
 handoff history in git for gate internals (mypy reports, Radon, Bandit, etc.).
+
+Wave 4 (2026-09-11): `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
+commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`74695e83…`**. `ci-scripts`
+and `python-quality.yml` stay in-repo. Unset `COMMONDEVOPS_READ_TOKEN` is empty (reusable
+falls back to `github.token`). `scripts/scorecard_summary.py` is no longer invoked from CI.
 
 *Last updated: 2026-09-11*
