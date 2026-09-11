@@ -28,8 +28,8 @@
         "sha": "cec208311dfd045dd5311c1add060b2062131d57"
     },
     "dorny/paths-filter": {
-        "tag": "v4.0.2",
-        "sha": "7b450fff21473bca461d4b92ce414b9d0420d706"
+        "tag": "v4.0.3",
+        "sha": "ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d"
     },
     "dependabot/fetch-metadata": {
         "tag": "v3.1.0",
@@ -48,8 +48,8 @@
         "sha": "a892a5a61159132606e93a2fa6f4358831b04d26"
     },
     "step-security/harden-runner": {
-        "tag": "v2.20.0",
-        "sha": "bf7454d06d71f1098171f2acdf0cd4708d7b5920"
+        "tag": "v2.21.1",
+        "sha": "e14015d583714f6e62063499dc959a02595150a1"
     },
     "zaproxy/action-baseline": {
         "tag": "v0.15.0",

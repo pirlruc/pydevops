@@ -7,13 +7,11 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-dependency-update-policy` |
+| Branch | `feature-post-102-bumps` (from `origin/main` after #102) |
 | `docs/guardrails` | tag `1.0.0` → `925b9f32659936382c67850ec125a182261710bf` |
-| `.github/scaffold` | `0db5890f808e4a9b9d11eabfc9a95b2b90898fad` (added; templates synced) |
-| commondevops optional caller | `.github/workflows/common-supply-chain.yml` @ **`74695e83a7b79784ee81fd970d9051d8efd711e8`** (also `common-infra-lint.yml` / `common-scorecard.yml` in devops-ci/scheduled) |
+| `.github/scaffold` | `0db5890f808e4a9b9d11eabfc9a95b2b90898fad` |
+| commondevops caller pin | **`75d0fafc90fbef7bb118025437502ca2cf42a11e`** (`common-supply-chain.yml`, `common-infra-lint.yml`, `common-scorecard.yml`) — keep a **single** SHA |
 | ci-python image | **Not used** (measurement: skip) |
-
-Retired Cursor rules removed after sync: `handoff-and-commits.mdc`, `radon-complexity.mdc`.
 
 ## Delivery status
 
@@ -21,30 +19,28 @@ Retired Cursor rules removed after sync: `handoff-and-commits.mdc`, `radon-compl
 |------|--------|
 | PDO-001 High floors | Done |
 | PDO-002 scaffold adoption | Done |
-| PDO-003 license/SBOM reusable | Done — lives in [commondevops](https://github.com/pirlruc/commondevops) `common-supply-chain.yml` / `scripts/license_gate.py` (local copy still present for in-repo quality path) |
-| PDO-004 Dependabot | Open — multi-ecosystem config rewritten; T2 Insights after default-branch land |
+| PDO-003 license/SBOM reusable | Done — lives in [commondevops](https://github.com/pirlruc/commondevops) |
+| PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights: no grouped `all-dependencies` PR yet (monthly cadence). Re-check next cycle. |
 | PDO-005 ai-reviewer | Open |
 | PDO-006 CI-025 permissions | Done |
 
-## Dependency bumps applied in-tree (not via closing Dependabot PRs)
+## Dependency pins (post-#102 follow-up)
 
 | Package | Version |
 |---------|---------|
-| ruff | 0.16.1 (lint select frozen to E4/E7/E9/F) |
-| mypy | 2.3.0 (3 type fixes in scorecard/job_summary helpers) |
-| pytest | 9.1.1 |
-| pydoclint | 0.9.1 |
-| pre-commit | 4.6.1 |
-| semgrep | 1.172.0 |
-| locust | 2.46.3 |
-| zizmor | `>=1.28.0,<2` |
-| actions/checkout | 7.0.1 |
-| ossf/scorecard-action | 2.4.4 |
-| pypa/gh-action-pypi-publish | 1.14.2 |
+| ruff | 0.16.6 (`[tool.ruff.lint] select = ["E4", "E7", "E9", "F"]`) |
+| pylint | 4.0.8 |
+| mypy | 2.3.0 |
+| locust | 2.46.5 |
+| zizmor | `>=1.30.0,<2` |
+| jscpd | 5.2.0 (`--format python`) |
+| harden-runner | 2.21.1 |
+| paths-filter | 4.0.3 |
 
 Keep `pyproject.toml`, `uv.lock`, `.pre-commit-config.yaml`,
 `.github/dependencies/quality-tools/requirements.txt`, and
-`github-actions-pins.json` in lockstep (`uv lock` + export script).
+`github-actions-pins.json` in lockstep (`uv lock` + export script +
+`python3 scripts/github_actions_pins.py`).
 
 ## Commands
 
@@ -53,55 +49,45 @@ uv sync
 uv run pytest
 uv run mypy src scripts
 uv run python scripts/export_quality_tools_requirements.py
-bash .github/scaffold/scripts/sync-templates.sh
+python3 scripts/github_actions_pins.py --check
 python3 .github/scaffold/scripts/issues-sync.py \
   --repo pirlruc/pydevops --yaml docs/issues.yml --dry-run
 ```
 
 ## Known pitfalls
 
-- Replace **`74695e83a7b79784ee81fd970d9051d8efd711e8`** after commondevops PR #62
-  merges if using `common-supply-chain.yml` / `common-infra-lint.yml` /
-  `common-scorecard.yml`. Keep a **single** commondevops SHA in this repo.
-  That pin's `common-infra-lint.yml` runs `zizmor .github/workflows` **without**
-  `-c .github/config/zizmor.yml` (added later). A `pipx` zizmor 1.30 may flag
-  `uses: ./` (`self-repository`) until the pin moves. Do not mix a second SHA
-  to pick up the `-c` flag.
+- Keep a **single** commondevops SHA. Pin `75d0faf…` loads
+  `.github/config/zizmor.yml` via `-c` when present.
 - CI-024: Scorecard, PyPI publish, and PR comment jobs skip `dependabot[bot]`.
 - Private `docs/guardrails` is not checked out in CI with default `GITHUB_TOKEN`; High
   floors fall back to baked-in defaults matching the profile YAML.
 - Do not add a `ci-python` job container without new measurement justifying it.
-- **Ruff 0.16.1** is pinned on this branch; `[tool.ruff.lint] select = ["E4", "E7", "E9", "F"]`
-  freezes the 0.15 default set so CI does not absorb the ~59→413 rule jump. Do not drop the
-  select until a dedicated cleanup PR enables 0.16 rules incrementally.
-- **Zizmor** in **this repo's lockfile** stays `>=1.28.0,<2` (do not bump to 1.30 here).
-  Workflow lint CI now calls commondevops `common-infra-lint.yml`, which `pipx install`s
-  `zizmor>=1.0` (may resolve 1.30). `.github/config/zizmor.yml` still ignores
-  `self-repository` on `devops-ci.yml`, `devops-scheduled.yml`, `publish-pypi.yml`, and
-  `python-quality.yml` until actionlint accepts `uses: $/...` (rhysd/actionlint#732
-  unreleased). Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`. The 1.30
-  lockfile pin belongs in PR #129 after this branch merges.
+- **Ruff 0.16** default rule set is ~413 rules. Do not drop
+  `[tool.ruff.lint] select` until a dedicated cleanup PR enables 0.16 rules
+  incrementally.
+- **Zizmor 1.30** `self-repository` is ignored in `.github/config/zizmor.yml`
+  until actionlint accepts `uses: $/...` (rhysd/actionlint#732 unreleased).
+  Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`.
+- README cites caller pin `@v1.2.0` but this repo had **no tags** until `1.0.0`.
+  Cut `1.0.0` after this branch merges.
+- **Dependabot Insights:** monthly `all-dependencies` group has not produced a
+  grouped PR yet (cadence). PDO-004-T2 records that limitation.
 
 ## Suggested next work
 
-1. After commondevops PR #62 merges, re-pin the single commondevops SHA (supply-chain,
-   infra-lint, scorecard) together.
-2. Merge branch; confirm Dependabot Insights grouping (PDO-004-T2). Cut annotated
-   tag `1.0.0` after merge so callers have a real pin (README currently cites `@v1.2.0`
-   but this repo has no tags).
-3. PDO-005 ai-reviewer pass into `docs/issues.yml`.
-4. After this branch merges: PR #129 can pin zizmor 1.30; keep the `self-repository` ignore
-   until actionlint supports `$/`.
+1. After merge: close leftover Dependabot PRs that this branch supersedes;
+   cut annotated tag `1.0.0`.
+2. PDO-005 ai-reviewer pass into `docs/issues.yml`.
+3. Re-check Dependabot Insights next monthly cycle.
+4. `mutmut` (#112) and leftover `semgrep` (#132) can land independently.
 
 ## Major themes (quality gates)
 
 Central evaluation remains **`python -m scripts.quality_gates`**. High floors load from
-`docs/guardrails/python/profile.thresholds.yml` when the submodule is present. See prior
-handoff history in git for gate internals (mypy reports, Radon, Bandit, etc.).
+`docs/guardrails/python/profile.thresholds.yml` when the submodule is present.
 
-Wave 4 (2026-09-11): `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
-commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`74695e83…`**. `ci-scripts`
-and `python-quality.yml` stay in-repo. Unset `COMMONDEVOPS_READ_TOKEN` is empty (reusable
-falls back to `github.token`). `scripts/scorecard_summary.py` is no longer invoked from CI.
+Wave 4: `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
+commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`75d0faf…`**.
+`ci-scripts` and `python-quality.yml` stay in-repo.
 
 *Last updated: 2026-09-11*
