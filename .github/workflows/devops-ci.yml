@@ -1,8 +1,8 @@
 ---
 # Consolidated CI (manual): three lanes (separate jobs):
-#   1) Workflow static analysis — actionlint + zizmor (same job: one checkout/setup, same scope).
+#   1) Workflow static analysis — commondevops common-infra-lint.yml (actionlint + zizmor).
 #   2) Python scripts quality — pytest, pylint, interrogate, Radon CC/MI (one job: one uv sync).
-#   3) Supply chain — OpenSSF Scorecard.
+#   3) Supply chain — commondevops common-scorecard.yml.
 # workflow_dispatch only to conserve GitHub Actions minutes; Dependabot remains the sole auto trigger.
 name: DevOps CI
 # Prefer Node 24 for JavaScript actions until all upstream actions ship node24 runtimes.
@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Check out repository
         if: github.event_name != 'workflow_dispatch'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Filter paths
@@ -66,194 +66,36 @@ jobs:
     needs: changes
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
       == 'true'
-    runs-on: ubuntu-latest
     permissions:
       contents: read
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-        with:
-          egress-policy: audit
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - name: Download and install workflow linter
-        env:
-          REPO_ROOT: ${{ github.workspace }}
-        run: |
-          set -euo pipefail
-          ACTIONLINT_VERSION_FILE="${REPO_ROOT}/.github/dependencies/actionlint/version.txt"
-          ACTIONLINT_SHA256_FILE="${REPO_ROOT}/.github/dependencies/actionlint/linux-amd64.sha256"
-          if [ ! -f "${ACTIONLINT_VERSION_FILE}" ] || [ ! -f "${ACTIONLINT_SHA256_FILE}" ]; then
-            echo "::error::Missing actionlint pin files under ${REPO_ROOT}/.github/dependencies/actionlint."
-            exit 1
-          fi
-          ACTIONLINT_VERSION="$(tr -d '\r\n' < "${ACTIONLINT_VERSION_FILE}")"
-          ACTIONLINT_SHA256="$(tr -d '\r\n' < "${ACTIONLINT_SHA256_FILE}")"
-          ASSET="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          URL="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${ASSET}"
-          curl -fsSLO "${URL}"
-          echo "${ACTIONLINT_SHA256}  ${ASSET}" | sha256sum -c -
-          tar -xzf "${ASSET}" actionlint
-          sudo install -m 0755 actionlint /usr/local/bin/actionlint
-      - id: actionlint
-        name: Lint workflow and action files
-        continue-on-error: true
-        run: |
-          set -euo pipefail
-          mkdir -p _diag
-          echo "actionlint — scanning workflow files under .github/workflows/"
-          find .github/workflows -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | sort | sed 's/^/  /'
-          echo "actionlint — scanning composite actions under .github/actions/**/action.y*ml"
-          find .github/actions -type f \( -name 'action.yml' -o -name 'action.yaml' \) 2>/dev/null | sort | sed 's/^/  /' || true
-          set +e
-          actionlint -no-color 2>&1 | tee _diag/actionlint.txt
-          al=${PIPESTATUS[0]}
-          set -e
-          if [ "$al" -eq 0 ]; then
-            echo "actionlint: OK (no findings)." | tee -a _diag/actionlint.txt
-          fi
-          exit "$al"
-      - name: Install pinned package tooling
-        uses: ./.github/actions/install-uv
-      - id: zizmor
-        name: Scan workflows for unsafe patterns
-        continue-on-error: true
-        env:
-          REPO_ROOT: ${{ github.workspace }}
-        run: |
-          set -euo pipefail
-          mkdir -p _diag
-          inputs=()
-          for p in .github/workflows .github/actions .github/dependabot.yml examples; do
-            if [ -e "$p" ]; then
-              inputs+=("$p")
-            fi
-          done
-          if [ "${#inputs[@]}" -eq 0 ]; then
-            echo "No zizmor inputs found; skipping." | tee _diag/zizmor.txt
-            exit 0
-          fi
-          set +e
-          # Color in this step’s log and _diag/zizmor.txt; strip ANSI when writing the job summary (next step).
-          uv run --with-requirements "${REPO_ROOT}/.github/dependencies/zizmor/requirements.txt" \
-            zizmor -c .github/config/zizmor.yml --format plain "${inputs[@]}" 2>&1 | tee _diag/zizmor.txt
-          zm=${PIPESTATUS[0]}
-          set -e
-          exit "$zm"
-      - name: Workflow lint — job summary
-        if: always()
-        run: |
-          set -euo pipefail
-          {
-            echo "## Workflow lint"
-            echo ""
-            echo "### actionlint"
-            echo ""
-            echo '```text'
-            if [ -f _diag/actionlint.txt ]; then cat _diag/actionlint.txt; else echo "(no actionlint log)"; fi
-            echo '```'
-            echo ""
-            echo "### zizmor"
-            echo ""
-            echo '```text'
-            if [ -f _diag/zizmor.txt ]; then sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' _diag/zizmor.txt; else echo "(no zizmor log)"; fi
-            echo '```'
-            echo ""
-          } >> "${GITHUB_STEP_SUMMARY}"
-      - name: Gate — workflow lint job
-        if: always()
-        env:
-          ACTIONLINT_OUTCOME: ${{ steps.actionlint.outcome }}
-          ZIZMOR_OUTCOME: ${{ steps.zizmor.outcome }}
-        run: |
-          set -euo pipefail
-          failed=()
-          if [ "${ACTIONLINT_OUTCOME}" != "success" ]; then
-            failed+=("actionlint")
-          fi
-          if [ "${ZIZMOR_OUTCOME}" != "success" ]; then
-            failed+=("zizmor")
-          fi
-          if [ "${#failed[@]}" -gt 0 ]; then
-            echo "::error::Workflow lint failed: ${failed[*]} (see this job's summary card)."
-            exit 1
-          fi
-          echo "Workflow lint job passed."
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@74695e83a7b79784ee81fd970d9051d8efd711e8
+    with:
+      scripts_ref: 74695e83a7b79784ee81fd970d9051d8efd711e8
+      blocking: true
+    secrets:
+      # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
+      # back to github.token. Set the secret (contents:read on pirlruc/commondevops)
+      # if private script checkout fails.
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
   ci-supply-chain:
     name: CI — supply chain (Scorecard)
     needs: changes
+    # CI-024: Scorecard needs id-token / security-events
     if: >
+      github.actor != 'dependabot[bot]' &&
       (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
       == 'true') &&
       github.event.repository.fork == false &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: ubuntu-latest
-    # contents + security-events + id-token for Scorecard.
     permissions:
       contents: read
       security-events: write
       id-token: write
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
-        with:
-          egress-policy: audit
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - id: scorecard
-        name: Run OpenSSF Scorecard (repository)
-        if: >
-          (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
-          == 'true') &&
-          github.event.repository.fork == false
-        continue-on-error: true
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-      - name: Supply chain — open summary section
-        if: always()
-        env:
-          SCORECARD_STEP_OUTCOME: ${{ steps.scorecard.outcome }}
-        run: |
-          set -euo pipefail
-          if [ "${SCORECARD_STEP_OUTCOME}" != "skipped" ]; then
-            printf '%s\n\n' "## Supply chain" >> "${GITHUB_STEP_SUMMARY}"
-          fi
-      - id: scorecard_summary
-        name: Summarize Scorecard for job log
-        if: always() && steps.scorecard.outcome != 'skipped'
-        continue-on-error: true
-        env:
-          REPO_FULL: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          python3 scripts/scorecard_summary.py --repo "github.com/${REPO_FULL}" results.sarif \
-            | tee -a "${GITHUB_STEP_SUMMARY}"
-      - name: Gate — supply chain job
-        if: always()
-        env:
-          SCORECARD_OUTCOME: ${{ steps.scorecard.outcome }}
-          SCORECARD_SUMMARY_OUTCOME: ${{ steps.scorecard_summary.outcome }}
-        run: |
-          set -euo pipefail
-          failed=()
-          if [ "${SCORECARD_OUTCOME}" = "failure" ]; then
-            failed+=("OpenSSF Scorecard")
-          fi
-          if [ "${SCORECARD_OUTCOME}" != "skipped" ] && [ "${SCORECARD_SUMMARY_OUTCOME}" != "success" ]; then
-            failed+=("scorecard summary")
-          fi
-          if [ "${#failed[@]}" -gt 0 ]; then
-            echo "::error::Supply chain checks failed: ${failed[*]} (see prior steps)."
-            exit 1
-          fi
-          echo "Supply chain job passed."
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@74695e83a7b79784ee81fd970d9051d8efd711e8
+    with:
+      blocking: true
+      publish_results: true
+
   ci-scripts:
     name: CI — scripts (pytest, pylint, interrogate, Radon)
     needs: changes
@@ -268,7 +110,7 @@ jobs:
         with:
           egress-policy: audit
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Install pinned package tooling and Python

@@ -2,13 +2,15 @@
 name: Dependabot Metadata (manual)
 on:
   workflow_dispatch:
-permissions:
-  contents: read
-  pull-requests: read
+# CI-025
+permissions: {}
 jobs:
   metadata:
     name: Summarize Dependabot dependency update
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Fetch Dependabot metadata
         id: metadata

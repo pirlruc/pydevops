@@ -1,0 +1,50 @@
+name: Common supply-chain (optional thin caller)
+
+# Optional license+SBOM path via pirlruc/commondevops. Primary quality remains
+# python-quality.yml. Pin matches scripts_ref (CI-018).
+
+on:
+  workflow_call:
+    inputs:
+      blocking:
+        required: false
+        type: boolean
+        default: false
+      working_directory:
+        required: false
+        type: string
+        default: .
+      license_deny_list:
+        required: false
+        type: string
+        default: "[]"
+    secrets:
+      checkout_token:
+        required: false
+  workflow_dispatch:
+    inputs:
+      blocking:
+        type: boolean
+        default: false
+      working_directory:
+        type: string
+        default: .
+      license_deny_list:
+        type: string
+        default: "[]"
+
+# CI-025
+permissions: {}
+
+jobs:
+  supply-chain:
+    # CI-024
+    if: github.actor != 'dependabot[bot]'
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@74695e83a7b79784ee81fd970d9051d8efd711e8
+    with:
+      blocking: ${{ inputs.blocking }}
+      working_directory: ${{ inputs.working_directory }}
+      license_deny_list: ${{ inputs.license_deny_list }}
+      scripts_ref: 74695e83a7b79784ee81fd970d9051d8efd711e8
+    secrets:
+      checkout_token: ${{ secrets.checkout_token }}

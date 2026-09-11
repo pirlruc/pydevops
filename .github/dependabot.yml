@@ -1,111 +1,71 @@
----
-# Dependency updates. Manifests live under .github/dependencies/ (see docs/dependency-management.md).
-# For GitHub Actions, use SHA pins in workflows (`uses: owner/repo@<sha> # vX.Y.Z`);
-# Dependabot keeps those refs updated while preserving version context in comments.
-# Python interpreter EOL issues are opened by devops-scheduled.yml (not Dependabot).
-# Quarterly schedule keeps Actions minutes low; run devops-ci / devops-scheduled manually.
+# Org-default Dependabot (SC-DEP-001/002/003).
+# Manifests under .github/dependencies/; Actions SHA pins in workflows.
+# Cadence: docs/guardrails/supply-chain/profile.thresholds.yml
+# Process: https://github.com/pirlruc/methodologies/blob/main/github-issue-adr/docs/process/dependency-updates.md
+#
+# Personal-account private git (uncomment and set Dependabot secrets — not Actions):
+# registries:
+#   github-private:
+#     type: git
+#     url: https://github.com
+#     username: x-access-token
+#     password: ${{secrets.DEPENDABOT_GITHUB_TOKEN}}
+#   dhi:
+#     type: docker-registry
+#     url: https://dhi.io
+#     username: ${{secrets.DOCKERHUB_USERNAME}}
+#     password: ${{secrets.DOCKERHUB_TOKEN}}
+# Then add `registries: [github-private]` (and/or dhi) under each updates entry that needs them.
+
 version: 2
+
+multi-ecosystem-groups:
+  all-dependencies:
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Lisbon
+    commit-message:
+      prefix: build
+      include: scope
+
 updates:
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: quarterly
-      time: '06:15'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-    open-pull-requests-limit: 10
-    groups:
-      github-actions:
-        patterns: ['*']
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: uv
     directory: /
-    schedule:
-      interval: quarterly
-      time: '06:00'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 10
-    groups:
-      python-dev-tooling:
-        dependency-type: development
-        patterns: ['*']
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
-    schedule:
-      interval: quarterly
-      time: '06:30'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pip
     directory: /.github/dependencies/semgrep
-    schedule:
-      interval: quarterly
-      time: '06:35'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pip
     directory: /.github/dependencies/zizmor
-    schedule:
-      interval: quarterly
-      time: '06:40'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pip
     directory: /.github/dependencies/mutmut
-    schedule:
-      interval: quarterly
-      time: '06:45'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
-    schedule:
-      interval: quarterly
-      time: '06:50'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pre-commit
     directory: /
-    schedule:
-      interval: quarterly
-      time: '06:55'
-      timezone: Europe/Lisbon
-    cooldown:
-      default-days: 7
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
-    open-pull-requests-limit: 5
-    groups:
-      pre-commit-hooks:
-        patterns: ['*']
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies

@@ -8,9 +8,12 @@ runner egress risk.
 **What it does:** Validates GitHub Actions workflow YAML (syntax, contexts, runner labels, reusable
 workflow usage).
 
-**Where it runs:** `.github/workflows/devops-ci.yml` job **`ci-workflow-lint`** (and the scheduled
-lint job in **`devops-scheduled.yml`**). The step prints the workflow and composite-action paths
-being scanned, then `actionlint: OK (no findings).` when the run is clean.
+**Where it runs:** `.github/workflows/devops-ci.yml` job **`ci-workflow-lint`** and
+**`devops-scheduled.yml`** job **`scheduled-workflow-lint`**, both calling
+`pirlruc/commondevops` `common-infra-lint.yml` at SHA
+`74695e83a7b79784ee81fd970d9051d8efd711e8` (same pin as `common-supply-chain.yml`).
+That reusable also runs shellcheck and hadolint. Re-pin after commondevops PR #62
+merges if you need newer commondevops behaviour.
 
 **Local use**
 
@@ -30,9 +33,10 @@ docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
 **What it does:** Static analysis for GitHub Actions — risky patterns, excessive permissions,
 template injection, unpinned actions, etc.
 
-**Where it runs:** **`devops-ci.yml`** / **`devops-scheduled.yml`** against `.github/workflows/`,
-`.github/actions/`, `examples/`, and `.github/dependabot.yml` (when those paths are in scope for the
-job).
+**Where it runs:** **`devops-ci.yml`** / **`devops-scheduled.yml`** via commondevops
+`common-infra-lint.yml`, which scans `.github/workflows` (and loads
+[`.github/config/zizmor.yml`](../.github/config/zizmor.yml) when present). Composite actions and
+`examples/` are no longer in that zizmor invocation.
 
 **Policy:** [`.github/config/zizmor.yml`](../.github/config/zizmor.yml) sets `unpinned-uses` to
 **ref-pin** (tag or SHA) and ignores `secrets-outside-env` for `python-quality.yml` only (optional
@@ -61,12 +65,14 @@ writes **SARIF** (`results.sarif`) and **publishes** it to GitHub code scanning.
 is parsed by `scripts/scorecard_summary.py` to print a Markdown table and verdict in the log and the
 GitHub **job summary** (Scorecard encodes each check as `score is N: …` in SARIF result messages).
 
-**Where it runs:** **`devops-ci.yml`** job **`ci-supply-chain`** (with dependency review on PRs) and
-**`devops-scheduled.yml`** job **`scheduled-openssf-scorecard`**, using
-`ossf/scorecard-action@v2.4.3`.
+**Where it runs:** **`devops-ci.yml`** job **`ci-supply-chain`** and
+**`devops-scheduled.yml`** job **`scheduled-openssf-scorecard`**, both calling
+commondevops `common-scorecard.yml` at SHA `74695e83a7b79784ee81fd970d9051d8efd711e8`.
+That pin ships scorecard-action **v2.4.3**; do not mix a second commondevops SHA in this
+repo. Re-pin after commondevops #62 if you need v2.4.4 + `repo_token`.
 
 **Requirements:** The job uses `id-token: write` and `security-events: write` for the action; runs
-are skipped on forks.
+are skipped on forks. The reusable uploads SARIF (`category: openssf-scorecard`).
 
 **Docs:** [OpenSSF Scorecard](https://scorecard.dev/),
 [scorecard-action](https://github.com/ossf/scorecard-action).
@@ -76,8 +82,9 @@ are skipped on forks.
 **What it does:** Monitors egress and process activity on GitHub-hosted runners; supports **audit**
 mode (log destinations) and **block** mode (allow lists).
 
-**Where it runs:** First step of jobs in `python-quality.yml`, `publish-pypi.yml`, `devops-ci.yml`,
-and `devops-scheduled.yml`.
+**Where it runs:** First step of jobs in `python-quality.yml`, `publish-pypi.yml`, and the remaining
+inline jobs in `devops-ci.yml` / `devops-scheduled.yml` (scripts, Mutmut, EOL). Workflow-lint and
+Scorecard jobs now run inside commondevops reusables and do not wrap harden-runner.
 
 **Current policy:** `egress-policy: audit` so installs (PyPI, GitHub releases, Semgrep registry,
 etc.) keep working. After reviewing StepSecurity’s recommended allow list for your pipelines, switch
