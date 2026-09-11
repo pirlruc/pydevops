@@ -34,7 +34,7 @@ jobs:
       - name: Filter paths
         if: github.event_name != 'workflow_dispatch'
         id: filter
-        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
           filters: |
             scripts:
@@ -68,9 +68,9 @@ jobs:
       == 'true'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@74695e83a7b79784ee81fd970d9051d8efd711e8
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
     with:
-      scripts_ref: 74695e83a7b79784ee81fd970d9051d8efd711e8
+      scripts_ref: 75d0fafc90fbef7bb118025437502ca2cf42a11e
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -91,7 +91,7 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@74695e83a7b79784ee81fd970d9051d8efd711e8
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
     with:
       blocking: true
       publish_results: true
@@ -106,7 +106,7 @@ jobs:
       contents: read
     steps:
       - name: Harden runner with audited egress
-        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
       - name: Check out repository

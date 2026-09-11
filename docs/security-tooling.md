@@ -11,9 +11,9 @@ workflow usage).
 **Where it runs:** `.github/workflows/devops-ci.yml` job **`ci-workflow-lint`** and
 **`devops-scheduled.yml`** job **`scheduled-workflow-lint`**, both calling
 `pirlruc/commondevops` `common-infra-lint.yml` at SHA
-`74695e83a7b79784ee81fd970d9051d8efd711e8` (same pin as `common-supply-chain.yml`).
-That reusable also runs shellcheck and hadolint. Re-pin after commondevops PR #62
-merges if you need newer commondevops behaviour.
+`75d0fafc90fbef7bb118025437502ca2cf42a11e` (same pin as `common-supply-chain.yml`).
+That reusable also runs shellcheck and hadolint, and loads
+`.github/config/zizmor.yml` when present.
 
 **Local use**
 
@@ -67,7 +67,7 @@ GitHub **job summary** (Scorecard encodes each check as `score is N: …` in SAR
 
 **Where it runs:** **`devops-ci.yml`** job **`ci-supply-chain`** and
 **`devops-scheduled.yml`** job **`scheduled-openssf-scorecard`**, both calling
-commondevops `common-scorecard.yml` at SHA `74695e83a7b79784ee81fd970d9051d8efd711e8`.
+commondevops `common-scorecard.yml` at SHA `75d0fafc90fbef7bb118025437502ca2cf42a11e`.
 That pin ships scorecard-action **v2.4.3**; do not mix a second commondevops SHA in this
 repo. Re-pin after commondevops #62 if you need v2.4.4 + `repo_token`.
 

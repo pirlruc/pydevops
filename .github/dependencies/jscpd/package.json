@@ -2,6 +2,6 @@
     "name": "devops-ci-jscpd",
     "private": true,
     "dependencies": {
-        "jscpd": "4.2.3"
+        "jscpd": "5.2.0"
     }
 }
