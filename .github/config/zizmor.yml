@@ -10,3 +10,12 @@ rules:
   # are not required to define a GitHub Environment for this single secret reference.
   secrets-outside-env:
     ignore: [python-quality.yml]
+  # zizmor 1.30 flags uses: ./... (self-repository).
+  # Replacement is uses: $/... ; actionlint in this repo still rejects that form
+  # (rhysd/actionlint#732 unreleased). Keep ./ until then.
+  self-repository:
+    ignore:
+      - devops-ci.yml
+      - devops-scheduled.yml
+      - publish-pypi.yml
+      - python-quality.yml
