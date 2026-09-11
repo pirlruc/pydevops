@@ -114,7 +114,8 @@ ______________________________________________________________________
   comment); High omits more aggressively.
 - **Ruff**: multiple `--exclude` flags from comma-separated `RUFF_EXCLUDE`.
 - **jscpd**: Pinned version read from **`.github/dependencies/jscpd/package.json`** (semver
-  extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@4.0.9`** if missing.
+  extracted for **`npx --yes "jscpd@${VER}"`**); falls back to **`jscpd@5.2.0`** if missing.
+  CLI uses `--format python` (v5 dropped `--pattern`).
 - **Ruff object format**: **`ruff_messages_in_files()`** in
   [`readers_ruff_jscpd.py`](../scripts/quality_gates/readers_ruff_jscpd.py) counts
   **`files[].messages`** only when **`messages`** is a **list**; **`null`** or non-list values
@@ -241,7 +242,7 @@ ______________________________________________________________________
   `pyproject.toml` `requires-python`).
 - **Current tool baseline** (post Dependabot batch on `feature-guardrails-high-floors`): Ruff
   **0.15.17**, Mypy **1.20.2** (2.1.0 left open as Dependabot #58), pytest **9.1.0**, Semgrep
-  **1.170.0**, Mutmut **>=3.6.0,\<4**, Zizmor **>=1.26.1,\<2**, jscpd **4.2.3**, Locust **2.46.0**,
+  **1.170.0**, Mutmut **>=3.6.0,\<4**, Zizmor **>=1.26.1,\<2**, jscpd **5.2.0**, Locust **2.46.0**,
   Harden-Runner **v2.20.0**, checkout **v7.0.0**, cache **v6.1.0**, `actions/github-script`
   **v9.0.0**.
 - **Requirements pins**: no generic **`requirements-txt-fixer`** pre-commit hook; generated
@@ -456,4 +457,4 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-*Last updated: 2026-07-30 — feature-guardrails-high-floors Dependabot batch, manual CI, High floors.*
+*Last updated: 2026-09-11 — jscpd 5.2.0 (Dependabot major loop).*
