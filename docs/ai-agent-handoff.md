@@ -86,7 +86,9 @@ python3 .github/scaffold/scripts/issues-sync.py \
 
 1. After commondevops PR #62 merges, re-pin the single commondevops SHA (supply-chain,
    infra-lint, scorecard) together.
-2. Merge branch; confirm Dependabot Insights grouping (PDO-004-T2).
+2. Merge branch; confirm Dependabot Insights grouping (PDO-004-T2). Cut annotated
+   tag `1.0.0` after merge so callers have a real pin (README currently cites `@v1.2.0`
+   but this repo has no tags).
 3. PDO-005 ai-reviewer pass into `docs/issues.yml`.
 4. After this branch merges: PR #129 can pin zizmor 1.30; keep the `self-repository` ignore
    until actionlint supports `$/`.
