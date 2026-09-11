@@ -7,11 +7,12 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-post-102-bumps` (from `origin/main` after #102) |
-| `docs/guardrails` | tag `1.0.0` → `925b9f32659936382c67850ec125a182261710bf` |
+| Branch | `feature-wave-e-backlog` (from `origin/main` @ `a48d5e5`, post-#135) |
+| `docs/guardrails` | tag `1.0.0` → `925b9f32659936382c67850ec125a182261710bf` (**stale vs 1.6.0** — PDO-PIN-001; do not bump in this PR) |
 | `.github/scaffold` | `0db5890f808e4a9b9d11eabfc9a95b2b90898fad` |
 | commondevops caller pin | **`75d0fafc90fbef7bb118025437502ca2cf42a11e`** (`common-supply-chain.yml`, `common-infra-lint.yml`, `common-scorecard.yml`) — keep a **single** SHA |
 | ci-python image | **Not used** (measurement: skip) |
+| Latest annotated tag | **`1.0.0`** (README/examples still cite `@v1.2.0` — PDO-WF-001-T2) |
 
 ## Delivery status
 
@@ -20,11 +21,31 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-001 High floors | Done |
 | PDO-002 scaffold adoption | Done |
 | PDO-003 license/SBOM reusable | Done — lives in [commondevops](https://github.com/pirlruc/commondevops) |
-| PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights: no grouped `all-dependencies` PR yet (monthly cadence). Re-check next cycle. |
-| PDO-005 ai-reviewer | Open |
+| PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights: no grouped `all-dependencies` PR yet (monthly cadence). Re-check after PDO-DEP-001. |
 | PDO-006 CI-025 permissions | Done |
+| PDO-005 ai-reviewer | **Done** (Wave E 2026-09-11) — findings filed, not a no-op |
+| PDO-WF-001 CI docs / consumer pin | Open |
+| PDO-GATE-001 self-CI floors / Gitleaks pin | Open |
+| PDO-DEP-001 Dependabot private git | Open — **operator must set Dependabot secret `DEPENDABOT_GITHUB_TOKEN`** (not an Actions secret); do not uncomment `registries:` until it exists |
+| PDO-PIN-001 guardrails 1.6.0 | Open — do not bump in the review PR |
 
-## Dependency pins (post-#102 follow-up)
+## Wave E (2026-09-11)
+
+| Item | Outcome |
+|------|---------|
+| PR [#132](https://github.com/pirlruc/pydevops/pull/132) semgrep → 1.176.1 | **Not merged.** `mergeStateStatus: DIRTY` (base 1.170.0 vs `main` `semgrep==1.172.0`). `statusCheckRollup` empty: `devops-ci.yml` / `devops-scheduled.yml` are `workflow_dispatch` only, so Dependabot PRs never get checks. `@dependabot rebase` requested. Revisit after rebase **only if CI is green**. |
+| PR [#112](https://github.com/pirlruc/pydevops/pull/112) mutmut `>=3.7.0,<4` | **Closed.** Existing `>=3.6.0,<4` already resolves 3.7.0. `mutmut_score_gate.py` is version-agnostic (`killed`/`survived` ints vs `MUTMUT_MIN_SCORE`); 3.7.0 changelog does not change `export-cicd-stats`. |
+| PDO-005-T1 | Review of workflows, scripts, composites, Dependabot, docs. Material findings: **PDO-WF-001** (2 tasks), **PDO-GATE-001** (2 tasks). Within budget (2 epics / 6 tasks). Not a no-op. |
+
+## PDO-005-T1 surfaces (what was judged)
+
+- `.github/workflows/` — dispatch-only maintainer CI vs docs claiming PR/push/schedule; in-repo `license_gate.py` still used by `python-quality.yml` (PDO-003 reusable path is optional `common-supply-chain.yml`, not a duplicate bug).
+- `scripts/` — `quality_gates` High loads org YAML; `mutmut_score_gate.py` does not sniff mutmut version; `org_thresholds.py` fallbacks match the 1.0.0 profile.
+- `.github/actions/qa-secrets-sast` — Gitleaks `8.21.2` hardcoded curl (SC-DEP-001 gap).
+- `.github/dependabot.yml` — monthly multi-ecosystem shape OK; `registries:` commented (PDO-DEP-001). Docs still say quarterly.
+- Consumer examples — `@v1.2.0` does not exist.
+
+## Dependency pins (post-#135)
 
 | Package | Version |
 |---------|---------|
@@ -34,6 +55,8 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | locust | 2.46.5 |
 | zizmor | `>=1.30.0,<2` |
 | jscpd | 5.2.0 (`--format python`) |
+| semgrep | **1.172.0** (leftover #132 → 1.176.1 blocked on conflict + no CI) |
+| mutmut | `>=3.6.0,<4` (#112 closed; already allows 3.7.0) |
 | harden-runner | 2.21.1 |
 | paths-filter | 4.0.3 |
 
@@ -54,13 +77,15 @@ python3 .github/scaffold/scripts/issues-sync.py \
   --repo pirlruc/pydevops --yaml docs/issues.yml --dry-run
 ```
 
+After Wave E backlog merges, sync with approval (`issues-sync.py` write is publishing).
+
 ## Known pitfalls
 
 - Keep a **single** commondevops SHA. Pin `75d0faf…` loads
   `.github/config/zizmor.yml` via `-c` when present.
 - CI-024: Scorecard, PyPI publish, and PR comment jobs skip `dependabot[bot]`.
 - Private `docs/guardrails` is not checked out in CI with default `GITHUB_TOKEN`; High
-  floors fall back to baked-in defaults matching the profile YAML.
+  floors fall back to baked-in defaults matching the **pinned** (1.0.0) profile YAML.
 - Do not add a `ci-python` job container without new measurement justifying it.
 - **Ruff 0.16** default rule set is ~413 rules. Do not drop
   `[tool.ruff.lint] select` until a dedicated cleanup PR enables 0.16 rules
@@ -68,18 +93,21 @@ python3 .github/scaffold/scripts/issues-sync.py \
 - **Zizmor 1.30** `self-repository` is ignored in `.github/config/zizmor.yml`
   until actionlint accepts `uses: $/...` (rhysd/actionlint#732 unreleased).
   Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`.
-- README cites caller pin `@v1.2.0` but this repo had **no tags** until `1.0.0`.
-  Cut `1.0.0` after this branch merges.
+- **Maintainer CI is `workflow_dispatch` only.** Comments that say Dependabot is the
+  sole auto trigger are false until a `pull_request` trigger exists (PDO-WF-001).
+- **Dependabot private submodule:** do not uncomment `registries:` until
+  **Dependabot** secret `DEPENDABOT_GITHUB_TOKEN` exists. An Actions secret with the
+  same name will not be visible to Dependabot Updates (PDO-DEP-001).
 - **Dependabot Insights:** monthly `all-dependencies` group has not produced a
-  grouped PR yet (cadence). PDO-004-T2 records that limitation.
+  grouped PR yet; private-clone failure is a likely blocker (PDO-DEP-001).
 
 ## Suggested next work
 
-1. After merge: close leftover Dependabot PRs that this branch supersedes;
-   cut annotated tag `1.0.0`.
-2. PDO-005 ai-reviewer pass into `docs/issues.yml`.
-3. Re-check Dependabot Insights next monthly cycle.
-4. `mutmut` (#112) and leftover `semgrep` (#132) can land independently.
+1. Operator: create Dependabot secret `DEPENDABOT_GITHUB_TOKEN`, then PDO-DEP-001-T1.
+2. After #132 rebases **and** has green CI, merge the semgrep 1.176.1 pin.
+3. PDO-WF-001 docs/pin examples; PDO-GATE-001 org floors + Gitleaks pin.
+4. PDO-PIN-001 guardrails 1.6.0 (dedicated PR; not this branch).
+5. Parent agent: merge this backlog PR, then `issues-sync.py` (approval-gated). Do not tag from this wave.
 
 ## Major themes (quality gates)
 
@@ -90,4 +118,4 @@ Wave 4: `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
 commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`75d0faf…`**.
 `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-11*
+*Last updated: 2026-09-11 (Wave E)*

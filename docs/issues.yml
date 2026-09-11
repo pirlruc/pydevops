@@ -1,7 +1,7 @@
 # Authored backlog for pydevops.
 #
 # Schema: https://github.com/pirlruc/github-scaffold/blob/main/docs/issues-schema.md
-# Methodology: https://github.com/pirlruc/methodologies/tree/1.1.0/github-issue-adr
+# Methodology: https://github.com/pirlruc/methodologies/tree/1.5.0/github-issue-adr
 
 milestones:
   - name: Guardrails alignment
@@ -210,7 +210,7 @@ milestones:
             guardrail_refs:
               - CI-025
       - id: PDO-005
-        status: open
+        status: done
         title: Review for improvements, bugs, and design flaws
         overview:
           problem: >-
@@ -233,7 +233,7 @@ milestones:
           - Does not re-file work already covered by existing epic/task ids
         tasks:
           - id: PDO-005-T1
-            status: open
+            status: done
             title: Run review pass and append material issues.yml findings
             instructions:
               files:
@@ -241,3 +241,251 @@ milestones:
                 - docs/ai-agent-handoff.md
             verification:
               - PR appends material findings within budget, or handoff records justified no-op
+
+      - id: PDO-WF-001
+        status: open
+        title: Reconcile maintainer CI triggers and consumer pin examples with the tree
+        overview:
+          problem: >-
+            Maintainer docs and workflow comments disagree with the YAML that
+            actually runs. docs/workflows.md still describes devops-ci.yml as
+            pull-request/push CI and devops-scheduled.yml as weekly Monday 06:00 UTC
+            plus an EOL-only push path. Both workflows are workflow_dispatch only
+            (quota mode). Comments claim Dependabot is the sole automatic trigger,
+            but Dependabot PRs receive no checks — Wave E could not merge #132
+            (semgrep 1.176.1) because mergeStateStatus was DIRTY and statusCheckRollup
+            was empty. README.md, examples/call-python-quality.yml, and
+            docs/versioning.md tell consumers to pin @v1.2.0; the only annotated tag
+            is 1.0.0. docs/dependency-management.md still says Dependabot is quarterly
+            while .github/dependabot.yml is monthly.
+          goal: >-
+            Docs and workflow comments match the tree; consumer examples pin a tag
+            that exists; an explicit decision records whether to restore pull_request
+            (or label-gated) CI so Dependabot bumps can be merged from green checks.
+        decision: >-
+          In the context of dispatch-only maintainer CI, facing docs that still
+          describe PR/push/schedule triggers and a non-existent @v1.2.0 consumer pin,
+          we decided to file the mismatch rather than silently re-enable PR CI,
+          to achieve an honest operator contract, accepting that restoring
+          pull_request triggers spends Actions minutes and requires user decision.
+        out_of_scope:
+          - Re-enabling pull_request or schedule triggers without operator approval
+            (Actions-minutes trade-off)
+        architecture:
+          target: .github/workflows/ and consumer-facing docs
+          modules:
+            - .github/workflows/devops-ci.yml
+            - .github/workflows/devops-scheduled.yml
+            - docs/workflows.md
+            - docs/dependency-management.md
+            - README.md
+            - examples/call-python-quality.yml
+            - docs/versioning.md
+        acceptance_criteria:
+          - workflows.md trigger text matches on: in devops-ci.yml and devops-scheduled.yml
+          - Workflow comments do not claim Dependabot auto-runs those workflows unless a pull_request trigger exists
+          - Consumer examples pin an annotated tag that exists (currently 1.0.0) or a commit SHA
+          - dependency-management.md cadence matches .github/dependabot.yml
+        guardrail_refs:
+          - CI-008
+        tasks:
+          - id: PDO-WF-001-T1
+            status: open
+            title: Align maintainer workflow docs and comments with dispatch-only YAML
+            instructions:
+              files:
+                - docs/workflows.md
+                - docs/dependency-management.md
+                - .github/workflows/devops-ci.yml
+                - .github/workflows/devops-scheduled.yml
+                - .github/workflows/README.md
+            verification:
+              - rg -n "workflow_dispatch|pull_request|quarterly|monthly" docs/workflows.md docs/dependency-management.md .github/workflows/devops-ci.yml .github/workflows/devops-scheduled.yml
+            guardrail_refs:
+              - CI-008
+          - id: PDO-WF-001-T2
+            status: open
+            title: Replace non-existent @v1.2.0 consumer pins with a tag that exists
+            instructions:
+              files:
+                - README.md
+                - examples/call-python-quality.yml
+                - examples/README.md
+                - docs/versioning.md
+            verification:
+              - "! grep -n '@v1.2.0' README.md examples docs/versioning.md"
+              - git tag -l --points-at HEAD || git tag -l
+
+      - id: PDO-GATE-001
+        status: open
+        title: Load org floors in maintainer CI and pin Gitleaks for Dependabot
+        overview:
+          problem: >-
+            Two self-CI / scanner paths bypass the sources of truth this repo
+            otherwise ships. (1) devops-ci.yml inlines Radon with max CC 5 and MI
+            floor 40, and interrogate --fail-under 95, instead of
+            scripts/org_thresholds.py. High-tier quality_gates already load
+            docs/guardrails/python/profile.thresholds.yml (max CC 8, min MI 40,
+            doc_coverage 95). Self-CI CC≤5 is stricter than the High product gate
+            with no recorded reason. (2) qa-secrets-sast curls Gitleaks 8.21.2 from
+            GitHub Releases; that version is not in .github/dependencies/ and
+            Dependabot cannot bump it (SC-DEP-001).
+          goal: >-
+            Maintainer Radon/interrogate floors come from org_thresholds (or a
+            recorded deviation if self-CI stays stricter than High); Gitleaks
+            version lives in a Dependabot-visible pin consumed by the composite.
+        decision: >-
+          In the context of quality_gates reading org YAML while devops-ci bakes
+          CC 5 and a curl-pinned Gitleaks, facing silent drift from High floors and
+          SC-DEP-001, we decided one org-threshold loader for self-CI plus a
+          pinned Gitleaks manifest, to achieve lockstep with the product gates,
+          accepting a follow-up if self-CI is intentionally stricter than High.
+        architecture:
+          target: .github/workflows/devops-ci.yml and qa-secrets-sast
+          modules:
+            - .github/workflows/devops-ci.yml
+            - scripts/org_thresholds.py
+            - .github/actions/qa-secrets-sast/action.yml
+            - .github/dependencies/
+        acceptance_criteria:
+          - devops-ci Radon CC/MI and interrogate fail-under read org_thresholds (or a documented intentional stricter self-CI policy)
+          - Gitleaks version is a pinned file under .github/dependencies/ (or equivalent Dependabot-visible manifest)
+          - qa-secrets-sast reads that pin instead of a hardcoded 8.21.2
+        guardrail_refs:
+          - PY-CPLX-001
+          - PY-CPLX-002
+          - PY-DOC-001
+          - SC-DEP-001
+        tasks:
+          - id: PDO-GATE-001-T1
+            status: open
+            title: Drive devops-ci Radon and interrogate floors from org_thresholds
+            instructions:
+              files:
+                - .github/workflows/devops-ci.yml
+                - scripts/org_thresholds.py
+            verification:
+              - uv run pytest tests/test_org_thresholds.py
+              - rg -n "org_thresholds|fail-under|overall_max" .github/workflows/devops-ci.yml
+            guardrail_refs:
+              - PY-CPLX-001
+              - PY-CPLX-002
+              - PY-DOC-001
+          - id: PDO-GATE-001-T2
+            status: open
+            title: Move Gitleaks version out of qa-secrets-sast into a Dependabot-visible pin
+            instructions:
+              files:
+                - .github/actions/qa-secrets-sast/action.yml
+                - .github/dependencies/
+                - .github/dependabot.yml
+            verification:
+              - rg -n "GITLEAKS" .github/actions/qa-secrets-sast/action.yml .github/dependencies
+            guardrail_refs:
+              - SC-DEP-001
+
+      - id: PDO-DEP-001
+        status: open
+        title: Uncomment Dependabot git registry after DEPENDABOT_GITHUB_TOKEN exists
+        overview:
+          problem: >-
+            Dependabot Updates fail cloning private pirlruc/github-scaffold
+            (.github/scaffold submodule). Personal-account GitHub has no org
+            "Grant Dependabot access" control. .github/dependabot.yml already
+            contains a commented registries: github-private stub (password
+            ${{secrets.DEPENDABOT_GITHUB_TOKEN}}). Uncommenting that stub before
+            the secret exists fails Dependabot closed for every ecosystem.
+          goal: >-
+            After the operator stores a fine-grained PAT as a Dependabot secret
+            named DEPENDABOT_GITHUB_TOKEN (Settings → Secrets and variables →
+            Dependabot — not an Actions secret), uncomment top-level registries:
+            and attach registries: [github-private] to each updates entry that
+            clones this private-git tree, then confirm Insights / grouped updates
+            no longer fail on github-scaffold.
+        decision: >-
+          In the context of Dependabot failing to clone private github-scaffold,
+          facing commented registries stubs that would also fail closed without a
+          secret, we decided the operator must create DEPENDABOT_GITHUB_TOKEN as a
+          Dependabot secret before anyone uncomments registries:, to achieve
+          private-submodule clones without pretending the token was set in this
+          review pass.
+        description: >-
+          This Epic does not set the secret. Actions secrets are invisible to
+          Dependabot version updates; a repository Actions secret named
+          DEPENDABOT_GITHUB_TOKEN would not fix the clone failure. The PAT needs
+          Contents: Read on private submodules (pirlruc/github-scaffold,
+          pirlruc/guardrails) and private reusable-workflow hosts, not only
+          package dependencies. Seed comments:
+          https://github.com/pirlruc/github-scaffold/blob/main/templates/dependabot.example.yml
+        out_of_scope:
+          - Creating or rotating DEPENDABOT_GITHUB_TOKEN (operator-only)
+          - Uncommenting registries: before that Dependabot secret exists
+          - Treating an Actions secret as a substitute
+        architecture:
+          target: .github/dependabot.yml
+          modules:
+            - .github/dependabot.yml
+            - docs/ai-agent-handoff.md
+        acceptance_criteria:
+          - Operator has created Dependabot secret DEPENDABOT_GITHUB_TOKEN (not an Actions secret)
+          - Top-level registries: github-private is uncommented and referenced from updates entries that clone private git
+          - Dependabot Updates no longer fail cloning pirlruc/github-scaffold
+        guardrail_refs:
+          - SC-DEP-001
+          - SC-DEP-002
+        tasks:
+          - id: PDO-DEP-001-T1
+            status: open
+            title: Uncomment registries and attach github-private after the Dependabot secret exists
+            instructions:
+              files:
+                - .github/dependabot.yml
+            verification:
+              - rg -n "registries:|DEPENDABOT_GITHUB_TOKEN|github-private" .github/dependabot.yml
+            guardrail_refs:
+              - SC-DEP-001
+
+      - id: PDO-PIN-001
+        status: open
+        title: Re-pin docs/guardrails from tag 1.0.0 to 1.6.0
+        overview:
+          problem: >-
+            docs/guardrails is pinned at 925b9f32659936382c67850ec125a182261710bf
+            (annotated tag 1.0.0). Current org default is 1.6.0. SC-DEP-004
+            requires the documented bootstrap ref, gitlink SHA, and annotated tag
+            to name the same revision. The stale pack omits later principles
+            (including python lint_exception_max_days) that High-tier consumers of
+            this QaaS repo should inherit. This review must not bump the submodule.
+          goal: >-
+            Re-pin docs/guardrails to annotated tag 1.6.0 in a dedicated change;
+            remediate newly failing gates or record deviations in
+            docs/guardrail-deviations.yml.
+        decision: >-
+          In the context of a 1.0.0 gitlink while guardrails is at 1.6.0, facing
+          SC-DEP-004 freshness and High-tier floor drift, we decided a dedicated
+          pin-bump Epic rather than bundling the submodule move with this review
+          PR, to achieve an assertable tag match, accepting that High floors stay
+          on the 1.0.0 profile until that bump lands.
+        out_of_scope:
+          - Bumping docs/guardrails in the PDO-005 review PR
+        architecture:
+          target: docs/guardrails gitlink
+          modules:
+            - docs/guardrails
+            - docs/ai-agent-handoff.md
+        acceptance_criteria:
+          - git submodule status docs/guardrails resolves to annotated tag 1.6.0
+          - Newly failing gates are remediated or recorded in docs/guardrail-deviations.yml
+        guardrail_refs:
+          - SC-DEP-004
+        tasks:
+          - id: PDO-PIN-001-T1
+            status: open
+            title: Re-pin docs/guardrails at guardrails 1.6.0 and remediate gates
+            instructions:
+              files:
+                - docs/guardrails
+            verification:
+              - git -C docs/guardrails describe --tags --exact-match
+            guardrail_refs:
+              - SC-DEP-004
