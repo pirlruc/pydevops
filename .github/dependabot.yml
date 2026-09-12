@@ -29,6 +29,9 @@ multi-ecosystem-groups:
       include: scope
 
 updates:
+  # github-private only on ecosystems that clone private git (reusable workflows
+  # and submodules). Attaching it to pip fails graph updates with
+  # unexpected_external_code (reject-external-code).
   - package-ecosystem: github-actions
     directory: /
     patterns: ["*"]
@@ -40,49 +43,35 @@ updates:
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/semgrep
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/zizmor
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/mutmut
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
-    registries:
-      - github-private
 
-# last-manual-retrigger: 2026-09-12T10:00Z
+# last-manual-retrigger: 2026-09-12T10:50Z
