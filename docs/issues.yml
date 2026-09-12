@@ -385,7 +385,7 @@ milestones:
               - SC-DEP-001
 
       - id: PDO-DEP-001
-        status: open
+        status: done
         title: Uncomment Dependabot git registry after DEPENDABOT_GITHUB_TOKEN exists
         overview:
           problem: >-
@@ -435,7 +435,7 @@ milestones:
           - SC-DEP-002
         tasks:
           - id: PDO-DEP-001-T1
-            status: open
+            status: done
             title: Uncomment registries and attach github-private after the Dependabot secret exists
             instructions:
               files:

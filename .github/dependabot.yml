@@ -3,21 +3,20 @@
 # Cadence: docs/guardrails/supply-chain/profile.thresholds.yml
 # Process: https://github.com/pirlruc/methodologies/blob/main/github-issue-adr/docs/process/dependency-updates.md
 #
-# Personal-account private git (uncomment and set Dependabot secrets — not Actions):
-# registries:
-#   github-private:
-#     type: git
-#     url: https://github.com
-#     username: x-access-token
-#     password: ${{secrets.DEPENDABOT_GITHUB_TOKEN}}
-#   dhi:
-#     type: docker-registry
-#     url: https://dhi.io
-#     username: ${{secrets.DOCKERHUB_USERNAME}}
-#     password: ${{secrets.DOCKERHUB_TOKEN}}
-# Then add `registries: [github-private]` (and/or dhi) under each updates entry that needs them.
+# Personal-account private git (Dependabot secrets — not Actions):
+#   DEPENDABOT_GITHUB_TOKEN — Contents: Read on private submodules
+#     (github-scaffold, guardrails) and reusable-workflow hosts (commondevops).
+#   DOCKERHUB_* — unused here (no docker ecosystem); keep as Dependabot secrets
+#     if a docker entry is added later.
 
 version: 2
+
+registries:
+  github-private:
+    type: git
+    url: https://github.com
+    username: x-access-token
+    password: ${{secrets.DEPENDABOT_GITHUB_TOKEN}}
 
 multi-ecosystem-groups:
   all-dependencies:
@@ -34,38 +33,56 @@ updates:
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: uv
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/semgrep
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/zizmor
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: pip
     directory: /.github/dependencies/mutmut
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
 
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
+
+# last-manual-retrigger: 2026-09-12T10:00Z
