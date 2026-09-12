@@ -21,7 +21,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-001 High floors | Done |
 | PDO-002 scaffold adoption | Done |
 | PDO-003 license/SBOM reusable | Done — lives in [commondevops](https://github.com/pirlruc/commondevops) |
-| PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights: no grouped `all-dependencies` PR yet (monthly cadence). Re-check after PDO-DEP-001. |
+| PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights 2026-09-12: github-actions/uv/npm/pre-commit graph jobs succeeded (private git 200 on github-scaffold, guardrails, commondevops). pip jobs failed `unexpected_external_code` while `github-private` was attached to pip — that attach is being dropped. |
 | PDO-006 CI-025 permissions | Done |
 | PDO-005 ai-reviewer | **Done** (Wave E) — findings filed [#111](https://github.com/pirlruc/pydevops/issues/111) closed |
 | PDO-WF-001 CI docs / consumer pin | Open ([#138](https://github.com/pirlruc/pydevops/issues/138)) |
@@ -95,15 +95,20 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
   Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`.
 - **Maintainer CI is `workflow_dispatch` only.** Comments that say Dependabot is the
   sole auto trigger are false until a `pull_request` trigger exists (PDO-WF-001).
-- **Dependabot private submodule:** `registries: github-private` is wired.
-  Confirm Insights / grouped `all-dependencies` after this land (PDO-DEP-001).
-  Do not treat an Actions secret as a substitute.
-- **Dependabot Insights:** monthly `all-dependencies` group has not produced a
-  grouped PR yet; private-clone failure is a likely blocker (PDO-DEP-001).
+- **Dependabot private git:** `registries: github-private` is wired on
+  **github-actions only** (private commondevops reusables + submodule clones).
+  Do not attach it to pip — that sets `reject-external-code` and fails the
+  graph update with `unexpected_external_code`. Do not treat an Actions secret
+  as a substitute for the Dependabot secret.
+- **Dependabot Insights (2026-09-12):** github-actions authenticated private
+  `pirlruc/commondevops`, `github-scaffold`, and `guardrails` (HTTP 200).
+  Grouped `all-dependencies` PRs still follow the monthly cadence. A 403 on
+  `pirlruc/pydevops.git` itself is the PAT repo allowlist (self-clone still
+  exited 0 via the Dependabot installation token).
 
 ## Suggested next work
 
-1. Confirm Dependabot Insights / grouped `all-dependencies` after this `dependabot.yml` land.
+1. Re-check grouped `all-dependencies` after pip is off `github-private` (monthly cadence).
 2. PDO-WF-001 docs/pin examples; PDO-GATE-001 org floors + Gitleaks pin.
 3. PDO-PIN-001 guardrails 1.6.0 (dedicated PR).
 
@@ -116,4 +121,4 @@ Wave 4: `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
 commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`75d0faf…`**.
 `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-12 (PDO-DEP-001 registries)*
+*Last updated: 2026-09-12 (Dependabot github-private on github-actions only)*
