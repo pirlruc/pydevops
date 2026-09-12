@@ -26,7 +26,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-005 ai-reviewer | **Done** (Wave E) — findings filed [#111](https://github.com/pirlruc/pydevops/issues/111) closed |
 | PDO-WF-001 CI docs / consumer pin | Open ([#138](https://github.com/pirlruc/pydevops/issues/138)) |
 | PDO-GATE-001 self-CI floors / Gitleaks pin | Open ([#141](https://github.com/pirlruc/pydevops/issues/141)) |
-| PDO-DEP-001 Dependabot private git | Open ([#144](https://github.com/pirlruc/pydevops/issues/144)) — **operator must set Dependabot secret `DEPENDABOT_GITHUB_TOKEN`** |
+| PDO-DEP-001 Dependabot private git | **Done** ([#144](https://github.com/pirlruc/pydevops/issues/144)) — `registries: github-private` wired; secret updated 2026-09-12. Confirm Insights after land. |
 | PDO-PIN-001 guardrails 1.6.0 | Open ([#146](https://github.com/pirlruc/pydevops/issues/146)) |
 
 ## Wave E (2026-09-11)
@@ -95,15 +95,15 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
   Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`.
 - **Maintainer CI is `workflow_dispatch` only.** Comments that say Dependabot is the
   sole auto trigger are false until a `pull_request` trigger exists (PDO-WF-001).
-- **Dependabot private submodule:** do not uncomment `registries:` until
-  **Dependabot** secret `DEPENDABOT_GITHUB_TOKEN` exists. An Actions secret with the
-  same name will not be visible to Dependabot Updates (PDO-DEP-001).
+- **Dependabot private submodule:** `registries: github-private` is wired.
+  Confirm Insights / grouped `all-dependencies` after this land (PDO-DEP-001).
+  Do not treat an Actions secret as a substitute.
 - **Dependabot Insights:** monthly `all-dependencies` group has not produced a
   grouped PR yet; private-clone failure is a likely blocker (PDO-DEP-001).
 
 ## Suggested next work
 
-1. Operator: create Dependabot secret `DEPENDABOT_GITHUB_TOKEN` (Settings → Secrets → **Dependabot**, not Actions), then PDO-DEP-001-T1. Do not uncomment `registries:` until it exists.
+1. Confirm Dependabot Insights / grouped `all-dependencies` after this `dependabot.yml` land.
 2. PDO-WF-001 docs/pin examples; PDO-GATE-001 org floors + Gitleaks pin.
 3. PDO-PIN-001 guardrails 1.6.0 (dedicated PR).
 
@@ -116,4 +116,4 @@ Wave 4: `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
 commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`75d0faf…`**.
 `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-12 (tag 1.1.0)*
+*Last updated: 2026-09-12 (PDO-DEP-001 registries)*
