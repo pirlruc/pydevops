@@ -1,4 +1,4 @@
 # zizmor for devops-ci.yml / devops-scheduled.yml. Dependabot: pip, /.github/dependencies/zizmor
 # >=1.30.0: self-repository audit; ignored via .github/config/zizmor.yml until
 # actionlint accepts uses: $/... (rhysd/actionlint#732).
-zizmor>=1.30.0,<2
+zizmor>=1.30.1,<2
