@@ -23,9 +23,14 @@ fi
 if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
   echo "==> Pulling ${IMAGE}"
   if ! docker pull "${IMAGE}"; then
-    echo "error: cannot pull digest-pinned ${IMAGE}" >&2
-    echo "Set PYDEVOPS_CI_IMAGE to a local tag (e.g. ci-lint:alpine-local)" >&2
-    exit 1
+    if docker image inspect ci-lint:alpine-local >/dev/null 2>&1; then
+      echo "digest pin unavailable; using ci-lint:alpine-local" >&2
+      IMAGE="ci-lint:alpine-local"
+    else
+      echo "error: cannot pull digest-pinned ${IMAGE}" >&2
+      echo "Set PYDEVOPS_CI_IMAGE to a local tag (e.g. ci-lint:alpine-local)" >&2
+      exit 1
+    fi
   fi
 fi
 

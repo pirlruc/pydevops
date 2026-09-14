@@ -1,27 +1,38 @@
-#!/usr/bin/env bash
-# Fail if vendored Python / CI thresholds drift from the pinned guardrails submodule.
-set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+#!/bin/sh
+# Fail if vendored Python / CI / supply-chain thresholds drift from the
+# pinned guardrails submodule. POSIX sh (CI-022 / CI-035).
+set -eu
+
+SCRIPT_DIR="$(dirname "$0")"
+SCRIPT_DIR="$(cd "${SCRIPT_DIR}" && pwd)"
+ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+extract() {
+  grep -E '^[a-z_]+:' "$1" | sed 's/[[:space:]]*#.*//' | sed 's/[[:space:]]*$//'
+}
 
 check_pair() {
-  local vended="$1"
-  local upstream="$2"
-  local label="$3"
-  if [[ ! -f "${vended}" ]]; then
+  vended="$1"
+  upstream="$2"
+  label="$3"
+  if [ ! -f "${vended}" ]; then
     echo "error: missing ${vended}" >&2
-    exit 1
+    return 1
   fi
-  if [[ ! -f "${upstream}" ]]; then
+  if [ ! -f "${upstream}" ]; then
     echo "error: guardrails submodule missing at ${upstream} (CI-022 / CI-035)" >&2
-    exit 1
+    return 1
   fi
-  extract() {
-    grep -E '^[a-z_]+:' "$1" | sed 's/[[:space:]]*#.*//' | sed 's/[[:space:]]*$//'
-  }
-  if ! diff -u <(extract "${upstream}") <(extract "${vended}"); then
+  tmp_u="$(mktemp)"
+  tmp_v="$(mktemp)"
+  extract "${upstream}" > "${tmp_u}"
+  extract "${vended}" > "${tmp_v}"
+  if ! diff -u "${tmp_u}" "${tmp_v}"; then
+    rm -f "${tmp_u}" "${tmp_v}"
     echo "error: ${label} drifted from ${upstream}" >&2
-    exit 1
+    return 1
   fi
+  rm -f "${tmp_u}" "${tmp_v}"
   echo "Thresholds in sync: ${label}"
 }
 

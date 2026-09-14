@@ -30,7 +30,16 @@ run_shellcheck() {
 }
 
 run_hadolint() {
-  files="$(find docker -name "Dockerfile*" 2>/dev/null)"
+  files=""
+  for d in docker .github/dependencies; do
+    if [ -d "${d}" ]; then
+      found="$(find "${d}" -name "Dockerfile*" 2>/dev/null || true)"
+      if [ -n "${found}" ]; then
+        files="${files} ${found}"
+      fi
+    fi
+  done
+  files="$(printf '%s' "${files}" | sed 's/^[[:space:]]*//')"
   if [ -z "${files}" ]; then
     echo "No Dockerfiles to lint"
     return 0
