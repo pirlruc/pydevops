@@ -172,8 +172,8 @@ actionlint + zizmor + shellcheck + hadolint), **supply chain** ([commondevops
 (**pytest**, **pylint**, **interrogate**, Radon CC, Radon MI after a single **`uv sync`**; **gate**
 lists failing tools). `ci-scripts` and `python-quality.yml` stay in-repo.
 
-**Triggers:** Pull request and push to `main`/`master` with a **union** of paths (scripts, tests,
-lockfiles, `.github/`, `examples/`, `docs/`, etc.); **`workflow_dispatch`** runs all path groups.
+**Triggers:** `push` and `pull_request` on `main`, plus **`workflow_dispatch`**. Path filters
+skip scripts vs workflow jobs. Dependabot PRs get checks (PDO-WF-001).
 
 **`GITHUB_TOKEN` scopes:** Vary by job (`contents`, `pull-requests` on **`changes`** for path
 filtering, `security-events`, `id-token` on **`ci-supply-chain`**). Nested reusable jobs appear in
@@ -187,18 +187,16 @@ ______________________________________________________________________
 
 ### `devops-scheduled.yml`
 
-**Purpose:** Weekly **Monday 06:00 UTC** maintenance (and **`workflow_dispatch`**): **workflow
-lint** and **OpenSSF Scorecard** via the same commondevops reusables and pin as
-`common-supply-chain.yml`, **Mutmut** (`mutmut run` → `export-cicd-stats` →
+**Purpose:** Weekly **Thursday 06:17 UTC** (`17 6 * * 4`, after commondevops Mon /
+containerdevops Tue / cppdevops Wed) plus **`workflow_dispatch`**: **workflow
+lint** and **OpenSSF Scorecard** via commondevops **5.0.0**
+(`bcddb5db4ba5d291aa7f434d447e43175f14136c`), **Mutmut** (`mutmut run` → `export-cicd-stats` →
 **`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`**) + artifact
 upload, **Python EOL watch** (issues) + gate.
 
-**Push** to `main`/`master` that only changes
-[`.github/config/python-support-versions.json`](../.github/config/python-support-versions.json) or
-this workflow runs **only** the **EOL** job (lint / mutmut / scorecard jobs are skipped on `push` so
-policy edits do not run mutation testing).
-
 **`GITHUB_TOKEN` scopes:** Per job (`contents`, `actions`, `issues`, `security-events`, `id-token`).
+
+Callers map **`SCORECARD_TOKEN`** to the reusable secret id **`repo_token`**.
 
 ______________________________________________________________________
 
@@ -218,3 +216,26 @@ tag-scoped builds.
 [PyPI trusted publisher](https://docs.pypi.org/trusted-publishers/) for this repository.
 
 ______________________________________________________________________
+
+## Dependabot and pins
+
+Schedule is **monthly** ([`.github/dependabot.yml`](../.github/dependabot.yml)). Manifests live
+under [`.github/dependencies/github-actions-pins.json`](../.github/dependencies/github-actions-pins.json). Apply GitHub Actions bumps via
+`github-actions-pins.json` + `python3 scripts/github_actions_pins.py --check`.
+
+Gitleaks is pinned at `.github/dependencies/gitleaks/` (`version.txt` + Dockerfile for Dependabot
+`docker`). `qa-secrets-sast` reads that pin (PY-SEC-003 / SC-DEP-001).
+
+Semgrep (PY-SEC-002) and Locust stay in isolated `requirements.txt` files because Semgrep’s
+`tomli~=2.0.1` conflicts with pip-audit’s `tomli>=2.2.1`.
+
+## Local CI parity
+
+```bash
+uv sync && uv run pytest && uv run mypy src scripts
+sh scripts/check-ci-local.sh
+```
+
+Host PATH tools run first; missing actionlint/shellcheck/hadolint/zizmor/yamllint go to
+digest-pinned `ci-lint` via `scripts/check-ci-docker.sh` (CMN-WF-004).
+

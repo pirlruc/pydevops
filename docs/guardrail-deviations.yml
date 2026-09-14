@@ -4,11 +4,22 @@
 # Epic body, so nothing is copied into docs/issues.yml or into issue text by hand.
 #
 # Field definitions: https://github.com/pirlruc/guardrails#deviation-rule
-# Approval flow:     https://github.com/pirlruc/methodologies/blob/1.1.0/github-issue-adr/docs/process/guardrail-compliance.md
+# Approval flow:     https://github.com/pirlruc/methodologies/blob/1.5.0/github-issue-adr/docs/process/guardrail-compliance.md
 #
 # Being stricter than the org default is always allowed and needs no entry here.
 
-deviations: []
+deviations:
+  - id: REL-CHG-001
+    key: changelog_required
+    org_default: true
+    repo_value: false
+    why: >-
+      Release-notes-only ops repo; GitHub Releases carry the notes. Guardrails
+      GR-CHG-001 is open to clarify changelog_required for this case.
+    epic: PDO-PIN-001
+    owner: pirlruc
+    approved_by: Engineering Lead
+    review: 2026-12-31
 
 # Parameterized guardrail — the org default is a number and the repo uses a different one.
 # Lowering a gate requires `epic` and `approved_by`.

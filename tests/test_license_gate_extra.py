@@ -91,3 +91,61 @@ def test_license_gate_skips_non_dict_package_entries(
     err = capsys.readouterr().err
     assert err.count('bad') == 1
     assert 'clean' not in err
+
+
+def test_license_gate_allow_list_rejects_unknown(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Non-empty LICENSE_ALLOW_LIST fails licenses that match no pattern."""
+    from scripts import license_gate
+
+    sbom = tmp_path / 's.json'
+    sbom.write_text(
+        json.dumps({'packages': [{'name': 'x', 'licenseConcluded': 'GPL-3.0-only'}]}),
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('SPDX_SBOM_PATH', str(sbom))
+    monkeypatch.setenv('LICENSE_DENY_LIST', '[]')
+    monkeypatch.setenv('LICENSE_ALLOW_LIST', json.dumps(['mit', 'apache-2.0']))
+    assert license_gate.main() == 1
+
+
+def test_license_gate_invalid_allow_list(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Invalid LICENSE_ALLOW_LIST exits 2."""
+    from scripts import license_gate
+
+    sbom = tmp_path / 's.json'
+    sbom.write_text('{}', encoding='utf-8')
+    monkeypatch.setenv('SPDX_SBOM_PATH', str(sbom))
+    monkeypatch.setenv('LICENSE_DENY_LIST', '[]')
+    monkeypatch.setenv('LICENSE_ALLOW_LIST', 'not-json')
+    assert license_gate.main() == 2
+
+
+def test_load_allow_list_from_missing_file(tmp_path: Path) -> None:
+    """Missing thresholds path yields an empty allow list."""
+    from scripts.license_gate import load_allow_list_from_thresholds
+
+    assert load_allow_list_from_thresholds(tmp_path / 'nope.yml') == []
+
+
+def test_license_gate_allow_list_accepts_match(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Allow-list substring match passes MIT when MIT is listed."""
+    from scripts import license_gate
+
+    sbom = tmp_path / 's.json'
+    sbom.write_text(
+        json.dumps({'packages': [{'name': 'x', 'licenseConcluded': 'MIT'}]}),
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('SPDX_SBOM_PATH', str(sbom))
+    monkeypatch.setenv('LICENSE_DENY_LIST', '[]')
+    monkeypatch.setenv('LICENSE_ALLOW_LIST', json.dumps(['mit']))
+    assert license_gate.main() == 0

@@ -1,0 +1,7 @@
+# Org-default numeric gates for CI/CD infrastructure.
+# CI should read this file as the single source of truth for thresholds.
+# Repos may override values with a recorded justification (Epic required when lowering a gate).
+
+ci_image_max_age_days: 30              # CI-027 — rebuild cadence for prebuilt CI toolchain images
+ci_job_timeout_minutes_max: 60         # CI-003 — soft ceiling for reusable workflow job timeouts
+security_rescan_interval_days: 30      # CI-029 — scheduled re-analysis of time-varying security gates

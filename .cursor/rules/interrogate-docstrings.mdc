@@ -17,4 +17,4 @@ edit** **`scripts/**/*.py`**, before finishing:
 2. Add minimal module/function docstrings until the gate passes.
 
 See also **[`python-scripts-ci-gates.mdc`](python-scripts-ci-gates.mdc)** and
-**[`radon-complexity.mdc`](radon-complexity.mdc)**.
+**[`python-quality-gates.mdc`](python-quality-gates.mdc)**.

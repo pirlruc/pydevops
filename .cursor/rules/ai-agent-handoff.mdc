@@ -39,7 +39,7 @@ Do **not** duplicate full content from `docs/issues.yml` or `README.md` — link
 
 When handoff status changes, also update [`docs/issues.yml`](docs/issues.yml) when closing or reconciling phases.
 
-When guardrails are referenced, use [`docs/guardrails/`](docs/guardrails/) in the consuming repository — see [guardrails-compliance.mdc](guardrails-compliance.mdc).
+When guardrails are referenced, use [`docs/guardrails/`](https://github.com/pirlruc/guardrails) in the consuming repository — see [guardrails-compliance.mdc](guardrails-compliance.mdc).
 
 Issue methodology: [github-issue-adr.mdc](github-issue-adr.mdc) (Epic = decision record; applies to **new issues only**).
 

@@ -1,0 +1,13 @@
+# Org-default numeric gates for Python repositories.
+# CI should read this file as the single source of truth for thresholds.
+# Repos may override values with a recorded justification (Epic required when lowering a gate).
+
+statement_coverage: 95            # PY-TEST-002
+branch_coverage: 95               # PY-TEST-002
+doc_coverage: 95                  # PY-DOC-001
+max_cyclomatic_complexity: 8      # PY-CPLX-001
+avg_cyclomatic_complexity: 5      # PY-CPLX-001
+min_maintainability_index: 40     # PY-CPLX-002
+avg_maintainability_index: 60     # PY-CPLX-002
+pr_size_soft_limit_lines: 500     # PY-DELIV-001
+lint_exception_max_days: 14       # PY-QUAL-001

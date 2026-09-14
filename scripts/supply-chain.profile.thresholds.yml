@@ -1,0 +1,13 @@
+# Org-default numeric / enum gates for supply-chain policy.
+# CI and Dependabot templates should treat this file as the single source of truth.
+# Repos may override values with a recorded justification (Epic required when lowering a gate).
+
+dependency_update_interval: monthly              # SC-DEP-003
+dependency_update_open_pr_limit: 5               # SC-DEP-002
+dependency_update_blocked_semver_levels: none    # SC-DEP-003
+
+# SPDX license policy for SC-LIC-001.
+# Prefer license_allow_list (SPDX expressions). license_deny_list is the legacy substring shape.
+# Empty deny list with an empty allow list means the gate runs but denies nothing; missing file fails closed (CI-022).
+license_deny_list: []                            # SC-LIC-001
+license_allow_list: []                           # SC-LIC-001
