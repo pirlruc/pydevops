@@ -64,6 +64,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # paths-filter fetches github.event.before; shallow + no credentials fails
+          # with "could not read Username for 'https://github.com'".
+          fetch-depth: 0
       - name: Filter paths
         if: github.event_name != 'workflow_dispatch'
         id: filter

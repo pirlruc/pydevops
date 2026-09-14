@@ -100,6 +100,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - **Dependabot private git:** `registries: github-private` is wired on
   **github-actions only**. Do not attach it to pip.
 - REL-CHG-001: no root CHANGELOG; GitHub Releases carry notes (GR-CHG-001).
+- `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout
+  plus `persist-credentials: false` cannot fetch `github.event.before`).
 
 ## Suggested next work
 
