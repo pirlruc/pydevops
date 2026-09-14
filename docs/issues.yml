@@ -243,81 +243,71 @@ milestones:
               - PR appends material findings within budget, or handoff records justified no-op
 
       - id: PDO-WF-001
-        status: open
+        status: done
         title: Reconcile maintainer CI triggers and consumer pin examples with the tree
         overview:
           problem: >-
-            Maintainer docs and workflow comments disagree with the YAML that
-            actually runs. docs/workflows.md still describes devops-ci.yml as
-            pull-request/push CI and devops-scheduled.yml as weekly Monday 06:00 UTC
-            plus an EOL-only push path. Both workflows are workflow_dispatch only
-            (quota mode). Comments claim Dependabot is the sole automatic trigger,
-            but Dependabot PRs receive no checks — Wave E could not merge #132
-            (semgrep 1.176.1) because mergeStateStatus was DIRTY and statusCheckRollup
-            was empty. README.md, examples/call-python-quality.yml, and
-            docs/versioning.md tell consumers to pin @v1.2.0; the only annotated tag
-            is 1.0.0. docs/dependency-management.md still says Dependabot is quarterly
-            while .github/dependabot.yml is monthly.
+            Maintainer docs and workflow comments disagreed with the YAML that
+            actually ran. docs/workflows.md described devops-ci.yml as
+            pull-request/push CI while both workflows were workflow_dispatch only
+            (quota mode). README.md and examples pinned @v1.2.0, a tag that never
+            existed. docs/dependency-management.md said quarterly Dependabot while
+            .github/dependabot.yml is monthly.
           goal: >-
             Docs and workflow comments match the tree; consumer examples pin a tag
-            that exists; an explicit decision records whether to restore pull_request
-            (or label-gated) CI so Dependabot bumps can be merged from green checks.
+            that exists; maintainer CI uses the sibling trigger policy.
         decision: >-
-          In the context of dispatch-only maintainer CI, facing docs that still
-          describe PR/push/schedule triggers and a non-existent @v1.2.0 consumer pin,
-          we decided to file the mismatch rather than silently re-enable PR CI,
-          to achieve an honest operator contract, accepting that restoring
-          pull_request triggers spends Actions minutes and requires user decision.
+          In the context of dispatch-only maintainer CI, facing an operator grant
+          to restore sibling triggers so Dependabot PRs get checks, we decided
+          push+PR on main for devops-ci.yml and Thursday cron 17 6 * * 4 for
+          devops-scheduled.yml (after commondevops Mon / containerdevops Tue /
+          cppdevops Wed), to achieve green Dependabot merges, accepting Actions
+          minutes. Consumer pins move to annotated tag 1.1.0 (then 2.0.0 at
+          release). dependabot-metadata.yml is removed.
         out_of_scope:
-          - Re-enabling pull_request or schedule triggers without operator approval
-            (Actions-minutes trade-off)
+          - Label-gated CI as an alternative to push+PR
         architecture:
           target: .github/workflows/ and consumer-facing docs
           modules:
             - .github/workflows/devops-ci.yml
             - .github/workflows/devops-scheduled.yml
             - docs/workflows.md
-            - docs/dependency-management.md
             - README.md
             - examples/call-python-quality.yml
-            - docs/versioning.md
         acceptance_criteria:
           - workflows.md trigger text matches on: in devops-ci.yml and devops-scheduled.yml
-          - Workflow comments do not claim Dependabot auto-runs those workflows unless a pull_request trigger exists
-          - Consumer examples pin an annotated tag that exists (currently 1.0.0) or a commit SHA
-          - dependency-management.md cadence matches .github/dependabot.yml
+          - Consumer examples pin an annotated tag that exists
+          - Dependabot cadence documented as monthly in workflows.md
         guardrail_refs:
           - CI-008
         tasks:
           - id: PDO-WF-001-T1
-            status: open
-            title: Align maintainer workflow docs and comments with dispatch-only YAML
+            status: done
+            title: Adopt sibling push+PR+Thursday triggers and align docs
             instructions:
               files:
                 - docs/workflows.md
-                - docs/dependency-management.md
                 - .github/workflows/devops-ci.yml
                 - .github/workflows/devops-scheduled.yml
                 - .github/workflows/README.md
             verification:
-              - rg -n "workflow_dispatch|pull_request|quarterly|monthly" docs/workflows.md docs/dependency-management.md .github/workflows/devops-ci.yml .github/workflows/devops-scheduled.yml
+              - rg -n "workflow_dispatch|pull_request|17 6 \\* \\* 4" docs/workflows.md .github/workflows/devops-ci.yml .github/workflows/devops-scheduled.yml
             guardrail_refs:
               - CI-008
           - id: PDO-WF-001-T2
-            status: open
+            status: done
             title: Replace non-existent @v1.2.0 consumer pins with a tag that exists
             instructions:
               files:
                 - README.md
                 - examples/call-python-quality.yml
                 - examples/README.md
-                - docs/versioning.md
             verification:
-              - "! grep -n '@v1.2.0' README.md examples docs/versioning.md"
+              - "! grep -n '@v1.2.0' README.md examples"
               - git tag -l --points-at HEAD || git tag -l
 
       - id: PDO-GATE-001
-        status: open
+        status: done
         title: Load org floors in maintainer CI and pin Gitleaks for Dependabot
         overview:
           problem: >-
@@ -358,7 +348,7 @@ milestones:
           - SC-DEP-001
         tasks:
           - id: PDO-GATE-001-T1
-            status: open
+            status: done
             title: Drive devops-ci Radon and interrogate floors from org_thresholds
             instructions:
               files:
@@ -372,7 +362,7 @@ milestones:
               - PY-CPLX-002
               - PY-DOC-001
           - id: PDO-GATE-001-T2
-            status: open
+            status: done
             title: Move Gitleaks version out of qa-secrets-sast into a Dependabot-visible pin
             instructions:
               files:
@@ -446,7 +436,7 @@ milestones:
               - SC-DEP-001
 
       - id: PDO-PIN-001
-        status: open
+        status: done
         title: Re-pin docs/guardrails from tag 1.0.0 to 1.6.0
         overview:
           problem: >-
@@ -480,7 +470,7 @@ milestones:
           - SC-DEP-004
         tasks:
           - id: PDO-PIN-001-T1
-            status: open
+            status: done
             title: Re-pin docs/guardrails at guardrails 1.6.0 and remediate gates
             instructions:
               files:

@@ -15,7 +15,7 @@ RowList = list[dict[str, Any]]
 
 
 def gate_bandit(root: Path, t: Thresholds) -> tuple[RowList, list[str]]:
-    """Evaluate Bandit result count against tier-specific caps."""
+    """Evaluate Bandit result count against tier-specific caps (PY-SEC-002)."""
     n = bandit_finding_count(root)
     if n is None:
         row = {
@@ -40,7 +40,7 @@ def gate_vulnerabilities(
     root: Path,
     t: Thresholds,
 ) -> tuple[RowList, list[str]]:
-    """Evaluate pip-audit and Grype vulnerability aggregates."""
+    """Evaluate pip-audit and Grype vulnerability aggregates (PY-SEC-004)."""
     pa_counts = pip_audit_vulns(root)
     gr_counts = grype_severities(root)
     failures: list[str] = []
@@ -102,7 +102,7 @@ def gate_vulnerabilities(
 
 
 def gate_semgrep(root: Path, strictness_norm: str) -> tuple[RowList, list[str]]:
-    """High strictness: Semgrep SARIF — 0 error-level findings, at most 5 warning-level."""
+    """High strictness: Semgrep SARIF error=0, warning<=5 (PY-SEC-002)."""
     if strictness_norm != 'High':
         return [], []
 
@@ -144,7 +144,7 @@ def gate_semgrep(root: Path, strictness_norm: str) -> tuple[RowList, list[str]]:
 
 
 def gate_gitleaks(root: Path) -> tuple[RowList, list[str]]:
-    """Fail on any Gitleaks finding."""
+    """Fail on any Gitleaks finding (PY-SEC-003)."""
     leaks = gitleaks_findings(root)
     ok = leaks == 0
     row = {

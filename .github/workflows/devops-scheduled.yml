@@ -1,11 +1,12 @@
 ---
-# Manual maintenance: commondevops workflow lint + Scorecard, mutation testing (with score gate), Python EOL watch.
-# (Previously split across reusable-workflows-quality, mutmut-nightly, python-eol-watch.)
-# workflow_dispatch only to conserve GitHub Actions minutes; Dependabot remains the sole auto trigger.
+# Weekly maintenance: commondevops workflow lint + Scorecard, mutation testing, Python EOL watch.
+# Thursday 06:17 UTC after commondevops Mon / containerdevops Tue / cppdevops Wed (PDO-WF-001).
 name: DevOps scheduled
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 on:
+  schedule:
+    - cron: "17 6 * * 4"
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -16,9 +17,9 @@ jobs:
     name: Scheduled — workflow lint (actionlint + zizmor)
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
     with:
-      scripts_ref: 75d0fafc90fbef7bb118025437502ca2cf42a11e
+      scripts_ref: bcddb5db4ba5d291aa7f434d447e43175f14136c
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -32,10 +33,12 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
     with:
       blocking: true
       publish_results: true
+    secrets:
+      repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
   scheduled-mutmut:
     name: Scheduled — mutation testing (Mutmut)

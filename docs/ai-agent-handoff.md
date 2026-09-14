@@ -3,16 +3,16 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-09-11)
+## Branch / pins (2026-09-14)
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (tag **1.1.0**) |
-| `docs/guardrails` | tag `1.0.0` → `925b9f32659936382c67850ec125a182261710bf` (**stale vs 1.6.0** — PDO-PIN-001; do not bump in this PR) |
-| `.github/scaffold` | `0db5890f808e4a9b9d11eabfc9a95b2b90898fad` |
-| commondevops caller pin | **`75d0fafc90fbef7bb118025437502ca2cf42a11e`** (`common-supply-chain.yml`, `common-infra-lint.yml`, `common-scorecard.yml`) — keep a **single** SHA |
-| ci-python image | **Not used** (measurement: skip) |
-| Latest annotated tag | **`1.1.0`** (README/examples still cite `@v1.2.0` — PDO-WF-001-T2) |
+| Branch | `feature-guardrails-16` (from `main` tag **1.1.0**) |
+| `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
+| `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
+| commondevops caller pin | **5.0.0** `bcddb5db4ba5d291aa7f434d447e43175f14136c` (single SHA) |
+| ci-python image | **Not used** |
+| Latest annotated tag | **`1.1.0`** (this wave tags **2.0.0**) |
 
 ## Delivery status
 
@@ -24,10 +24,10 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-004 Dependabot | Done — T1 config on `main`; T2 Insights 2026-09-13: grouped [`#152`](https://github.com/pirlruc/pydevops/pull/152) (`all-dependencies`, 6 ecosystems). github-actions clones `pirlruc/pydevops` with HTTP 200 after the PAT allowlist included this repo. |
 | PDO-006 CI-025 permissions | Done |
 | PDO-005 ai-reviewer | **Done** (Wave E) — findings filed [#111](https://github.com/pirlruc/pydevops/issues/111) closed |
-| PDO-WF-001 CI docs / consumer pin | Open ([#138](https://github.com/pirlruc/pydevops/issues/138)) |
-| PDO-GATE-001 self-CI floors / Gitleaks pin | Open ([#141](https://github.com/pirlruc/pydevops/issues/141)) |
+| PDO-WF-001 CI docs / consumer pin | Done (this wave) |
+| PDO-GATE-001 self-CI floors / Gitleaks pin | Done (this wave) |
 | PDO-DEP-001 Dependabot private git | **Done** ([#144](https://github.com/pirlruc/pydevops/issues/144)) — `registries: github-private` on github-actions; PAT includes pydevops (self-clone HTTP 200, 2026-09-13). |
-| PDO-PIN-001 guardrails 1.6.0 | Open ([#146](https://github.com/pirlruc/pydevops/issues/146)) |
+| PDO-PIN-001 guardrails 1.6.0 | Done (this wave) |
 
 ## Wave E (2026-09-11)
 
@@ -71,21 +71,22 @@ Keep `pyproject.toml`, `uv.lock`, `.pre-commit-config.yaml`,
 uv sync
 uv run pytest
 uv run mypy src scripts
-uv run python scripts/export_quality_tools_requirements.py
+sh scripts/check-ci-local.sh
 python3 scripts/github_actions_pins.py --check
 python3 .github/scaffold/scripts/issues-sync.py \
-  --repo pirlruc/pydevops --yaml docs/issues.yml --dry-run
+  --repo pirlruc/pydevops --yaml docs/issues.yml --validate-only
 ```
 
 After Wave E backlog merges, sync with approval (`issues-sync.py` write is publishing).
 
 ## Known pitfalls
 
-- Keep a **single** commondevops SHA. Pin `75d0faf…` loads
-  `.github/config/zizmor.yml` via `-c` when present.
+- Keep a **single** commondevops SHA (`bcddb5db…` / tag 5.0.0).
 - CI-024: Scorecard, PyPI publish, and PR comment jobs skip `dependabot[bot]`.
-- Private `docs/guardrails` is not checked out in CI with default `GITHUB_TOKEN`; High
-  floors fall back to baked-in defaults matching the **pinned** (1.0.0) profile YAML.
+- Private `docs/guardrails` is not initialized in default checkout; High floors
+  load from vendored `scripts/python.profile.thresholds.yml` (fail closed on
+  missing keys). Missing checkout without a vendored copy warns loudly and uses
+  baked-in High floors.
 - Do not add a `ci-python` job container without new measurement justifying it.
 - **Ruff 0.16** default rule set is ~413 rules. Do not drop
   `[tool.ruff.lint] select` until a dedicated cleanup PR enables 0.16 rules
@@ -93,33 +94,24 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - **Zizmor 1.30** `self-repository` is ignored in `.github/config/zizmor.yml`
   until actionlint accepts `uses: $/...` (rhysd/actionlint#732 unreleased).
   Do not migrate `uses: ./` to `$/` or `${{ github.repository }}`.
-- **Maintainer CI is `workflow_dispatch` only.** Comments that say Dependabot is the
-  sole auto trigger are false until a `pull_request` trigger exists (PDO-WF-001).
+- Maintainer CI is **push + pull_request + workflow_dispatch** on `devops-ci.yml`
+  and Thursday cron on `devops-scheduled.yml` (PDO-WF-001).
+- Self-CI Radon CC cap is **5**, stricter than High floor 8; no deviation.
 - **Dependabot private git:** `registries: github-private` is wired on
-  **github-actions only** (private commondevops reusables + submodule clones).
-  Do not attach it to pip — that sets `reject-external-code` and fails the
-  graph update with `unexpected_external_code`. Do not treat an Actions secret
-  as a substitute for the Dependabot secret. The PAT must include this repo
-  as well as the private siblings, or github-actions self-clone returns 403.
-- **Dependabot Insights (2026-09-13):** grouped [`#152`](https://github.com/pirlruc/pydevops/pull/152)
-  after PAT allowlist included pydevops (self-clone HTTP 200). Do not merge
-  that PR's `publish-pypi.yml` SHA alone — apply Actions bumps via
-  `github-actions-pins.json` + `scripts/github_actions_pins.py`. After the uv
-  hunk, run `bash scripts/export_pinned_requirements.sh`.
+  **github-actions only**. Do not attach it to pip.
+- REL-CHG-001: no root CHANGELOG; GitHub Releases carry notes (GR-CHG-001).
 
 ## Suggested next work
 
-1. Review grouped Dependabot [`#152`](https://github.com/pirlruc/pydevops/pull/152): Actions pin via `github-actions-pins.json`, then `export_pinned_requirements.sh` for the uv hunk. Maintainer CI is dispatch-only.
-2. PDO-WF-001 docs/pin examples; PDO-GATE-001 org floors + Gitleaks pin.
-3. PDO-PIN-001 guardrails 1.6.0 (dedicated PR).
+1. After tag **2.0.0**, bump consumer examples from `@1.1.0` to `@2.0.0`.
+2. Review grouped Dependabot [`#152`](https://github.com/pirlruc/pydevops/pull/152): Actions pin via `github-actions-pins.json`, then `export_pinned_requirements.sh` for the uv hunk.
+3. `issues-sync.py` write to close GitHub PDO-PIN-001 / PDO-WF-001 / PDO-GATE-001 (yaml already `done`).
 
 ## Major themes (quality gates)
 
 Central evaluation remains **`python -m scripts.quality_gates`**. High floors load from
-`docs/guardrails/python/profile.thresholds.yml` when the submodule is present.
+`docs/guardrails/python/profile.thresholds.yml` or vendored `scripts/python.profile.thresholds.yml`.
 
-Wave 4: `ci-workflow-lint` / `scheduled-workflow-lint` and Scorecard jobs call
-commondevops `common-infra-lint.yml` / `common-scorecard.yml` at **`75d0faf…`**.
-`ci-scripts` and `python-quality.yml` stay in-repo.
+Wave 5: commondevops **5.0.0** (`bcddb5db…`). `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-13 (Dependabot Insights #152; PAT includes pydevops)*
+*Last updated: 2026-09-14*

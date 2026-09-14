@@ -59,7 +59,7 @@ Org **Grant Dependabot access** is org-only. On a personal account:
    and private reusable-workflow hosts, not only package deps.
 2. Store as a **Dependabot** secret (not Actions); wire top-level `registries:` `type: git`.
 3. For private OCI (e.g. `dhi.io`), Dependabot `DOCKERHUB_*` secrets + `type: docker-registry`.
-4. Seed comments: [`templates/dependabot.example.yml`](../../templates/dependabot.example.yml).
+4. Seed comments: [dependabot.example.yml](https://github.com/pirlruc/github-scaffold/blob/main/templates/dependabot.example.yml).
 
 ## Migration and verification
 

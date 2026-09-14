@@ -1,0 +1,17 @@
+# Single-repo bootstrap for pydevops labels and milestones.
+targets:
+  - repo: pirlruc/pydevops
+    yaml: docs/issues.yml
+
+labels:
+  - { name: epic, color: "5319E7", description: "Decision record" }
+  - { name: task, color: "0E8A16", description: "Unit of work under an epic" }
+  - { name: ai-architect, color: "7057FF", description: "Architecture or planning" }
+  - { name: ai-implementer, color: "1D76DB", description: "Implementation" }
+  - { name: ai-reviewer, color: "ededed", description: "Review or triage" }
+
+milestones:
+  - name: Phase 1 — Foundation
+    description: Reusable python-quality workflow, scripts, Dependabot, ai-reviewer prompt
+  - name: Continuous improvement
+    description: Follow-up epics from reviews and ops findings

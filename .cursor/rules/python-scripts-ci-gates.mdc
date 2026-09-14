@@ -16,4 +16,4 @@ This repo is **stricter** on its own scripts package (no deviation needed):
    (`[tool.pylint.main]` `fail-under = 9.5`).
 
 See also **[`interrogate-docstrings.mdc`](interrogate-docstrings.mdc)** and
-**[`radon-complexity.mdc`](radon-complexity.mdc)**.
+**[`python-quality-gates.mdc`](python-quality-gates.mdc)**.

@@ -26,6 +26,10 @@ on:
           ["GPL-3.0"]
         type: string
         default: '[]'
+      license_allow_list:
+        description: JSON array of SPDX allow-list patterns (SC-LIC-001). Empty keeps deny-list-only.
+        type: string
+        default: '[]'
       devops_repository:
         description: >
           Optional override for DevOps owner/name. Empty: parse from github.workflow_ref
@@ -86,6 +90,9 @@ on:
         type: boolean
         default: false
       license_deny_list:
+        type: string
+        default: '[]'
+      license_allow_list:
         type: string
         default: '[]'
       devops_repository:
@@ -498,6 +505,7 @@ jobs:
         env:
           SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
+          LICENSE_ALLOW_LIST: ${{ inputs.license_allow_list }}
           UV_PYTHON: ${{ inputs.python_version }}
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |

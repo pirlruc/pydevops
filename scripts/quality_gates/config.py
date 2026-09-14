@@ -1,9 +1,9 @@
 """Threshold definitions and High-tier required artifact list.
 
 High-tier coverage / complexity / MI / docstring floors are loaded from
-``docs/guardrails/python/profile.thresholds.yml`` when present (org source of
-truth). Low and Medium remain relative offsets below High. A guardrails-governed
-consumer that runs below High must record a deviation.
+``docs/guardrails/python/profile.thresholds.yml`` (or the vendored
+``scripts/python.profile.thresholds.yml``). Missing required keys fail closed
+(CI-022). Low and Medium remain relative offsets below High.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def _repo_root() -> Path:
 
 @lru_cache(maxsize=1)
 def load_org_python_floors() -> dict[str, float]:
-    """Org floors from the pinned guardrails submodule, or baked-in fallbacks."""
+    """Org floors from the pinned guardrails submodule or vendored copy."""
     return load_python_floors(_repo_root())
 
 

@@ -69,6 +69,11 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
 
+  - package-ecosystem: docker
+    directory: /.github/dependencies/gitleaks
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]

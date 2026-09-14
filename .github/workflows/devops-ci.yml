@@ -1,20 +1,53 @@
 ---
-# Consolidated CI (manual): three lanes (separate jobs):
+# Consolidated CI: three lanes (separate jobs):
 #   1) Workflow static analysis — commondevops common-infra-lint.yml (actionlint + zizmor).
 #   2) Python scripts quality — pytest, pylint, interrogate, Radon CC/MI (one job: one uv sync).
 #   3) Supply chain — commondevops common-scorecard.yml.
-# workflow_dispatch only to conserve GitHub Actions minutes; Dependabot remains the sole auto trigger.
+# Sibling trigger policy (PDO-WF-001): push+PR on main, plus workflow_dispatch.
 name: DevOps CI
 # Prefer Node 24 for JavaScript actions until all upstream actions ship node24 runtimes.
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 permissions: {}
 jobs:
+  pins:
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: SC-DEP-004 submodule pin assert
+        run: sh scripts/check-submodule-pins.sh
+
+  docs:
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
+    with:
+      blocking: true
+      shell_scripts: scripts/*.sh
+      ruff_paths: scripts/lint-doc-links.py scripts/validate-yaml.py
+      yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
+      yaml_globs: .github/workflows/*.yml
+      run_link_lint: true
+      scripts_ref: bcddb5db4ba5d291aa7f434d447e43175f14136c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
   changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
@@ -68,9 +101,9 @@ jobs:
       == 'true'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
     with:
-      scripts_ref: 75d0fafc90fbef7bb118025437502ca2cf42a11e
+      scripts_ref: bcddb5db4ba5d291aa7f434d447e43175f14136c
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -91,10 +124,12 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@75d0fafc90fbef7bb118025437502ca2cf42a11e
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
     with:
       blocking: true
       publish_results: true
+    secrets:
+      repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
   ci-scripts:
     name: CI — scripts (pytest, pylint, interrogate, Radon)
@@ -148,7 +183,8 @@ jobs:
         run: |
           set -euo pipefail
           set -o pipefail
-          uv run interrogate scripts -vv --fail-under 95 2>&1 | tee _ci_summary/interrogate.txt
+          FAIL_UNDER="$(PYTHONPATH=. uv run python -c 'from pathlib import Path; from scripts.org_thresholds import load_python_floors; print(int(load_python_floors(Path("."))["doc_coverage"]))')"
+          uv run interrogate scripts -vv --fail-under "${FAIL_UNDER}" 2>&1 | tee _ci_summary/interrogate.txt
       - id: radon_cc
         name: Enforce complexity limits on gates
         continue-on-error: true
@@ -157,9 +193,18 @@ jobs:
           set -o pipefail
           uv run python << 'PY' | tee _ci_summary/radon_cc.txt
           import json
+          import os
           import subprocess
           import sys
           from pathlib import Path
+
+          os.environ.setdefault("PYTHONPATH", ".")
+          sys.path.insert(0, ".")
+          from scripts.org_thresholds import load_python_floors, self_ci_max_cyclomatic
+
+          floors = load_python_floors(Path("."))
+          # Self-CI CC cap is min(org High 8, 5). Stricter than High; no deviation.
+          limit = self_ci_max_cyclomatic(floors)
           root = Path("scripts/quality_gates")
           py_files = sorted(p.name for p in root.glob("*.py"))
           print("Radon CC — scope: scripts/quality_gates/*.py")
@@ -191,9 +236,9 @@ jobs:
           for rel, max_c, n in rows:
               print(f"{rel:<48} {max_c:>8.1f}  {n:>8d}")
           print("-" * 68)
-          print(f"{'Overall max CC (across files)':<48} {overall_max:>8.1f}  (limit ≤ 5.0)")
-          if overall_max > 5:
-              print(f"FAIL: max cyclomatic complexity {overall_max} exceeds 5", file=sys.stderr)
+          print(f"{'Overall max CC (across files)':<48} {overall_max:>8.1f}  (limit ≤ {limit})")
+          if overall_max > limit:
+              print(f"FAIL: max cyclomatic complexity {overall_max} exceeds {limit}", file=sys.stderr)
               sys.exit(1)
           print("PASS: cyclomatic complexity within limit.")
           PY
@@ -205,9 +250,17 @@ jobs:
           set -o pipefail
           uv run python << 'PY' | tee _ci_summary/radon_mi.txt
           import json
+          import os
           import subprocess
           import sys
           from pathlib import Path
+
+          os.environ.setdefault("PYTHONPATH", ".")
+          sys.path.insert(0, ".")
+          from scripts.org_thresholds import load_python_floors
+
+          floors = load_python_floors(Path("."))
+          floor = floors["min_maintainability_index"]
           root = Path("scripts/quality_gates")
           files = sorted(root.glob("*.py"))
           paths = [str(p) for p in files]
@@ -216,7 +269,6 @@ jobs:
           print()
           raw = subprocess.check_output(["uv", "run", "radon", "mi", "-j", *paths], text=True)
           data = json.loads(raw)
-          floor = 40.0
           rows: list[tuple[str, float, str]] = []
           for path in sorted(data.keys()):
               meta = data[path]
@@ -242,6 +294,7 @@ jobs:
           PY
       - id: pip_audit
         name: Audit Python dependencies (pip-audit)
+        # PY-SEC-004
         continue-on-error: true
         run: |
           set -euo pipefail

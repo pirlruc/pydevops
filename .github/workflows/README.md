@@ -21,8 +21,8 @@ Run on pushes/PRs to this repo (or on schedule). **Do not** point application re
 
 | Workflow                   | Purpose                                                                                                                                                                            |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`devops-ci.yml`**        | Path filter → **workflow lint** (commondevops `common-infra-lint.yml`), **scripts** (single job: pytest, pylint, interrogate, Radon CC/MI), **supply chain** (commondevops `common-scorecard.yml`) |
-| **`devops-scheduled.yml`** | commondevops lint + Scorecard, Mutmut (score ≥ 85%), Python EOL issues; push-triggered EOL-only run for policy file edits                                                                 |
+| **`devops-ci.yml`**        | Path filter → **workflow lint**, **scripts**, **supply chain**; SC-DEP-004 pins; markdown/YAML lint |
+| **`devops-scheduled.yml`** | Thursday 06:17 UTC lint + Scorecard, Mutmut (score ≥ 85%), Python EOL issues |
 | **`publish-pypi.yml`**     | Manual PyPI publish (`workflow_dispatch`, `environment: pypi`)                                                                                                                     |
 
 ## Layout elsewhere under `.github/`

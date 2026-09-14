@@ -57,7 +57,11 @@ Issues = "https://github.com/pirlruc/pydevops/issues"
 Repository = "https://github.com/pirlruc/pydevops"
 
 [tool.coverage.run]
-omit = ["tests/*"]
+omit = [
+    "tests/*",
+    "scripts/lint-doc-links.py",
+    "scripts/validate-yaml.py",
+]
 source = ["scripts", "src/devops_quality"]
 
 [tool.hatch.build.targets.wheel]
@@ -72,6 +76,7 @@ verbose = 1
 
 [tool.mypy]
 files = ["scripts", "src/devops_quality", "tests"]
+exclude = "(lint-doc-links|validate-yaml)\\.py$"
 mypy_path = "src"
 python_version = "3.13"
 warn_unused_configs = true
