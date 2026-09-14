@@ -7,12 +7,12 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-guardrails-16` (from `main` tag **1.1.0**) |
+| Branch | `main` tag **2.0.0** |
 | `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
 | `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
 | commondevops caller pin | **5.0.0** `bcddb5db4ba5d291aa7f434d447e43175f14136c` (single SHA) |
 | ci-python image | **Not used** |
-| Latest annotated tag | **`1.1.0`** (this wave tags **2.0.0**) |
+| Latest annotated tag | **`2.0.0`** (`f858aa29…`, #154) |
 
 ## Delivery status
 
@@ -49,14 +49,14 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Package | Version |
 |---------|---------|
-| ruff | 0.16.6 (`[tool.ruff.lint] select = ["E4", "E7", "E9", "F"]`) |
+| ruff | 0.16.7 (`[tool.ruff.lint] select = ["E4", "E7", "E9", "F"]`) |
 | pylint | 4.0.8 |
-| mypy | 2.3.0 |
+| mypy | 2.3.1 |
 | locust | 2.46.5 |
-| zizmor | `>=1.30.0,<2` |
+| zizmor | `>=1.30.1,<2` |
 | jscpd | 5.2.0 (`--format python`) |
-| semgrep | **1.176.1** ([#137](https://github.com/pirlruc/pydevops/pull/137); #132 closed as superseded) |
-| mutmut | `>=3.6.0,<4` (#112 closed; already allows 3.7.0) |
+| semgrep | **1.177.0** (Dependabot #152 folded into the 2.0.0 handoff) |
+| mutmut | `>=3.7.0,<4` |
 | harden-runner | 2.21.1 |
 | paths-filter | 4.0.3 |
 
@@ -103,9 +103,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. After tag **2.0.0**, bump consumer examples from `@1.1.0` to `@2.0.0`.
-2. Review grouped Dependabot [`#152`](https://github.com/pirlruc/pydevops/pull/152): Actions pin via `github-actions-pins.json`, then `export_pinned_requirements.sh` for the uv hunk.
-3. `issues-sync.py` write to close GitHub PDO-PIN-001 / PDO-WF-001 / PDO-GATE-001 (yaml already `done`).
+1. `issues-sync.py` write to close GitHub PDO-PIN-001 / PDO-WF-001 / PDO-GATE-001 (yaml already `done`).
+2. Close Dependabot [#152](https://github.com/pirlruc/pydevops/pull/152) as superseded after this handoff lands.
 
 ## Major themes (quality gates)
 

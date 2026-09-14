@@ -2,12 +2,12 @@
 bandit==1.9.4
 deptry==0.25.1
 interrogate==1.7.0
-mypy==2.3.0
+mypy==2.3.1
 pip-audit==2.10.1
-pre-commit==4.6.1
+pre-commit==4.6.2
 pydoclint==0.9.1
 pylint-json2html==0.5.0
 pylint==4.0.8
 pytest-cov==7.1.0
 pytest==9.1.1
-ruff==0.16.6
+ruff==0.16.7

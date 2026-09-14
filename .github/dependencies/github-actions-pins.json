@@ -45,7 +45,7 @@
     },
     "pypa/gh-action-pypi-publish": {
         "tag": "v1.14.2",
-        "sha": "a892a5a61159132606e93a2fa6f4358831b04d26"
+        "sha": "dc37677b2e1c63e2034f94d8a5b11f265b73ba33"
     },
     "step-security/harden-runner": {
         "tag": "v2.21.1",
