@@ -135,8 +135,8 @@ separate Grype CLI `--fail-on` step in the same job, or it would override those 
 
 **Caller configuration**
 
-Use `secrets: inherit` only if you intentionally pass organization/caller secrets into the reusable
-workflow. The pipeline does not require custom secrets for the default same-repository PR flow.
+Use an explicit `secrets:` map (`caller_pat` is optional). `secrets: inherit` would pass
+every caller secret into the reusable workflow.
 
 ##### Caller permissions
 
@@ -147,9 +147,10 @@ permissions: {}
 
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@vX.Y.Z
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
     with: { ... }
-    secrets: inherit
+    secrets:
+      caller_pat: ${{ secrets.caller_pat }}
 ```
 
 The reusable workflow’s jobs then add only the scopes listed above. If your organization enforces a

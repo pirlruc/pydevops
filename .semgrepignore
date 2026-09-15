@@ -1,0 +1,4 @@
+# Submodule checkouts are scanned by their own CI. common-secrets-sast
+# `--config auto` would otherwise flag companion-repo Dependabot/uv rules here.
+.github/scaffold/
+docs/guardrails/

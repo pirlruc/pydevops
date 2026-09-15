@@ -19,8 +19,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - Locust fails the DAST job when `enable_dast` is true (no `|| true`).
 - `pip-audit` exit code is captured separately from JSON parse.
 - zizmor and mutmut pins are exact (`zizmor==1.30.1`, `mutmut==3.8.0`).
-- Dependabot docker for the Gitleaks sentinel Dockerfile is omitted (install is
-  `version.txt` + checksummed tarball).
+- Dependabot `cooldown.default-days: 7` on every ecosystem. Caller examples pass
+  `caller_pat` instead of `secrets: inherit`.
 
 ### Fixed
 

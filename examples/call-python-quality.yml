@@ -12,13 +12,14 @@ on:
 permissions: {}
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.0.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
     with:
-      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @2.0.0 above).
+      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @2.1.0 above).
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false
       license_deny_list: '[]'
       working_directory: .
       python_version: '3.13'
-    secrets: inherit
+    secrets:
+      caller_pat: ${{ secrets.caller_pat }}

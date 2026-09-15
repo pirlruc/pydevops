@@ -42,40 +42,56 @@ updates:
     multi-ecosystem-group: all-dependencies
     registries:
       - github-private
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: uv
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pip
     directory: /.github/dependencies/semgrep
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pip
     directory: /.github/dependencies/zizmor
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pip
     directory: /.github/dependencies/mutmut
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    cooldown:
+      default-days: 7
 
 # last-manual-retrigger: 2026-09-12T10:50Z

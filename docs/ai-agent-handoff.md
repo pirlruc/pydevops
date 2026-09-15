@@ -107,7 +107,10 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout
   plus `persist-credentials: false` cannot fetch `github.event.before`).
 - Git tags are unprefixed SemVer (`2.1.0`). Publish/release gates reject `v2.1.0`.
-- Docker Hub / GitHub Packages docs are N/A (PyPI-only).
+- Do not set `uv` `exclude-newer = "7 days"` until pinned wheels (ruff 0.16.7)
+  are older than seven days; use `# nosemgrep` on `[tool.uv]` instead.
+- `.semgrepignore` excludes submodule trees so `common-secrets-sast` `--config auto`
+  does not flag companion-repo Dependabot.
 
 ## Suggested next work
 

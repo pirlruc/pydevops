@@ -117,5 +117,5 @@ select = ["E4", "E7", "E9", "F"]
 [tool.ruff.format]
 quote-style = "single"
 
-[tool.uv]
+[tool.uv]  # nosemgrep: package_managers.uv.uv-missing-dependency-cooldown.uv-missing-dependency-cooldown
 default-groups = ["dev", "scripts"]

@@ -26,13 +26,14 @@ drift).
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.0.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
     with:
       strictness_level: High
       docstring_format: Google
       enable_dast: false
       license_deny_list: '["GPL-3.0-only"]'
-    secrets: inherit
+    secrets:
+      caller_pat: ${{ secrets.caller_pat }}
 ```
 
 Cutting a release: land `main`, create an annotated tag (`git tag -a 2.1.0 -m "Release 2.1.0"`),
