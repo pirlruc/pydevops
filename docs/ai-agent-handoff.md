@@ -3,16 +3,17 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-09-14)
+## Branch / pins (2026-09-15)
 
 | Item | Value |
 |------|-------|
-| Branch | `main` tag **2.0.0** |
+| Branch | `feature-version-2.1.0` → tag **2.1.0** |
 | `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
 | `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
 | commondevops caller pin | **5.0.0** `bcddb5db4ba5d291aa7f434d447e43175f14136c` (single SHA) |
 | ci-python image | **Not used** |
-| Latest annotated tag | **`2.0.0`** (`f858aa29…`, #154) |
+| Latest annotated tag | **`2.0.0`** until 2.1.0 lands (`f858aa29…`, #154) |
+| Package version | **2.1.0** (`pyproject.toml` / `__version__`, unprefixed git tags) |
 
 ## Delivery status
 
@@ -45,7 +46,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 - `.github/dependabot.yml` — monthly multi-ecosystem shape OK; `registries:` commented (PDO-DEP-001). Docs still say quarterly.
 - Consumer examples — `@v1.2.0` does not exist.
 
-## Dependency pins (post-#135)
+## Dependency pins (post-2.1.0)
 
 | Package | Version |
 |---------|---------|
@@ -53,12 +54,13 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | pylint | 4.0.8 |
 | mypy | 2.3.1 |
 | locust | 2.46.5 |
-| zizmor | `>=1.30.1,<2` |
+| zizmor | `==1.30.1` |
 | jscpd | 5.2.0 (`--format python`) |
 | semgrep | **1.177.0** (Dependabot #152 folded into the 2.0.0 handoff) |
-| mutmut | `>=3.7.0,<4` |
+| mutmut | `==3.8.0` |
 | harden-runner | 2.21.1 |
 | paths-filter | 4.0.3 |
+| gitleaks | 8.21.2 + `linux-amd64.sha256` |
 
 Keep `pyproject.toml`, `uv.lock`, `.pre-commit-config.yaml`,
 `.github/dependencies/quality-tools/requirements.txt`, and
@@ -82,7 +84,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 ## Known pitfalls
 
 - Keep a **single** commondevops SHA (`bcddb5db…` / tag 5.0.0).
-- CI-024: Scorecard, PyPI publish, and PR comment jobs skip `dependabot[bot]`.
+- CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
+  `dependabot[bot]`. Token-free `pins` still runs.
 - Private `docs/guardrails` is not initialized in default checkout; High floors
   load from vendored `scripts/python.profile.thresholds.yml` (fail closed on
   missing keys). Missing checkout without a vendored copy warns loudly and uses
@@ -99,9 +102,12 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - Self-CI Radon CC cap is **5**, stricter than High floor 8; no deviation.
 - **Dependabot private git:** `registries: github-private` is wired on
   **github-actions only**. Do not attach it to pip.
-- REL-CHG-001: no root CHANGELOG; GitHub Releases carry notes (GR-CHG-001).
+- Do not re-add Dependabot `docker` for `.github/dependencies/gitleaks` — the
+  real pin is `version.txt` + checksum; docker 400'd.
 - `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout
   plus `persist-credentials: false` cannot fetch `github.event.before`).
+- Git tags are unprefixed SemVer (`2.1.0`). Publish/release gates reject `v2.1.0`.
+- Docker Hub / GitHub Packages docs are N/A (PyPI-only).
 
 ## Suggested next work
 
@@ -115,4 +121,4 @@ Central evaluation remains **`python -m scripts.quality_gates`**. High floors lo
 
 Wave 5: commondevops **5.0.0** (`bcddb5db…`). `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-14*
+*Last updated: 2026-09-15*

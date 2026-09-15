@@ -35,8 +35,10 @@ jobs:
     secrets: inherit
 ```
 
-Cutting a release: land `main`, create an annotated tag (`git tag -a 2.0.0 -m "Release 2.0.0"`),
-and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `1.1.0`.
+Cutting a release: land `main`, create an annotated tag (`git tag -a 2.1.0 -m "Release 2.1.0"`),
+and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `2.0.0`.
+PyPI publish stays `workflow_dispatch`. This repo does not publish container images, so
+Docker Hub / GitHub Packages docs are not applicable.
 
 ## Repository layout
 

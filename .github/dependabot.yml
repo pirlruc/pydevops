@@ -8,6 +8,10 @@
 #     (github-scaffold, guardrails) and reusable-workflow hosts (commondevops).
 #   DOCKERHUB_* — unused here (no docker ecosystem); keep as Dependabot secrets
 #     if a docker entry is added later.
+# Gitleaks install is version.txt + linux-amd64.sha256 (GitHub release tarball).
+# A Dependabot docker entry on .github/dependencies/gitleaks 400'd because the
+# sentinel Dockerfile is not what CI pulls. Do not re-add docker until install
+# uses that image.
 
 version: 2
 
@@ -66,11 +70,6 @@ updates:
 
   - package-ecosystem: npm
     directory: /.github/dependencies/jscpd
-    patterns: ["*"]
-    multi-ecosystem-group: all-dependencies
-
-  - package-ecosystem: docker
-    directory: /.github/dependencies/gitleaks
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
 

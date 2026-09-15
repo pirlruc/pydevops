@@ -39,11 +39,15 @@ runs:
         mkdir -p "$HOME/.local/bin"
         SYFT_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/syft-version.txt")
         GRYPE_VER=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/grype-version.txt")
+        SYFT_SHA=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/syft-linux-amd64.sha256")
+        GRYPE_SHA=$(tr -d ' \t\n\r' < "$DEVOPS/.github/dependencies/grype-linux-amd64.sha256")
         tmp=$(mktemp -d)
         trap 'rm -rf "$tmp"' EXIT
         curl -sSL "https://github.com/anchore/syft/releases/download/v${SYFT_VER}/syft_${SYFT_VER}_linux_amd64.tar.gz" -o "$tmp/syft.tgz"
+        echo "${SYFT_SHA}  $tmp/syft.tgz" | sha256sum -c -
         sudo tar -xzf "$tmp/syft.tgz" -C /usr/local/bin syft
         curl -sSL "https://github.com/anchore/grype/releases/download/v${GRYPE_VER}/grype_${GRYPE_VER}_linux_amd64.tar.gz" -o "$tmp/grype.tgz"
+        echo "${GRYPE_SHA}  $tmp/grype.tgz" | sha256sum -c -
         sudo tar -xzf "$tmp/grype.tgz" -C /usr/local/bin grype
     - id: uv_version
       name: Read pinned installer version file

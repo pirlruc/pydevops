@@ -49,7 +49,11 @@ run_hadolint() {
 }
 
 run_zizmor() {
-  zizmor --min-severity=low .github/workflows
+  if [ -f .github/config/zizmor.yml ]; then
+    zizmor --min-severity=low -c .github/config/zizmor.yml .github/workflows
+  else
+    zizmor --min-severity=low .github/workflows
+  fi
 }
 
 run_yamllint() {

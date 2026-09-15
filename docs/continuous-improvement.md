@@ -38,7 +38,8 @@ Do **not** trust any baked-in file tree. From the checkout:
 2. List what actually exists under the surfaces below (workflow names, scripts, dependency pins).
 3. List open GitHub issues (especially titles containing epic/task codes) and every epic/task
    `id` already in `docs/issues.yml`.
-4. Note submodule pins and `uses:` SHAs (including any `PLACEHOLDER_*`) as they appear.
+4. Note submodule pins and `uses:` SHAs as they appear in the tree. Do not
+   assume versions from memory or from a previous run.
 
 ### 2. Idempotency gate
 
@@ -53,6 +54,13 @@ Re-filing completed or open work is a failure of this run.
 
 Judge every finding against least friction: a consumer can pin a SHA and call
 `python-quality.yml` correctly in ~10 minutes.
+
+**Evidence rule (non-negotiable):** before claiming a nested reusable, companion repo,
+or downstream workflow "declares", "requires", or "fails with" a specific permission,
+input, or behaviour, **read the referenced file in this checkout** (or fetch the pinned
+`uses:` SHA via `gh`/raw URL). Do **not** infer companion contents from naming or
+comments. Findings that guess at another workflow's `permissions:` or SARIF steps are
+invalid and must not be filed.
 
 **Also look for defects in what the tree actually ships:**
 
