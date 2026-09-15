@@ -12,9 +12,9 @@ on:
 permissions: {}
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.1
     with:
-      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @2.1.0 above).
+      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @2.1.1 above).
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false

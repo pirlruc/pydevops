@@ -7,13 +7,13 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (tag **2.1.0** landed; handoff refresh on `feature-handoff-2.1.0`) |
+| Branch | `feature-digest-2.1.1` → tag **2.1.1** |
 | `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
 | `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
-| commondevops caller pin | **5.0.0** `bcddb5db4ba5d291aa7f434d447e43175f14136c` (single SHA) |
+| commondevops caller pin | **5.1.2** `b3c462bed0de4f6475e6be7875c4ababd831acc6` (single SHA) |
 | ci-python image | **Not used** |
-| Latest annotated tag | **`2.1.0`** (`f50a77da…`, #157) |
-| Package version | **2.1.0** (`pyproject.toml` / `__version__`, unprefixed git tags) |
+| Latest annotated tag | **`2.1.1`** |
+| Package version | **2.1.1** (`pyproject.toml` / `__version__`, unprefixed git tags) |
 
 ## Delivery status
 
@@ -83,7 +83,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
-- Keep a **single** commondevops SHA (`bcddb5db…` / tag 5.0.0).
+- Keep a **single** commondevops SHA (`b3c462be…` / tag 5.1.2).
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
@@ -109,7 +109,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
   real pin is `version.txt` + checksum; docker 400'd.
 - `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout
   plus `persist-credentials: false` cannot fetch `github.event.before`).
-- Git tags are unprefixed SemVer (`2.1.0`). Publish/release gates reject `v2.1.0`.
+- Git tags are unprefixed SemVer (`2.1.1`). Publish/release gates reject `v2.1.1`.
 - Do not set `uv` `exclude-newer = "7 days"` until pinned wheels (ruff 0.16.7)
   are older than seven days; use `# nosemgrep` on `[tool.uv]` instead.
 - `.semgrepignore` excludes submodule trees so `common-secrets-sast` `--config auto`
@@ -117,7 +117,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. `issues-sync.py --update` ran 2026-09-15 for yaml already `done`.
+1. After tag **2.1.1**, dispatch `publish-pypi.yml` with `tag=2.1.1` (skip 2.1.0).
 2. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
 3. PyPI publish stays `workflow_dispatch`.
 
@@ -126,6 +126,6 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 Central evaluation remains **`python -m scripts.quality_gates`**. High floors load from
 `docs/guardrails/python/profile.thresholds.yml` or vendored `scripts/python.profile.thresholds.yml`.
 
-Wave 5: commondevops **5.0.0** (`bcddb5db…`). `ci-scripts` and `python-quality.yml` stay in-repo.
+Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality.yml` stay in-repo.
 
 *Last updated: 2026-09-15*

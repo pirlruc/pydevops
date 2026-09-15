@@ -26,7 +26,7 @@ drift).
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.1
     with:
       strictness_level: High
       docstring_format: Google
@@ -36,7 +36,7 @@ jobs:
       caller_pat: ${{ secrets.caller_pat }}
 ```
 
-Cutting a release: land `main`, create an annotated tag (`git tag -a 2.1.0 -m "Release 2.1.0"`),
+Cutting a release: land `main`, create an annotated tag (`git tag -a 2.1.1 -m "Release 2.1.1"`),
 and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `2.0.0`.
 PyPI publish stays `workflow_dispatch`. This repo does not publish container images, so
 Docker Hub / GitHub Packages docs are not applicable.
