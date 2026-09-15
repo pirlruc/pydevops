@@ -86,6 +86,9 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - Keep a **single** commondevops SHA (`bcddb5db…` / tag 5.0.0).
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
+- Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
+  unset. `GITHUB_TOKEN` cannot ListCommits; blocking `true` fails DevOps CI on
+  `main` once paths-filter selects the Scorecard job (docs/` .github/` changes).
 - Private `docs/guardrails` is not initialized in default checkout; High floors
   load from vendored `scripts/python.profile.thresholds.yml` (fail closed on
   missing keys). Missing checkout without a vendored copy warns loudly and uses
@@ -114,9 +117,9 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. `issues-sync.py` write to close GitHub PDO-PIN-001 / PDO-WF-001 / PDO-GATE-001 (yaml already `done`).
-2. Dependabot [#152](https://github.com/pirlruc/pydevops/pull/152) is closed as superseded.
-   PyPI publish stays `workflow_dispatch`.
+1. `issues-sync.py --update` ran 2026-09-15 for yaml already `done`.
+2. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
+3. PyPI publish stays `workflow_dispatch`.
 
 ## Major themes (quality gates)
 

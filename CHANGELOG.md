@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- OpenSSF Scorecard is advisory on this private repo (no `SCORECARD_TOKEN`).
+  Blocking `true` plus an empty `repo_token` failed `DevOps CI` on `main`
+  after paths-filter started selecting the Scorecard job.
+
 ## [2.1.0] - 2026-09-15
 
 ### Added

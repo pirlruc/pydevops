@@ -198,6 +198,10 @@ upload, **Python EOL watch** (issues) + gate.
 **`GITHUB_TOKEN` scopes:** Per job (`contents`, `actions`, `issues`, `security-events`, `id-token`).
 
 Callers map **`SCORECARD_TOKEN`** to the reusable secret id **`repo_token`**.
+This private repo has no `SCORECARD_TOKEN`; Scorecard stays **advisory**
+(`blocking` / `publish_results` follow `repository.private == false`) until a
+classic PAT with `repo` scope is added. Do not set `blocking: true` without it
+— `GITHUB_TOKEN` cannot `ListCommits` on a private repo.
 
 ______________________________________________________________________
 
