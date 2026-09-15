@@ -35,8 +35,10 @@ jobs:
       id-token: write
     uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
     with:
-      blocking: true
-      publish_results: true
+      # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
+      # ListCommits. Match commondevops: advisory + no OSSF publish while private.
+      blocking: ${{ github.event.repository.private == false }}
+      publish_results: ${{ github.event.repository.private == false }}
     secrets:
       repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
