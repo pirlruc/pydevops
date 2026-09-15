@@ -126,6 +126,7 @@ Task ids: `<EPIC-ID>-T1`, …
 | `scripts/` | Quality gates, CI runners, license gate (legacy path) |
 | `.github/dependencies/` | Pinned CLIs and Actions pin manifest |
 | `docs/` | Handoff, workflows reference, this prompt, authored `issues.yml` |
+| Docker Hub / GitHub Packages | Not a surface — this repo is PyPI-only |
 | `.github/dependabot.yml` | Multi-ecosystem dependency updates |
 
 Ecosystem (URL only): [commondevops](https://github.com/pirlruc/commondevops),

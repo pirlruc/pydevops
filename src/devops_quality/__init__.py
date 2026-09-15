@@ -5,4 +5,4 @@ Application repositories consume quality logic from the checked-out ``scripts/``
 in CI rather than from this package directly.
 """
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'

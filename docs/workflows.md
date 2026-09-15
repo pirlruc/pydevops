@@ -147,7 +147,7 @@ permissions: {}
 
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.1
     with: { ... }
     secrets:
       caller_pat: ${{ secrets.caller_pat }}
@@ -190,8 +190,8 @@ ______________________________________________________________________
 
 **Purpose:** Weekly **Thursday 06:17 UTC** (`17 6 * * 4`, after commondevops Mon /
 containerdevops Tue / cppdevops Wed) plus **`workflow_dispatch`**: **workflow
-lint** and **OpenSSF Scorecard** via commondevops **5.0.0**
-(`bcddb5db4ba5d291aa7f434d447e43175f14136c`), **Mutmut** (`mutmut run` → `export-cicd-stats` →
+lint** and **OpenSSF Scorecard** via commondevops **5.1.2**
+(`b3c462bed0de4f6475e6be7875c4ababd831acc6`), **Mutmut** (`mutmut run` → `export-cicd-stats` →
 **`scripts/mutmut_score_gate.py`** with **`MUTMUT_MIN_SCORE=85`**) + artifact
 upload, **Python EOL watch** (issues) + gate.
 

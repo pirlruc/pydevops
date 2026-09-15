@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-09-15
+
+### Changed
+
+- Nested [commondevops](https://github.com/pirlruc/commondevops) pin is **5.1.2**
+  (`b3c462bed0de4f6475e6be7875c4ababd831acc6`).
+- Package version **2.1.1**. `check-ci-docker.sh` default is ci-lint **5.1.1**
+  Alpine `sha256:35a82a43…`.
+
 ### Fixed
 
 - OpenSSF Scorecard is advisory on this private repo (no `SCORECARD_TOKEN`).
