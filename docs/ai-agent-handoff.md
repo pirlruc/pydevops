@@ -7,12 +7,12 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-version-2.1.0` → tag **2.1.0** |
+| Branch | `main` (tag **2.1.0** landed; handoff refresh on `feature-handoff-2.1.0`) |
 | `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
 | `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
 | commondevops caller pin | **5.0.0** `bcddb5db4ba5d291aa7f434d447e43175f14136c` (single SHA) |
 | ci-python image | **Not used** |
-| Latest annotated tag | **`2.0.0`** until 2.1.0 lands (`f858aa29…`, #154) |
+| Latest annotated tag | **`2.1.0`** (`f50a77da…`, #157) |
 | Package version | **2.1.0** (`pyproject.toml` / `__version__`, unprefixed git tags) |
 
 ## Delivery status
@@ -115,7 +115,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 ## Suggested next work
 
 1. `issues-sync.py` write to close GitHub PDO-PIN-001 / PDO-WF-001 / PDO-GATE-001 (yaml already `done`).
-2. Close Dependabot [#152](https://github.com/pirlruc/pydevops/pull/152) as superseded after this handoff lands.
+2. Dependabot [#152](https://github.com/pirlruc/pydevops/pull/152) is closed as superseded.
+   PyPI publish stays `workflow_dispatch`.
 
 ## Major themes (quality gates)
 
