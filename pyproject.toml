@@ -33,7 +33,7 @@ scripts = [
 
 [project]
 name = "devops-quality-tooling"
-version = "0.1.0"
+version = "2.1.0"
 dependencies = []
 requires-python = ">=3.13"
 authors = [{name = "pirlruc"}]
@@ -117,5 +117,5 @@ select = ["E4", "E7", "E9", "F"]
 [tool.ruff.format]
 quote-style = "single"
 
-[tool.uv]
+[tool.uv]  # nosemgrep: package_managers.uv.uv-missing-dependency-cooldown.uv-missing-dependency-cooldown
 default-groups = ["dev", "scripts"]

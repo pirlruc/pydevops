@@ -8,18 +8,7 @@
 #
 # Being stricter than the org default is always allowed and needs no entry here.
 
-deviations:
-  - id: REL-CHG-001
-    key: changelog_required
-    org_default: true
-    repo_value: false
-    why: >-
-      Release-notes-only ops repo; GitHub Releases carry the notes. Guardrails
-      GR-CHG-001 is open to clarify changelog_required for this case.
-    epic: PDO-PIN-001
-    owner: pirlruc
-    approved_by: Engineering Lead
-    review: 2026-12-31
+deviations: []
 
 # Parameterized guardrail — the org default is a number and the repo uses a different one.
 # Lowering a gate requires `epic` and `approved_by`.

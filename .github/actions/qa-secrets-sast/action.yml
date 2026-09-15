@@ -24,7 +24,12 @@ runs:
         set -euo pipefail
         sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends jq
         GITLEAKS_VERSION="$(tr -d ' \n\r' < "${GITHUB_ACTION_PATH}/../../dependencies/gitleaks/version.txt")"
-        curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | sudo tar -xz -C /usr/local/bin gitleaks
+        GITLEAKS_SHA="$(tr -d ' \t\n\r' < "${GITHUB_ACTION_PATH}/../../dependencies/gitleaks/linux-amd64.sha256")"
+        tmp=$(mktemp -d)
+        trap 'rm -rf "$tmp"' EXIT
+        curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o "$tmp/gitleaks.tgz"
+        echo "${GITLEAKS_SHA}  $tmp/gitleaks.tgz" | sha256sum -c -
+        sudo tar -xzf "$tmp/gitleaks.tgz" -C /usr/local/bin gitleaks
     - name: Write secret scan report files
       # PY-SEC-003 — secret scanning in CI.
       shell: bash

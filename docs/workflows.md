@@ -45,7 +45,7 @@ artifacts. Composites under `.github/actions/` stay the unit of reuse
 | **quality-report**       | Merge artifacts, **license** gate, full **`scripts.quality_gates`**, consolidate, bundle + PR comment artifact | `if: always()` on the job; final step fails the job if license or gates failed (after uploads)                                                                                                                                                                                                          |
 | **pr-quality-comment**   | Post PR summary                                                                                                | Downloads comment artifact                                                                                                                                                                                                                                                                              |
 | **quality-dast**         | Optional ZAP + Locust                                                                                          | After tests when `enable_dast`; **`zaproxy/action-baseline`** runs the [OWASP ZAP](https://www.zaproxy.org/) **baseline** scan (passive checks against `dast_target_url` with the repo’s `.zap/rules.tsv` if present). Locust load smoke reads **`.github/dependencies/dast-python/requirements.txt`**. |
-| **release-github**       | Tag-only GitHub Release                                                                                        | **`environment: production`**; needs supply + test + report + dast; runs only on `refs/tags/v*.*.*` (SemVer) when **`gates_passed`** is true and DAST succeeded or was skipped                                                                                                                          |
+| **release-github**       | Tag-only GitHub Release                                                                                        | **`environment: production`**; needs supply + test + report + dast; runs only on unprefixed `refs/tags/*.*.*` (SemVer, no `v`) when **`gates_passed`** is true and DAST succeeded or was skipped                                                                                                        |
 
 The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** per composite call
 (`static`, `security`, or `test`).
@@ -60,8 +60,8 @@ pipeline.
 - `workflow_dispatch` — manual runs (self-test / debugging).
 
 To produce **GitHub Releases** from **`release-github`**, the **calling** workflow must run on
-SemVer tag pushes (for example `on.push.tags: ['v*.*.*']`); the reusable job’s release step is gated
-on `refs/tags/v*.*.*` and successful gates.
+unprefixed SemVer tag pushes (for example `on.push.tags: ['[0-9]+.[0-9]+.[0-9]+']`); the reusable
+job’s release step is gated on `refs/tags/X.Y.Z` (no `v` prefix) and successful gates.
 
 **`workflow_call` outputs**
 
@@ -135,8 +135,8 @@ separate Grype CLI `--fail-on` step in the same job, or it would override those 
 
 **Caller configuration**
 
-Use `secrets: inherit` only if you intentionally pass organization/caller secrets into the reusable
-workflow. The pipeline does not require custom secrets for the default same-repository PR flow.
+Use an explicit `secrets:` map (`caller_pat` is optional). `secrets: inherit` would pass
+every caller secret into the reusable workflow.
 
 ##### Caller permissions
 
@@ -147,9 +147,10 @@ permissions: {}
 
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@vX.Y.Z
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.0
     with: { ... }
-    secrets: inherit
+    secrets:
+      caller_pat: ${{ secrets.caller_pat }}
 ```
 
 The reusable workflow’s jobs then add only the scopes listed above. If your organization enforces a
@@ -223,8 +224,11 @@ Schedule is **monthly** ([`.github/dependabot.yml`](../.github/dependabot.yml)).
 under [`.github/dependencies/github-actions-pins.json`](../.github/dependencies/github-actions-pins.json). Apply GitHub Actions bumps via
 `github-actions-pins.json` + `python3 scripts/github_actions_pins.py --check`.
 
-Gitleaks is pinned at `.github/dependencies/gitleaks/` (`version.txt` + Dockerfile for Dependabot
-`docker`). `qa-secrets-sast` reads that pin (PY-SEC-003 / SC-DEP-001).
+Gitleaks is pinned at `.github/dependencies/gitleaks/` (`version.txt` +
+`linux-amd64.sha256`; the Dockerfile is a human-readable sentinel). Dependabot
+`docker` for that folder 400'd because install is the GitHub release tarball, not
+the image — the docker ecosystem entry is omitted. `qa-secrets-sast` verifies the
+tarball SHA256 (PY-SEC-003 / SC-DEP-001).
 
 Semgrep (PY-SEC-002) and Locust stay in isolated `requirements.txt` files because Semgrep’s
 `tomli~=2.0.1` conflicts with pip-audit’s `tomli>=2.2.1`.

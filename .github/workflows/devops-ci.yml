@@ -20,7 +20,7 @@ concurrency:
 permissions: {}
 jobs:
   pins:
-    if: github.actor != 'dependabot[bot]'
+    # Token-free (CI-024): Dependabot PRs still get a submodule pin signal.
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -44,6 +44,19 @@ jobs:
       yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
+      scripts_ref: bcddb5db4ba5d291aa7f434d447e43175f14136c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
+  secrets-sast:
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      security-events: write
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@bcddb5db4ba5d291aa7f434d447e43175f14136c
+    with:
+      blocking: true
+      working_directory: .
       scripts_ref: bcddb5db4ba5d291aa7f434d447e43175f14136c
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
@@ -302,12 +315,28 @@ jobs:
         run: |
           set -euo pipefail
           set -o pipefail
-          uv run pip-audit --format=json > _ci_summary/pip_audit.json 2> _ci_summary/pip_audit.stderr || true
+          set +e
+          uv run pip-audit --format=json > _ci_summary/pip_audit.json 2> _ci_summary/pip_audit.stderr
+          PIP_AUDIT_RC=$?
+          set -e
+          export PIP_AUDIT_RC
           uv run python << 'PY' | tee _ci_summary/pip_audit.txt
           import json
+          import os
           import re
           import sys
           from pathlib import Path
+          try:
+              audit_rc = int(os.environ.get("PIP_AUDIT_RC", "1"))
+          except ValueError:
+              print("FAIL: pip-audit exit code was not an integer.", file=sys.stderr)
+              sys.exit(1)
+          if audit_rc not in (0, 1):
+              print(
+                  f"FAIL: pip-audit exited {audit_rc} (not 0=clean or 1=findings).",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
           payload = []
           p = Path("_ci_summary/pip_audit.json")
           try:
