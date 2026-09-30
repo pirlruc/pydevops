@@ -25,7 +25,7 @@ quality-tools = [
     "pylint==4.0.8",
     "pytest-cov==7.1.0",
     "pytest==9.1.1",
-    "ruff==0.16.7",
+    "ruff==0.16.8",
 ]
 scripts = [
     "radon>=6.0,<7",
