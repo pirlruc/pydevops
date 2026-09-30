@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- `docs/guardrails` tag **1.8.0** (`aa5184ce…`); `.github/scaffold` tag **1.7.0**
+  (`e76bb3fd…`). Synced issue templates, Cursor rules, `AGENTS.md`, `SKILLS.md`,
+  and `CLAUDE.md`. Decision links cite methodologies **1.6.0** (not a submodule
+  in this repo).
+
 ## [2.1.1] - 2026-09-15
 
 ### Changed

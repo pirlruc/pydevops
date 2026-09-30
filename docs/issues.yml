@@ -1,7 +1,7 @@
 # Authored backlog for pydevops.
 #
 # Schema: https://github.com/pirlruc/github-scaffold/blob/main/docs/issues-schema.md
-# Methodology: https://github.com/pirlruc/methodologies/tree/1.5.0/github-issue-adr
+# Methodology: https://github.com/pirlruc/methodologies/tree/1.6.0/github-issue-adr
 
 milestones:
   - name: Guardrails alignment

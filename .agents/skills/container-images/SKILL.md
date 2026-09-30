@@ -1,12 +1,17 @@
 ---
-description: Production container image authoring (product artifact, not tooling env)
-globs: "**/Dockerfile*,**/.dockerignore,**/container-structure-test*.y*ml,**/*compose*.y*ml"
-alwaysApply: false
+name: container-images
+description: 'Production container image authoring (product artifact, not tooling env). Use when editing files that match: **/Dockerfile*,**/.dockerignore,**/container-structure-test*.y*ml,**/*compose*.y*ml.'
+paths: '**/Dockerfile*,**/.dockerignore,**/container-structure-test*.y*ml,**/*compose*.y*ml'
+disable-model-invocation: true
 ---
+
+<!-- Generated from .cursor/rules by scripts/render-agent-instructions.py. Edit the .mdc files, then re-run that script. -->
+
+Cursor applies the matching `.cursor/rules` file by glob and does not auto-invoke this skill. Other agents should follow this skill when the description matches.
 
 # Container images (product artifacts)
 
-[build-test-environments.mdc](build-test-environments.mdc) governs containers used as a
+[build-test-environments.mdc](../../../.cursor/rules/build-test-environments.mdc) governs containers used as a
 **tooling environment** (devcontainers, CI runners, one-off tool images). **This rule**
 governs containers shipped as a **product artifact** (published images, Compose stacks
 that deploy them). Do not treat the two as interchangeable Docker advice.
