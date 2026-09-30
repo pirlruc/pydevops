@@ -90,6 +90,10 @@ updates:
     multi-ecosystem-group: all-dependencies
     registries:
       - github-private
+    # Exact pins in package.json. `increase` keeps 5.3.2 rather than rewriting
+    # it to ^5.3.2. The 5.2.0 -> 5.3.2 updater still 400'd after the submodule
+    # clone succeeded; the pin below removes that pending update.
+    versioning-strategy: increase
     cooldown:
       default-days: 7
 
