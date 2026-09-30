@@ -479,3 +479,44 @@ milestones:
               - git -C docs/guardrails describe --tags --exact-match
             guardrail_refs:
               - SC-DEP-004
+
+      - id: PDO-STRICT-001
+        status: open
+        title: Make mypy blocking and strict in python-quality
+        overview:
+          problem: >-
+            python-quality runs mypy and ignores the exit code. It is not
+            --strict. strictness_level only changes coverage and docstring
+            floors. A Python library cannot cite a blocking strict typecheck.
+          goal: >-
+            python-quality fails the job when mypy fails, and a strict mode
+            passes --strict (or an equivalent pyright strict flag).
+        decision: >-
+          In the context of the existing python-quality reusable, facing an
+          advisory mypy run, we decided to make that step blocking and add a
+          strict mode, to achieve a citeable gate, accepting that the
+          guardrails pack does not require strict mode until this lands.
+        out_of_scope:
+          - A second Python quality workflow
+        architecture:
+          target: python-quality.yml
+          modules:
+            - .github/workflows/python-quality.yml
+            - scripts/ci_run_quality.sh
+        acceptance_criteria:
+          - mypy failure fails the quality job
+          - A caller can select strict typechecking
+        guardrail_refs:
+          - PY-RUN-002
+        tasks:
+          - id: PDO-STRICT-001-T1
+            status: open
+            title: Stop ignoring mypy and add a strict mode
+            instructions:
+              files:
+                - scripts/ci_run_quality.sh
+                - .github/workflows/python-quality.yml
+            verification:
+              - rg -n 'mypy' scripts/ci_run_quality.sh .github/workflows/python-quality.yml
+            guardrail_refs:
+              - PY-RUN-002
