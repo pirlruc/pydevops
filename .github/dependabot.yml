@@ -1,7 +1,7 @@
 # Org-default Dependabot (SC-DEP-001/002/003).
 # Manifests under .github/dependencies/; Actions SHA pins in workflows.
 # Cadence: docs/guardrails/supply-chain/profile.thresholds.yml
-# Process: https://github.com/pirlruc/methodologies/blob/main/github-issue-adr/docs/process/dependency-updates.md
+# Process: https://github.com/pirlruc/methodologies/blob/1.6.0/github-issue-adr/docs/process/dependency-updates.md
 #
 # Personal-account private git (Dependabot secrets — not Actions):
 #   DEPENDABOT_GITHUB_TOKEN — Contents: Read on private submodules

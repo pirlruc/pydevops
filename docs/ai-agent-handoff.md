@@ -3,13 +3,14 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-09-15)
+## Branch / pins (2026-09-30)
 
 | Item | Value |
 |------|-------|
 | Branch | `feature-digest-2.1.1` → tag **2.1.1** |
-| `docs/guardrails` | tag **1.6.0** → `77cf16eb…` |
-| `.github/scaffold` | tag **1.5.0** → `9e04ed53…` |
+| `docs/guardrails` | tag **1.8.0** → `aa5184ce…` |
+| `.github/scaffold` | tag **1.7.0** → `e76bb3fd…` |
+| methodologies (links only; not a submodule) | tag **1.6.0** |
 | commondevops caller pin | **5.1.2** `b3c462bed0de4f6475e6be7875c4ababd831acc6` (single SHA) |
 | ci-python image | **Not used** |
 | Latest annotated tag | **`2.1.1`** |
@@ -128,4 +129,10 @@ Central evaluation remains **`python -m scripts.quality_gates`**. High floors lo
 
 Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality.yml` stay in-repo.
 
-*Last updated: 2026-09-15*
+## Recent history
+
+- 2026-09-30: guardrails **1.8.0** / scaffold **1.7.0**. Methodology decision
+  links cite **1.6.0** (no methodologies submodule). Synced scaffold templates.
+  Token-free `pins` still runs on Dependabot pull requests (CI-024).
+
+*Last updated: 2026-09-30*
