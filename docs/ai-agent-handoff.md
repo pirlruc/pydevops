@@ -7,7 +7,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-digest-2.1.1` → tag **2.1.1** |
+| Branch | `main` (latest tag **2.1.1**) |
 | `docs/guardrails` | tag **1.8.0** → `aa5184ce…` |
 | `.github/scaffold` | tag **1.7.0** → `e76bb3fd…` |
 | methodologies (links only; not a submodule) | tag **1.6.0** |
