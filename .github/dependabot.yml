@@ -33,9 +33,11 @@ multi-ecosystem-groups:
       include: scope
 
 updates:
-  # github-private only on ecosystems that clone private git (reusable workflows
-  # and submodules). Attaching it to pip fails graph updates with
-  # unexpected_external_code (reject-external-code).
+# github-private on ecosystems whose updater clones this repo. Dependabot
+# uses --recurse-submodules; without the registry the private gitlinks 404
+# and a real update is rejected as unauthorized changes (SC-DEP-005).
+# Attaching it to pip fails graph updates with unexpected_external_code
+# (reject-external-code). Leave pip off.
   - package-ecosystem: github-actions
     directory: /
     patterns: ["*"]
@@ -49,6 +51,8 @@ updates:
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
     cooldown:
       default-days: 7
 
@@ -84,6 +88,8 @@ updates:
     directory: /.github/dependencies/jscpd
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
     cooldown:
       default-days: 7
 
@@ -91,6 +97,8 @@ updates:
     directory: /
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
+    registries:
+      - github-private
     cooldown:
       default-days: 7
 

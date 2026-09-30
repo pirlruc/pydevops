@@ -104,8 +104,10 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - Maintainer CI is **push + pull_request + workflow_dispatch** on `devops-ci.yml`
   and Thursday cron on `devops-scheduled.yml` (PDO-WF-001).
 - Self-CI Radon CC cap is **5**, stricter than High floor 8; no deviation.
-- **Dependabot private git:** `registries: github-private` is wired on
-  **github-actions only**. Do not attach it to pip.
+- **Dependabot private git:** `registries: github-private` is on
+  `github-actions`, `uv`, `npm`, and `pre-commit`. The updater clones with
+  `--recurse-submodules`; without the registry a real update fails as
+  unauthorized changes (jscpd job on 2026-09-30). Do not attach it to pip.
 - Do not re-add Dependabot `docker` for `.github/dependencies/gitleaks` — the
   real pin is `version.txt` + checksum; docker 400'd.
 - `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout
@@ -134,5 +136,6 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-09-30: guardrails **1.8.0** / scaffold **1.7.0**. Methodology decision
   links cite **1.6.0** (no methodologies submodule). Synced scaffold templates.
   Token-free `pins` still runs on Dependabot pull requests (CI-024).
+  `github-private` now covers `uv`, `npm`, and `pre-commit` too.
 
 *Last updated: 2026-09-30*

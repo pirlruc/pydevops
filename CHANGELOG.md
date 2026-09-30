@@ -11,6 +11,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   (`e76bb3fd…`). Synced issue templates, Cursor rules, `AGENTS.md`, `SKILLS.md`,
   and `CLAUDE.md`. Decision links cite methodologies **1.6.0** (not a submodule
   in this repo).
+- Dependabot `registries: github-private` is attached to `uv`, `npm`, and
+  `pre-commit` as well as `github-actions` (SC-DEP-005). `pip` stays off that
+  registry.
 
 ## [2.1.1] - 2026-09-15
 
