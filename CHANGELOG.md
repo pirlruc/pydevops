@@ -14,6 +14,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - Dependabot `registries: github-private` is attached to `uv`, `npm`, and
   `pre-commit` as well as `github-actions` (SC-DEP-005). `pip` stays off that
   registry.
+- jscpd pin is **5.3.2** (exact). The Dependabot updater could not open the
+  5.2.0 → 5.3.2 pull request. `--format python` and the JSON percentage path
+  still match `scripts/ci_run_quality.sh`.
 
 ## [2.1.1] - 2026-09-15
 

@@ -56,7 +56,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | mypy | 2.3.1 |
 | locust | 2.46.5 |
 | zizmor | `==1.30.1` |
-| jscpd | 5.2.0 (`--format python`) |
+| jscpd | 5.3.2 (`--format python`, JSON `statistics.total.percentage`) |
 | semgrep | **1.177.0** (Dependabot #152 folded into the 2.0.0 handoff) |
 | mutmut | `==3.8.0` |
 | harden-runner | 2.21.1 |
@@ -106,8 +106,10 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - Self-CI Radon CC cap is **5**, stricter than High floor 8; no deviation.
 - **Dependabot private git:** `registries: github-private` is on
   `github-actions`, `uv`, `npm`, and `pre-commit`. The updater clones with
-  `--recurse-submodules`; without the registry a real update fails as
-  unauthorized changes (jscpd job on 2026-09-30). Do not attach it to pip.
+  `--recurse-submodules`. Do not attach it to pip. After the registry was
+  added, the jscpd job cloned the private submodules and still got HTTP 400
+  `invalid or unauthorized changes` opening the 5.2.0 → 5.3.2 pull request.
+  That pin is now 5.3.2 in-tree. 5.3.3 stays inside the 7-day cooldown.
 - Do not re-add Dependabot `docker` for `.github/dependencies/gitleaks` — the
   real pin is `version.txt` + checksum; docker 400'd.
 - `dorny/paths-filter` on `devops-ci.yml` needs `fetch-depth: 0` (shallow checkout

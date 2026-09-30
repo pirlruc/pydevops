@@ -150,10 +150,10 @@ if [[ "${want_static}" == "1" ]]; then
       JSCPD_VER=$(
         python3 -c "import json, re, sys; v=json.load(open(sys.argv[1]))['dependencies']['jscpd']; m=re.search(r'(\d+\.\d+\.\d+)', str(v)); print(m.group(1) if m else str(v).strip())" "${JSCPD_PREFIX}/package.json" 2>/dev/null || true
       )
-      [[ -z "${JSCPD_VER}" ]] && JSCPD_VER="5.2.0"
+      [[ -z "${JSCPD_VER}" ]] && JSCPD_VER="5.3.2"
       npx --yes "jscpd@${JSCPD_VER}" . --reporters json --output "$OUT" --format python --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     else
-      npx --yes jscpd@5.2.0 . --reporters json --output "$OUT" --format python --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
+      npx --yes jscpd@5.3.2 . --reporters json --output "$OUT" --format python --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
     fi
     if [[ -f "$OUT/jscpd-report.json" ]]; then
       :
