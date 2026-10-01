@@ -24,6 +24,10 @@ inputs:
     description: When true, mypy runs with --strict
     required: false
     default: "false"
+  installable-app:
+    description: When false, skip mypy and coverage
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
@@ -36,6 +40,8 @@ runs:
         APP_DIR: ${{ inputs.workspace }}/${{ inputs.working-directory }}
         STRICTNESS_LEVEL: ${{ inputs.strictness-level }}
         MYPY_STRICT: ${{ inputs.mypy-strict == true && '1' || '0' }}
+        PACKAGE_MODE: ${{ inputs.installable-app == false && 'scripts' || 'app' }}
+        CONSUMER_THRESHOLDS: ${{ env.CONSUMER_THRESHOLDS }}
       run: |-
         set -euo pipefail
         export PATH="$HOME/.local/bin:$PATH"

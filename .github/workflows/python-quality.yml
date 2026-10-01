@@ -3,6 +3,7 @@ name: Python Quality (Reusable)
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   QUALITY_OUTPUT_DIR: ${{ github.workspace }}/quality-output
+  CONSUMER_THRESHOLDS: ${{ github.workspace }}/${{ inputs.working_directory }}/docs/guardrails/python/profile.thresholds.yml
 on:
   workflow_call:
     inputs:
@@ -56,6 +57,13 @@ on:
         description: Pass --strict to mypy (PDO-STRICT-001). Exit code is always blocking.
         type: boolean
         default: false
+      installable_app:
+        description: >-
+          False for a pyproject.toml that is not an installable app (PDO-PYPROJECT-001).
+          Skips package install, mypy, and coverage floors. Protobuf generation and
+          extra services such as Postgres stay on the caller.
+        type: boolean
+        default: true
       app_install_command:
         description: Install app deps before tests (empty to skip)
         type: string
@@ -269,6 +277,7 @@ jobs:
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.app_install_command || '' }}
+          installable-app: ${{ inputs.installable_app }}
       - name: Run static analysis quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -278,6 +287,7 @@ jobs:
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
+          installable-app: ${{ inputs.installable_app }}
           mypy-strict: ${{ inputs.typecheck_strict }}
       - name: Upload static analysis artifacts
         if: always()
@@ -339,6 +349,7 @@ jobs:
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.app_install_command || '' }}
+          installable-app: ${{ inputs.installable_app }}
       - name: Run security quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -348,6 +359,7 @@ jobs:
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
+          installable-app: ${{ inputs.installable_app }}
       - name: Upload supply-chain artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -408,6 +420,7 @@ jobs:
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.app_install_command || '' }}
+          installable-app: ${{ inputs.installable_app }}
       - name: Run test quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -417,6 +430,7 @@ jobs:
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
+          installable-app: ${{ inputs.installable_app }}
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

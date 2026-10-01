@@ -527,3 +527,48 @@ def test_mypy_high_fails_zero_slocs_for_density(tmp_out: Path) -> None:
     passed, rows = qg.evaluate(tmp_out, 'High')
     assert not passed
     assert any('SLOC is 0' in str(r.get('actual', '')) for r in rows)
+
+
+def test_consumer_thresholds_overlay_coverage(tmp_out: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A present profile supplies the coverage floor (PDO-THRESH-002)."""
+    profile = tmp_path / 'profile.thresholds.yml'
+    profile.write_text(
+        '\n'.join([
+            'statement_coverage: 99',
+            'branch_coverage: 99',
+            'doc_coverage: 95',
+            'max_cyclomatic_complexity: 8',
+            'avg_cyclomatic_complexity: 5',
+            'min_maintainability_index: 40',
+            'avg_maintainability_index: 60',
+        ]),
+        encoding='utf-8',
+    )
+    monkeypatch.setenv('CONSUMER_THRESHOLDS', str(profile))
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    _passed, rows = qg.evaluate(tmp_out, 'Low')
+    line = next(r for r in rows if r.get('gate') == 'Coverage (line)')
+    assert '99.0%' in str(line['required'])
+
+
+def test_consumer_thresholds_missing_key_fails(tmp_path: Path) -> None:
+    """A present file with a missing floor fails closed."""
+    from scripts.org_thresholds import ThresholdError
+    from scripts.quality_gates.config import apply_consumer_floors, resolve_thresholds
+
+    profile = tmp_path / 'profile.thresholds.yml'
+    profile.write_text('statement_coverage: 90\n', encoding='utf-8')
+    base = resolve_thresholds('High', '')
+    with pytest.raises(ThresholdError):
+        apply_consumer_floors(base, profile)
+
+
+def test_scripts_mode_skips_coverage(tmp_out: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A non-installable pyproject does not fail on missing coverage."""
+    monkeypatch.setenv('PACKAGE_MODE', 'scripts')
+    (tmp_out / 'coverage.json').unlink()
+    (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
+    passed, rows = qg.evaluate(tmp_out, 'High')
+    assert any(r.get('gate') == 'Package mode' for r in rows)
+    assert not any(r.get('gate') == 'Coverage (line)' for r in rows)
+    assert passed or not any('line coverage' in str(r) for r in rows)

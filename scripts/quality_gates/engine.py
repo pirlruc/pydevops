@@ -7,6 +7,7 @@ import os
 import sys
 from pathlib import Path
 
+from scripts.org_thresholds import ThresholdError
 from scripts.quality_gates.config import normalized_strictness_level
 from scripts.quality_gates.evaluation import evaluate, evaluate_semgrep_shield_only
 
@@ -24,10 +25,14 @@ def main() -> int:
     raw = os.environ.get('STRICTNESS_LEVEL', 'Medium')
     strictness = normalized_strictness_level(raw)
 
-    if args.semgrep_shield_only:
-        passed, rows = evaluate_semgrep_shield_only(root, strictness)
-    else:
-        passed, rows = evaluate(root, strictness)
+    try:
+        if args.semgrep_shield_only:
+            passed, rows = evaluate_semgrep_shield_only(root, strictness)
+        else:
+            passed, rows = evaluate(root, strictness)
+    except ThresholdError as exc:
+        print(f'CI-022: {exc}', file=sys.stderr)
+        return 1
 
     print('=== Quality gate summary ===')
     for r in rows:

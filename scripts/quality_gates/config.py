@@ -8,11 +8,12 @@ High-tier coverage / complexity / MI / docstring floors are loaded from
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import os
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 
-from scripts.org_thresholds import load_python_floors
+from scripts.org_thresholds import load_python_floors, require_python_floors
 
 
 @dataclass(frozen=True)
@@ -112,6 +113,41 @@ def _build_strictness() -> dict[str, Thresholds]:
 
 
 STRICTNESS: dict[str, Thresholds] = _build_strictness()
+
+
+def apply_consumer_floors(base: Thresholds, path: Path) -> Thresholds:
+    """Replace coverage, complexity, MI, and docstring floors from a consumer file.
+
+    A present file with a missing required key fails closed (CI-022).
+    """
+    floors = require_python_floors(path)
+    return replace(
+        base,
+        coverage_line_min=floors['statement_coverage'],
+        coverage_branch_min=floors['branch_coverage'],
+        cyclomatic_max=floors['max_cyclomatic_complexity'],
+        cyclomatic_avg_max=floors['avg_cyclomatic_complexity'],
+        maintainability_index_min=floors['min_maintainability_index'],
+        maintainability_index_avg_min=floors['avg_maintainability_index'],
+        docstring_coverage_min=floors['doc_coverage'],
+    )
+
+
+def resolve_thresholds(strictness: str, consumer_file: str | None = None) -> Thresholds:
+    """Strictness tier, overlaid by the consumer profile when that file exists."""
+    base = STRICTNESS[normalized_strictness_level(strictness)]
+    raw = consumer_file if consumer_file is not None else os.environ.get('CONSUMER_THRESHOLDS', '')
+    if not raw:
+        return base
+    path = Path(raw)
+    if not path.is_file():
+        return base
+    return apply_consumer_floors(base, path)
+
+
+def scripts_only_package() -> bool:
+    """True when the caller has no installable app (PDO-PYPROJECT-001)."""
+    return os.environ.get('PACKAGE_MODE', 'app') == 'scripts'
 
 
 def normalized_strictness_level(raw: str) -> str:

@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-10-01
+
+### Added
+
+- `installable_app: false` skips package install, mypy, and coverage floors
+  for a `pyproject.toml` that is not an application (PDO-PYPROJECT-001).
+- When `docs/guardrails/python/profile.thresholds.yml` is in the app checkout,
+  coverage, complexity, maintainability, and docstring floors come from it.
+  A missing key fails closed. If the file is absent, the strictness enum
+  remains the fallback (PDO-THRESH-002).
+- Lockfile urllib3 2.8.0 and virtualenv 21.12.1 (Dependabot).
+
 ## [3.0.0] - 2026-10-01
 
 ### Breaking

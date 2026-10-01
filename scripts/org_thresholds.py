@@ -101,6 +101,12 @@ def ci_threshold_candidates(repo_root: Path) -> list[Path]:
     ]
 
 
+def require_python_floors(path: Path) -> dict[str, float]:
+    """Floors from one YAML file. Missing required keys fail closed (CI-022)."""
+    parsed = parse_threshold_yaml(path.read_text(encoding='utf-8'))
+    return _require_keys(parsed, PYTHON_FLOOR_KEYS, path)
+
+
 def load_python_floors(repo_root: Path, *, allow_missing_checkout: bool = True) -> dict[str, float]:
     """Org floors from guardrails / vendored YAML.
 

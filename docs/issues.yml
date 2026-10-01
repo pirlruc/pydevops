@@ -789,3 +789,53 @@ milestones:
               - grep -q common-doc-verify docs/workflows.md
             guardrail_refs:
               - CI-018
+
+      - id: PDO-THRESH-002
+        status: done
+        title: Read profile.thresholds.yml from python-quality
+        overview:
+          problem: Numeric gates ignored the consumer profile.
+          goal: A present profile supplies coverage and complexity floors.
+        decision: >-
+          In the context of product repos with their own floors, facing a
+          strictness enum, we decided to overlay the consumer profile when it
+          is in the checkout, to achieve CI-022, accepting strictness as the
+          fallback when the file is absent.
+        guardrail_refs:
+          - CI-022
+          - PY-TEST-002
+        tasks:
+          - id: PDO-THRESH-002-T1
+            status: done
+            title: Overlay consumer python floors
+            instructions:
+              files:
+                - scripts/quality_gates/config.py
+            verification:
+              - grep -q CONSUMER_THRESHOLDS .github/workflows/python-quality.yml
+            guardrail_refs:
+              - CI-022
+
+      - id: PDO-PYPROJECT-001
+        status: done
+        title: Accept a pyproject.toml that is not an installable app
+        overview:
+          problem: python-quality assumed uv sync of an installable package.
+          goal: installable_app false skips install, mypy, and coverage floors.
+        decision: >-
+          In the context of helper-script repos, facing an installable-app
+          assumption, we decided on an explicit input, to achieve a green
+          caller, accepting that full apps keep the current gates.
+        guardrail_refs:
+          - CI-018
+        tasks:
+          - id: PDO-PYPROJECT-001-T1
+            status: done
+            title: Add the non-app mode
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+            verification:
+              - grep -q installable_app .github/workflows/python-quality.yml
+            guardrail_refs:
+              - CI-018

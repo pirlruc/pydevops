@@ -6,7 +6,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from scripts.quality_gates.config import STRICTNESS, Thresholds, normalized_strictness_level
+from scripts.quality_gates.config import (
+    Thresholds,
+    normalized_strictness_level,
+    resolve_thresholds,
+    scripts_only_package,
+)
 from scripts.quality_gates.gates_artifacts import enforce_high_artifact_presence
 from scripts.quality_gates.gates_complexity import (
     gate_cyclomatic,
@@ -59,29 +64,40 @@ def collect_gate_results(  # pylint: disable=too-many-locals,too-many-statements
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Run all gate checks and return (rows, failure labels)."""
     sn = normalized_strictness_level(strictness)
-    t: Thresholds = STRICTNESS[sn]
+    t: Thresholds = resolve_thresholds(strictness)
     rows: list[dict[str, Any]] = []
     failures: list[str] = []
+    scripts_only = scripts_only_package()
 
-    art_rows, art_fail = enforce_high_artifact_presence(root, sn)
-    rows.extend(art_rows)
-    failures.extend(art_fail)
+    if not scripts_only:
+        art_rows, art_fail = enforce_high_artifact_presence(root, sn)
+        rows.extend(art_rows)
+        failures.extend(art_fail)
 
-    line_cov, branch_cov = load_coverage_totals(root)
-    r, f = gate_coverage_line(line_cov, t, sn)
-    rows.extend(r)
-    failures.extend(f)
-    r, f = gate_coverage_branch(branch_cov, t, sn)
-    rows.extend(r)
-    failures.extend(f)
+    if scripts_only:
+        rows.append({
+            'gate': 'Package mode',
+            'actual': 'scripts',
+            'required': 'skip install, mypy, and coverage floors',
+            'ok': True,
+        })
+    else:
+        line_cov, branch_cov = load_coverage_totals(root)
+        r, f = gate_coverage_line(line_cov, t, sn)
+        rows.extend(r)
+        failures.extend(f)
+        r, f = gate_coverage_branch(branch_cov, t, sn)
+        rows.extend(r)
+        failures.extend(f)
 
     r, f = gate_pylint(pylint_score(root), t, sn)
     rows.extend(r)
     failures.extend(f)
 
-    r, f = gate_pytest_exit(pytest_exit_code(root), sn)
-    rows.extend(r)
-    failures.extend(f)
+    if not scripts_only:
+        r, f = gate_pytest_exit(pytest_exit_code(root), sn)
+        rows.extend(r)
+        failures.extend(f)
 
     r, f = gate_cyclomatic(radon_cc_max(root), t, sn)
     rows.extend(r)
@@ -108,9 +124,10 @@ def collect_gate_results(  # pylint: disable=too-many-locals,too-many-statements
     rows.extend(r)
     failures.extend(f)
 
-    r, f = gate_mypy(root, sloc, t, sn)
-    rows.extend(r)
-    failures.extend(f)
+    if not scripts_only:
+        r, f = gate_mypy(root, sloc, t, sn)
+        rows.extend(r)
+        failures.extend(f)
 
     r, f = gate_docstring_coverage(interrogate_coverage(root), t, sn)
     rows.extend(r)
