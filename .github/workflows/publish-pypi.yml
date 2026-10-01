@@ -15,7 +15,7 @@ env:
 permissions: {}
 jobs:
   publish:
-    if: github.actor != 'dependabot[bot]'
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     name: Build and publish release artifacts
     runs-on: ubuntu-latest
     environment: pypi

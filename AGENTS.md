@@ -25,23 +25,32 @@ the same text. Other agents apply a skill when its description matches.
 
 # Agent workflow guardrails
 
+## No approval needed
+
+- Web search and fetch
+- Reading the repo, running tools already on PATH, project-local environments, builds, and tests — see [build-test-environments.mdc](.cursor/rules/build-test-environments.mdc)
+- Commits on a feature branch, using [Conventional Commits](.cursor/rules/conventional-commits.mdc), including submodule pointer bumps
+- Annotated tag creation for a release
+- Creating, switching, and deleting `feature-*` branches, locally and on the remote
+- Non-force pushes to feature branches
+- Pull request creation, closing, and merging. Merge only when the required checks are green
+- `gh release create` for a release that already has its annotated tag
+- Issue create, update, and close through `issues-sync.py`: run `--dry-run` first and show its output, then sync. `gh issue edit`, `gh issue comment`, and `gh issue close` with an explanatory comment are also allowed
+
 ## Never without explicit approval
 
 | Action | Examples |
 |--------|----------|
 | Installing on the system OS | `apt-get install`, `brew install`, `pip install` / `pip install --user` into system Python, `npm i -g`, SDK/toolchain installers, `vcpkg install` outside the manifest |
-| Writing to git history | `git commit`, `git tag`, `git merge`, `git rebase`, `git cherry-pick`, submodule pointer bumps |
-| Creating or moving refs | `git branch`, `git checkout -b`, `git switch -c`, branch deletion (local or remote) |
-| Publishing | `git push`, `gh pr create`, `gh pr merge`, `gh release create`, creating issues via `issues-sync.py` |
+| Pushing to the default branch | `git push origin main` |
+| Rewriting pushed history | `git push --force`, `git reset --hard` of pushed commits, amending a pushed commit |
+| Moving or deleting releases | Deleting or moving an existing tag or GitHub Release |
+| Deleting other branches | Deleting a branch whose name does not start with `feature-`, locally or on the remote |
+| Repository administration | Visibility, secrets, branch protection, rulesets, and other repo settings |
+| Lowering a guardrail gate | See [guardrails-compliance.mdc](.cursor/rules/guardrails-compliance.mdc). Engineering Lead approval still applies |
 
-### No approval needed
-
-Using tools already on PATH; project-local environments (`uv sync`, `pip install` into `.venv`, `npm ci` in the
-repo); configuring/building into repo build directories; running tests; pulling/running Docker images.
-See [build-test-environments.mdc](.cursor/rules/build-test-environments.mdc).
-
-When a task requires any gated action above, stop and ask, stating exactly what will be run.
-Approval is per action, not per session: a prior "yes" to a commit is not a "yes" to push.
+When a task requires a gated action above, stop and ask, stating exactly what will be run.
+Approval is per action, not per session.
 
 ## Branch naming
 
@@ -63,7 +72,7 @@ Create branches as `feature-<purpose>`, lowercase, hyphen-separated:
 
 # Conventional Commits
 
-When the user asks for a commit (or you commit with explicit approval), use [Conventional Commits](https://www.conventionalcommits.org/):
+When creating a commit, use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 <type>(<scope>): <subject>
@@ -113,7 +122,7 @@ test(flow): cover typed graph cycle detection
 
 ## Scope guardrails
 
-Approval for commits, pushes, and OS installs lives in
+Which git actions need approval lives in
 [agent-workflow.mdc](.cursor/rules/agent-workflow.mdc). Do not amend, force-push, or skip
 hooks unless the user requests it. Match the consuming repo's existing commit
 message style when in doubt.
@@ -270,7 +279,7 @@ Scripts that need the consuming repo root derive it from `git rev-parse --show-t
 
 ## Related
 
-- Approval gates for submodule pointer bumps: [agent-workflow.mdc](.cursor/rules/agent-workflow.mdc)
+- Submodule pointer bumps: [agent-workflow.mdc](.cursor/rules/agent-workflow.mdc)
 - Guardrails submodule pinning: [guardrails-compliance.mdc](.cursor/rules/guardrails-compliance.mdc)
 
 ---
@@ -324,7 +333,7 @@ issue text by hand.
 
 Field definitions: [guardrails deviation rule](https://github.com/pirlruc/guardrails#deviation-rule).
 Process and approval flow:
-[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.6.0/github-issue-adr/docs/process/guardrail-compliance.md).
+[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.8.0/github-issue-adr/docs/process/guardrail-compliance.md).
 
 ## Related
 
@@ -335,7 +344,7 @@ Process and approval flow:
 
 # github-issue-adr methodology
 
-[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.6.0/github-issue-adr) is the methodology for every
+[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.8.0/github-issue-adr) is the methodology for every
 repo carrying this scaffold. Do not introduce a second decision-record format alongside it.
 
 ## Core model
@@ -367,8 +376,8 @@ issue that the manifest should own — the two drift immediately.
 python3 .github/scaffold/scripts/issues-sync.py --repo pirlruc/<repo> --yaml docs/issues.yml --dry-run
 ```
 
-Creating issues is a publishing action and needs approval — see [agent-workflow.mdc](.cursor/rules/agent-workflow.mdc). Run
-`--dry-run` first and show the result.
+Sync issues with `issues-sync.py`. Run `--dry-run` first and show the result, then sync.
+See [agent-workflow.mdc](.cursor/rules/agent-workflow.mdc). `status: rejected` requires `resolution`.
 
 Schema: [`docs/issues-schema.md`](https://github.com/pirlruc/github-scaffold/blob/main/docs/issues-schema.md).
 
@@ -425,7 +434,7 @@ Keep these sections, in order, across every repo that carries the file:
 
 - Propose new work as entries appended to `docs/issues.yml` in a pull request.
 - Never `gh issue create` (or equivalent) from the automation — that bypasses the authored-manifest
-  contract and the publishing approval gate.
+  contract. A human or a later agent syncs with `issues-sync.py` after the manifest PR merges.
 - The `ai-reviewer` label is applied by `issues-sync.py` after a human merges and syncs; provenance in
   the prompt uses epic id prefixes (`GS-`, `GR-`, `MTH-`, …) and the PR description.
 - Schema: [`docs/issues-schema.md`](https://github.com/pirlruc/github-scaffold/blob/main/docs/issues-schema.md).

@@ -90,5 +90,18 @@ runs:
           line="${line%"${line##*[![:space:]]}"}"
           [[ -z "${line}" ]] && continue
           [[ "${line}" =~ ^# ]] && continue
+          # pytest-cov has no console script (PDO-TOOL-001).
+          if [[ "${line}" == pytest-cov==* ]]; then
+            continue
+          fi
+          if [[ "${line}" == pytest==* ]]; then
+            cov="$(grep -E '^pytest-cov==' "$REQ" || true)"
+            if [[ -n "${cov}" ]]; then
+              uv tool install "${line}" --with "${cov}"
+            else
+              uv tool install "${line}"
+            fi
+            continue
+          fi
           uv tool install "${line}"
         done < "$REQ"

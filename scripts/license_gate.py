@@ -143,8 +143,8 @@ def main() -> int:
         return e.code
 
     if not sbom.is_file():
-        print(f'No SPDX SBOM at {sbom}; skipping license gate.')
-        return 0
+        print(f'No SPDX SBOM at {sbom}; license gate fails closed.', file=sys.stderr)
+        return 1
 
     try:
         data = json.loads(sbom.read_text(encoding='utf-8', errors='replace'))

@@ -5,12 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-01
+
+### Breaking
+
+- Cross-repo callers must pass `devops_repository` and `devops_ref` equal to the
+  `uses:` pin. `github.workflow_ref` is the caller, so an empty pair no longer
+  checks out this repo (CI-034).
+- The caller job must grant the permission union. See
+  `examples/call-python-quality.yml`.
+- DevOps `uv sync` and `uv run` use Python 3.13. `python_version` applies to
+  the application only.
+- mypy's exit code fails the quality script. `typecheck_strict: true` adds
+  `--strict`.
+- A missing SPDX SBOM fails the license gate. Semgrep findings block at Medium
+  as well as High.
+
 ### Changed
 
-- `docs/guardrails` tag **1.8.0** (`aa5184ce…`); `.github/scaffold` tag **1.7.0**
-  (`e76bb3fd…`). Synced issue templates, Cursor rules, `AGENTS.md`, `SKILLS.md`,
-  and `CLAUDE.md`. Decision links cite methodologies **1.6.0** (not a submodule
-  in this repo).
+- `docs/guardrails` tag **1.9.0** (`16a2c95c…`); `.github/scaffold` tag **1.8.0**
+  (`ac9059fd…`). Decision links cite methodologies **1.8.0**.
+- commondevops pin is **5.2.6** (`8aad4ba4…`).
+- uv pin is **0.12.0**. `exclude-newer` is 7 days. pytest-cov is installed with
+  `uv tool install pytest --with pytest-cov`.
+- Quality artifacts keep 7 days. `mutmut-results` keeps 1 day.
+- ruff 0.16.8, locust 2.46.6, toml-sort 0.25.0, typos 1.50.2.
+- CI-032 and REL-PUB-004 recorded. The repository returns to private.
 - Dependabot `registries: github-private` is attached to `uv`, `npm`, and
   `pre-commit` as well as `github-actions` (SC-DEP-005). `pip` stays off that
   registry.

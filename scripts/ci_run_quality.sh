@@ -106,13 +106,17 @@ if [[ "${want_static}" == "1" ]]; then
     pylint-json2html -f "$OUT/pylint.json" -o "$OUT/pylint_report.html" 2>/dev/null || true
   fi
 
-  # Mypy (always produce reports for quality gates; exit code ignored)
+  # Mypy is blocking (PDO-STRICT-001). MYPY_STRICT=1 adds --strict.
+  mypy_rc=0
   if command -v mypy >/dev/null 2>&1; then
     mkdir -p "$OUT/mypy-reports/lineprecision" "$OUT/mypy-reports/anyexprs"
-    mypy . --exclude '\.devops' --show-error-codes \
-      --lineprecision-report "$OUT/mypy-reports/lineprecision" \
-      --any-exprs-report "$OUT/mypy-reports/anyexprs" \
-      >"$OUT/mypy.txt" 2>&1 || true
+    mypy_args=(. --exclude '\.devops' --show-error-codes
+      --lineprecision-report "$OUT/mypy-reports/lineprecision"
+      --any-exprs-report "$OUT/mypy-reports/anyexprs")
+    if [[ "${MYPY_STRICT:-0}" == "1" ]]; then
+      mypy_args+=(--strict)
+    fi
+    mypy "${mypy_args[@]}" >"$OUT/mypy.txt" 2>&1 || mypy_rc=$?
   else
     echo "mypy not installed" >"$OUT/mypy.txt"
     if [[ "${_high}" == "1" ]]; then
@@ -252,6 +256,11 @@ if [[ "${want_test}" == "1" ]]; then
       echo "pytest not installed" >"$OUT/pytest.txt"
     fi
   fi
+fi
+
+if [[ "${mypy_rc:-0}" != 0 ]]; then
+  echo "mypy failed with status ${mypy_rc}" >&2
+  exit "${mypy_rc}"
 fi
 
 echo "ci_run_quality.sh finished (phases=${QUALITY_PHASES_RAW}); outputs in $OUT"

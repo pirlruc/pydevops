@@ -32,11 +32,58 @@ jobs:
       - name: SC-DEP-004 submodule pin assert
         run: sh scripts/check-submodule-pins.sh
 
-  docs:
-    if: github.actor != 'dependabot[bot]'
+  threshold-drift:
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    env:
+      GUARDRAILS_TOKEN: ${{ secrets.GUARDRAILS_READ_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require GUARDRAILS_READ_TOKEN
+        run: |
+          set -euo pipefail
+          if [ -z "${GUARDRAILS_TOKEN}" ]; then
+            echo "::error::GUARDRAILS_READ_TOKEN is required outside Dependabot pull requests." >&2
+            exit 1
+          fi
+          echo "sha=$(git rev-parse HEAD:docs/guardrails)" >> "$GITHUB_OUTPUT"
+        id: token
+      - name: Checkout pinned guardrails
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pirlruc/guardrails
+          ref: ${{ steps.token.outputs.sha }}
+          token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
+          persist-credentials: false
+          path: docs/guardrails
+          sparse-checkout: |
+            ci/profile.thresholds.yml
+            python/profile.thresholds.yml
+            supply-chain/profile.thresholds.yml
+          sparse-checkout-cone-mode: false
+      - name: Drift-check vendored thresholds
+        run: bash scripts/check-threshold-drift.sh
+
+  scaffold:
+    permissions:
+      contents: read
+    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    with:
+      blocking: true
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
+  docs:
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    permissions:
+      contents: read
+    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
       blocking: true
       shell_scripts: scripts/*.sh
@@ -44,20 +91,20 @@ jobs:
       yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
-      scripts_ref: b3c462bed0de4f6475e6be7875c4ababd831acc6
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
   secrets-sast:
-    if: github.actor != 'dependabot[bot]'
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
       blocking: true
       working_directory: .
-      scripts_ref: b3c462bed0de4f6475e6be7875c4ababd831acc6
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -117,9 +164,9 @@ jobs:
       == 'true'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
-      scripts_ref: b3c462bed0de4f6475e6be7875c4ababd831acc6
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -131,7 +178,7 @@ jobs:
     needs: changes
     # CI-024: Scorecard needs id-token / security-events
     if: >
-      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
       (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
       == 'true') &&
       github.event.repository.fork == false &&
@@ -140,7 +187,7 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Without it, ossf/scorecard-action fails with

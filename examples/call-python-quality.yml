@@ -8,13 +8,20 @@ on:
   pull_request:
   push:
     branches: [main, master]
-# Narrow the default token; the reusable workflow requests its own job-level permissions.
+# CI-031: the caller job must grant the union of nested job permissions.
+# CI-034: devops_repository and devops_ref must match the uses pin.
 permissions: {}
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.1
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+      security-events: write
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.0.0
     with:
-      # Optional: omit devops_repository / devops_ref — checkout uses github.workflow_ref (same as @2.1.1 above).
+      devops_repository: pirlruc/pydevops
+      devops_ref: 3.0.0
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false
@@ -23,3 +30,4 @@ jobs:
       python_version: '3.13'
     secrets:
       caller_pat: ${{ secrets.caller_pat }}
+      checkout_token: ${{ secrets.PYDEVOPS_READ_TOKEN }}

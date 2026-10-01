@@ -3,18 +3,18 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-09-30)
+## Branch / pins (2026-10-01)
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (latest tag **2.1.1**) |
-| `docs/guardrails` | tag **1.8.0** → `aa5184ce…` |
-| `.github/scaffold` | tag **1.7.0** → `e76bb3fd…` |
-| methodologies (links only; not a submodule) | tag **1.6.0** |
-| commondevops caller pin | **5.1.2** `b3c462bed0de4f6475e6be7875c4ababd831acc6` (single SHA) |
-| ci-python image | **Not used** |
-| Latest annotated tag | **`2.1.1`** |
-| Package version | **2.1.1** (`pyproject.toml` / `__version__`, unprefixed git tags) |
+| Branch | `main` (release **3.0.0**) |
+| `docs/guardrails` | tag **1.9.0** → `16a2c95c…` |
+| `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
+| methodologies (links only; not a submodule) | tag **1.8.0** |
+| commondevops caller pin | **5.2.6** `8aad4ba4a597a87565d6d3d1a92a8bdd7568921c` |
+| ci-python image | **Not used**. No Docker Hub or GitHub Packages page. |
+| Latest annotated tag | **`3.0.0`** after this release |
+| Package version | **3.0.0** (`pyproject.toml`, same as the git tag) |
 
 ## Delivery status
 
@@ -140,4 +140,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   Token-free `pins` still runs on Dependabot pull requests (CI-024).
   `github-private` now covers `uv`, `npm`, and `pre-commit` too.
 
-*Last updated: 2026-09-30*
+*Last updated: 2026-10-01 (3.0.0 scripts_ref contract, guardrails 1.9.0, uv 0.12.0)*

@@ -32,16 +32,15 @@ on:
         default: '[]'
       devops_repository:
         description: >
-          Optional override for DevOps owner/name. Empty: parse from github.workflow_ref
-          (same repo/ref as the reusable workflow definition) or fall back to github.repository.
+          DevOps owner/name. Required for callers other than pirlruc/pydevops.
+          Must match the uses pin (CI-034). github.workflow_ref is the caller, not this file.
         type: string
         default: ''
         required: false
       devops_ref:
         description: >
-          Optional override for DevOps git ref. Empty: parse from github.workflow_ref
-          or use
-          github.ref_name. Prefer an immutable tag or SHA in production.
+          DevOps git ref. Required for callers other than pirlruc/pydevops.
+          Must match the uses pin (CI-034). Prefer a commit SHA.
         type: string
         default: ''
         required: false
@@ -50,9 +49,13 @@ on:
         type: string
         default: .
       python_version:
-        description: Python version for uv
+        description: Python version for the application. DevOps itself stays on 3.13.
         type: string
         default: '3.13'
+      typecheck_strict:
+        description: Pass --strict to mypy (PDO-STRICT-001). Exit code is always blocking.
+        type: boolean
+        default: false
       app_install_command:
         description: Install app deps before tests (empty to skip)
         type: string
@@ -69,6 +72,10 @@ on:
     secrets:
       caller_pat:
         description: Optional PAT from caller for PR comments / forks
+        required: false
+      checkout_token:
+        description: >
+          Optional PAT with contents:read on pirlruc/pydevops for private cross-repo checkout.
         required: false
     outputs:
       gates_passed:
@@ -97,17 +104,12 @@ on:
         default: '[]'
       devops_repository:
         description: >
-          Optional DevOps owner/name. Empty: same resolution as workflow_call — parse
-          from
-          github.workflow_ref (repo that defines this reusable workflow) or fall back
-          to
-          github.repository.
+          DevOps owner/name. Required unless this repo is pirlruc/pydevops (CI-034).
         type: string
         default: ''
       devops_ref:
         description: >
-          Optional DevOps git ref. Empty: parse from github.workflow_ref or use github.ref_name
-          (same as workflow_call). Prefer an immutable tag or SHA in production.
+          DevOps git ref matching the uses pin. Required unless this repo is pirlruc/pydevops.
         type: string
         default: ''
       working_directory:
@@ -136,32 +138,21 @@ jobs:
         env:
           INPUT_DEVOPS_REPO: ${{ inputs.devops_repository }}
           INPUT_DEVOPS_REF: ${{ inputs.devops_ref }}
-          GITHUB_WORKFLOW_REF: ${{ github.workflow_ref }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           repo="${INPUT_DEVOPS_REPO:-}"
           ref="${INPUT_DEVOPS_REF:-}"
-          wf="${GITHUB_WORKFLOW_REF:-}"
-          auto_repo=""
-          auto_ref=""
-          if [[ -n "${wf}" && "${wf}" == *"@"* ]]; then
-            base="${wf%@*}"
-            auto_ref="${wf##*@}"
-            auto_repo="${base%/.github/*}"
-          fi
-          if [ -z "${repo}" ]; then
-            repo="${auto_repo:-}"
-          fi
-          if [ -z "${ref}" ]; then
-            ref="${auto_ref:-}"
-          fi
-          if [ -z "${repo}" ]; then
-            repo="${GITHUB_REPOSITORY}"
-          fi
-          if [ -z "${ref}" ]; then
-            ref="${GITHUB_REF_NAME}"
+          # github.workflow_ref is the caller workflow, not this reusable file (CI-034).
+          if [ -z "${repo}" ] || [ -z "${ref}" ]; then
+            if [ "${GITHUB_REPOSITORY}" = "pirlruc/pydevops" ]; then
+              repo="${repo:-${GITHUB_REPOSITORY}}"
+              ref="${ref:-${GITHUB_SHA}}"
+            else
+              echo "CI-034: pass devops_repository and devops_ref matching the uses pin" >&2
+              exit 1
+            fi
           fi
           echo "repository=${repo}" >> "${GITHUB_OUTPUT}"
           echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
@@ -188,6 +179,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Create quality output directory
@@ -205,14 +197,14 @@ jobs:
           working-directory: .
       - name: Sync DevOps dependencies (quality gates)
         env:
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
       - name: Enforce Semgrep SARIF policy (High only; Low/Medium no-op)
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |
           uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
@@ -221,6 +213,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: quality-shield-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-static:
@@ -245,6 +238,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
@@ -284,10 +278,12 @@ jobs:
           devops-checkout-path: ${{ github.workspace }}/.devops
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
+          mypy-strict: ${{ inputs.typecheck_strict }}
       - name: Upload static analysis artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: quality-static-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-supply-chain:
@@ -312,6 +308,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
@@ -355,6 +352,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: quality-security-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-test:
@@ -379,6 +377,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Restore uv cache
@@ -422,6 +421,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: quality-test-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-report:
@@ -453,6 +453,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Install uv and Python for reporting scripts
@@ -462,7 +463,7 @@ jobs:
           working-directory: .
       - name: Sync DevOps dependencies
         env:
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: uv sync --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}"
       - name: Create merged quality output directory
@@ -471,24 +472,28 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: quality-shield-artifacts
           path: _merge/shield
       - name: Download static artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: quality-static-artifacts
           path: _merge/static
       - name: Download supply-chain artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: quality-security-artifacts
           path: _merge/security
       - name: Download test artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: quality-test-artifacts
           path: _merge/test
       - name: Merge downloaded artifacts
@@ -506,7 +511,7 @@ jobs:
           SPDX_SBOM_PATH: ${{ env.QUALITY_OUTPUT_DIR }}/sbom-spdx.json
           LICENSE_DENY_LIST: ${{ inputs.license_deny_list }}
           LICENSE_ALLOW_LIST: ${{ inputs.license_allow_list }}
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |
           uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
@@ -517,7 +522,7 @@ jobs:
         env:
           STRICTNESS_LEVEL: ${{ inputs.strictness_level }}
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |
           uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
@@ -526,7 +531,7 @@ jobs:
         if: always()
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |
           uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
@@ -535,6 +540,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
       - name: Build release distributions (tag runs)
@@ -545,23 +551,30 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && github.ref_type == 'tag'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: release-dist
           path: ${{ format('{0}/dist', inputs.working_directory) }}
       - name: Render pull request comment body
         if: always() && github.event_name == 'pull_request'
         env:
           QUALITY_OUTPUT_DIR: ${{ env.QUALITY_OUTPUT_DIR }}
-          UV_PYTHON: ${{ inputs.python_version }}
+          UV_PYTHON: "3.13"
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
           COMMENT_FILE: ${{ github.workspace }}/quality-pr-comment.md
         run: |
-          uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
-            python scripts/pr_comment_markdown.py > "${COMMENT_FILE}"
+          if ! uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
+            python scripts/pr_comment_markdown.py > "${COMMENT_FILE}"; then
+            rm -f "${COMMENT_FILE}"
+          fi
+          if [ ! -s "${COMMENT_FILE}" ] || ! grep -q '[^[:space:]]' "${COMMENT_FILE}"; then
+            rm -f "${COMMENT_FILE}"
+          fi
       - name: Upload comment body for later job
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name
           == github.repository
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: pr-quality-comment
           path: quality-pr-comment.md
           if-no-files-found: ignore
@@ -596,7 +609,7 @@ jobs:
     needs: quality-report
     # CI-024: may use caller_pat Actions secret
     if: >
-      always() && github.actor != 'dependabot[bot]' &&
+      always() && github.event.pull_request.user.login != 'dependabot[bot]' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -614,6 +627,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         continue-on-error: true
         with:
+          retention-days: 7
           name: pr-quality-comment
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
@@ -625,6 +639,7 @@ jobs:
             const path = 'quality-pr-comment.md';
             if (!fs.existsSync(path)) return;
             const body = fs.readFileSync(path, 'utf8');
+            if (!body.trim()) return;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -653,6 +668,7 @@ jobs:
         with:
           repository: ${{ needs.devops-coordinates.outputs.repository }}
           ref: ${{ needs.devops-coordinates.outputs.ref }}
+          token: ${{ secrets.checkout_token || github.token }}
           path: .devops
           persist-credentials: false
       - name: Install pinned package tooling
@@ -699,6 +715,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
+          retention-days: 7
           name: dast-reports
           path: |
             report_html.html
@@ -744,11 +761,13 @@ jobs:
       - name: Download quality bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: quality-bundle
           path: bundle
       - name: Download release distributions
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          retention-days: 7
           name: release-dist
           path: dist
       - name: Create release with dist and quality bundle

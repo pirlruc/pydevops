@@ -102,8 +102,8 @@ def gate_vulnerabilities(
 
 
 def gate_semgrep(root: Path, strictness_norm: str) -> tuple[RowList, list[str]]:
-    """High strictness: Semgrep SARIF error=0, warning<=5 (PY-SEC-002)."""
-    if strictness_norm != 'High':
+    """Medium and High: Semgrep SARIF error=0, warning<=5 (PY-SEC-002)."""
+    if strictness_norm == 'Low':
         return [], []
 
     counts = semgrep_sarif_error_warning_counts(root)
