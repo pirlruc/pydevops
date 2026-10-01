@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-10-02
+
+### Fixed
+
+- Threshold drift requires `GUARDRAILS_READ_TOKEN` and removes the gitlink
+  directory before checkout. The previous skip left the content check off,
+  and checkout into the existing gitlink fails once the token is set.
+  Dependabot still skips the job. Tag only. PyPI publish stays manual.
+
 ## [3.0.1] - 2026-10-01
 
 ### Added

@@ -44,18 +44,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Detect GUARDRAILS_READ_TOKEN
+      - name: Require GUARDRAILS_READ_TOKEN
         id: token
         run: |
           set -euo pipefail
-          echo "sha=$(git rev-parse HEAD:docs/guardrails)" >> "$GITHUB_OUTPUT"
           if [ -z "${GUARDRAILS_TOKEN}" ]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "::error::GUARDRAILS_READ_TOKEN is required. Dependabot skips this job; every other run checks content drift." >&2
+            exit 1
           fi
+          echo "sha=$(git rev-parse HEAD:docs/guardrails)" >> "$GITHUB_OUTPUT"
+      - name: Clear gitlink placeholder
+        run: rm -rf docs/guardrails
       - name: Checkout pinned guardrails
-        if: steps.token.outputs.available == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: pirlruc/guardrails
@@ -69,11 +69,7 @@ jobs:
             supply-chain/profile.thresholds.yml
           sparse-checkout-cone-mode: false
       - name: Drift-check vendored thresholds
-        if: steps.token.outputs.available == 'true'
         run: bash scripts/check-threshold-drift.sh
-      - name: Note skipped content drift
-        if: steps.token.outputs.available != 'true'
-        run: echo "::notice::GUARDRAILS_READ_TOKEN is not set, so content drift was skipped. The pin job still checks the gitlink."
 
   scaffold:
     permissions:
