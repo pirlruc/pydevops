@@ -8,4 +8,4 @@ import devops_quality
 def test_version() -> None:
     """Package exposes a version string."""
     assert isinstance(devops_quality.__version__, str)
-    assert devops_quality.__version__ == '2.1.1'
+    assert devops_quality.__version__ == '3.0.0'

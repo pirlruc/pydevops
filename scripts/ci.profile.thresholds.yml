@@ -5,3 +5,4 @@
 ci_image_max_age_days: 30              # CI-027 — rebuild cadence for prebuilt CI toolchain images
 ci_job_timeout_minutes_max: 60         # CI-003 — soft ceiling for reusable workflow job timeouts
 security_rescan_interval_days: 30      # CI-029 — scheduled re-analysis of time-varying security gates
+ci_token_max_lifetime_days: 90            # CI-038 — maximum lifetime of a PAT that OIDC cannot replace

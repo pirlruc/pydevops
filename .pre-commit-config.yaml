@@ -28,7 +28,7 @@ repos:
     hooks:
       - id: yamlfix
   - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.4
+    rev: v0.25.0
     hooks:
       - id: toml-sort-fix
         args:
@@ -45,7 +45,7 @@ repos:
         args: [--wrap=100, --number]
         additional_dependencies: [mdformat-gfm]
   - repo: https://github.com/crate-ci/typos
-    rev: v1.50.1
+    rev: v1.50.2
     hooks:
       - id: typos
   - repo: https://github.com/jsh9/format-json
@@ -75,7 +75,7 @@ repos:
       - id: gitlint
         stages: [commit-msg]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.7
+    rev: v0.16.8
     hooks:
       - id: ruff-check
         args: [--fix]

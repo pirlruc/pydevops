@@ -481,7 +481,7 @@ milestones:
               - SC-DEP-004
 
       - id: PDO-STRICT-001
-        status: open
+        status: done
         title: Make mypy blocking and strict in python-quality
         overview:
           problem: >-
@@ -510,7 +510,7 @@ milestones:
           - PY-RUN-002
         tasks:
           - id: PDO-STRICT-001-T1
-            status: open
+            status: done
             title: Stop ignoring mypy and add a strict mode
             instructions:
               files:
@@ -520,3 +520,272 @@ milestones:
               - rg -n 'mypy' scripts/ci_run_quality.sh .github/workflows/python-quality.yml
             guardrail_refs:
               - PY-RUN-002
+
+      - id: PDO-PIN-003
+        status: done
+        title: Pin guardrails 1.9.0 and record Free-plan deviations
+        overview:
+          problem: Gitlinks were guardrails 1.8.0 and scaffold 1.7.0.
+          goal: Pin 1.9.0 and 1.8.0 and record CI-032 and REL-PUB-004.
+        decision: >-
+          In the context of the org pin window, facing a private Free-plan host,
+          we decided to bump both submodules and record the Free-plan deviations,
+          to achieve SC-DEP-004, accepting that PyPI publish stays on the pypi
+          environment without tag protection.
+        guardrail_refs:
+          - SC-DEP-004
+          - CI-032
+          - REL-PUB-004
+        tasks:
+          - id: PDO-PIN-003-T1
+            status: done
+            title: Bump the gitlinks and record the deviations
+            instructions:
+              files:
+                - docs/guardrails
+                - docs/guardrail-deviations.yml
+            verification:
+              - sh scripts/check-submodule-pins.sh
+            guardrail_refs:
+              - SC-DEP-004
+
+      - id: PDO-COORD-001
+        status: done
+        title: Resolve the DevOps checkout from explicit inputs
+        overview:
+          problem: devops-coordinates parsed github.workflow_ref, which is the caller.
+          goal: Cross-repo callers must pass devops_repository and devops_ref.
+        decision: >-
+          In the context of a cross-repo quality call, facing a checkout of the
+          caller tree, we decided to fail closed unless the caller is this repo,
+          to achieve CI-034, accepting an extra pair of inputs.
+        guardrail_refs:
+          - CI-034
+        tasks:
+          - id: PDO-COORD-001-T1
+            status: done
+            title: Fail closed when DevOps coordinates are empty
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+            verification:
+              - grep -q CI-034 .github/workflows/python-quality.yml
+            guardrail_refs:
+              - CI-034
+
+      - id: PDO-TOOL-001
+        status: done
+        title: Install pytest-cov without uv tool install
+        overview:
+          problem: uv tool install pytest-cov fails because it has no console script.
+          goal: Install it with pytest --with.
+        decision: >-
+          In the context of the quality toolchain, facing a package with no
+          executable, we decided to attach pytest-cov to the pytest tool, to
+          achieve a green install, accepting a special case in the loop.
+        guardrail_refs:
+          - CI-039
+        tasks:
+          - id: PDO-TOOL-001-T1
+            status: done
+            title: Skip tool install for packages with no console script
+            instructions:
+              files:
+                - .github/actions/qa-install-toolchain/action.yml
+            verification:
+              - grep -q pytest-cov .github/actions/qa-install-toolchain/action.yml
+            guardrail_refs:
+              - CI-039
+
+      - id: PDO-UV-001
+        status: done
+        title: Install a uv that accepts relative dependency cooldowns
+        overview:
+          problem: uv 0.6.9 rejects exclude-newer of 7 days.
+          goal: Pin uv 0.12.0 and set the cooldown.
+        decision: >-
+          In the context of SC-DEP-006, facing an old uv, we decided to pin
+          0.12.0, to achieve a relative cooldown, accepting a lock refresh.
+        guardrail_refs:
+          - SC-DEP-006
+        tasks:
+          - id: PDO-UV-001-T1
+            status: done
+            title: Bump the uv pin and set exclude-newer
+            instructions:
+              files:
+                - .github/dependencies/uv-version.txt
+                - pyproject.toml
+            verification:
+              - grep -q 0.12.0 .github/dependencies/uv-version.txt
+            guardrail_refs:
+              - SC-DEP-006
+
+      - id: PDO-PYVER-001
+        status: done
+        title: Sync DevOps with its own Python, not the caller pin
+        overview:
+          problem: The caller python_version was applied to the DevOps uv sync.
+          goal: DevOps stays on 3.13. python_version is only for the app.
+        decision: >-
+          In the context of a caller on an older Python, facing a DevOps
+          requires-python of 3.13, we decided the DevOps sync uses 3.13, to
+          achieve a gate that installs, accepting two interpreters on the runner.
+        guardrail_refs:
+          - PY-RUN-003
+        tasks:
+          - id: PDO-PYVER-001-T1
+            status: done
+            title: Pin the DevOps interpreter
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+            verification:
+              - grep -q 'UV_PYTHON: \"3.13\"' .github/workflows/python-quality.yml
+            guardrail_refs:
+              - PY-RUN-003
+
+      - id: PDO-COMMENT-001
+        status: done
+        title: Skip an empty python-quality pull request comment
+        overview:
+          problem: An empty comment body fails the job.
+          goal: Skip the comment when the body is blank.
+        decision: >-
+          In the context of a failed render, facing a blank comment, we decided
+          to delete the file and return before createComment, to achieve a job
+          that reports the real failure, accepting no comment on that run.
+        guardrail_refs:
+          - CI-035
+        tasks:
+          - id: PDO-COMMENT-001-T1
+            status: done
+            title: Skip a blank comment body
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+            verification:
+              - grep -q body.trim .github/workflows/python-quality.yml
+            guardrail_refs:
+              - CI-035
+
+      - id: PDO-PERM-001
+        status: done
+        title: Document the caller permission union for python-quality
+        overview:
+          problem: The example granted only permissions empty.
+          goal: The example grants the union the nested jobs need.
+        decision: >-
+          In the context of CI-031, facing a startup_failure, we decided the
+          example grants the union, to achieve a caller that starts, accepting
+          a wider caller token than the empty default.
+        guardrail_refs:
+          - CI-031
+        tasks:
+          - id: PDO-PERM-001-T1
+            status: done
+            title: Grant the permission union in the caller example
+            instructions:
+              files:
+                - examples/call-python-quality.yml
+            verification:
+              - grep -q security-events examples/call-python-quality.yml
+            guardrail_refs:
+              - CI-031
+
+      - id: PDO-CHKOUT-001
+        status: done
+        title: Let callers pass a checkout token into python-quality
+        overview:
+          problem: A private caller cannot check out this private repo with github.token.
+          goal: An optional checkout_token secret.
+        decision: >-
+          In the context of a private reusable, facing github.token, we decided
+          to accept checkout_token, to achieve a private checkout, accepting
+          another secret in the caller.
+        guardrail_refs:
+          - CI-034
+        tasks:
+          - id: PDO-CHKOUT-001-T1
+            status: done
+            title: Pass checkout_token into the DevOps checkout
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+            verification:
+              - grep -q checkout_token .github/workflows/python-quality.yml
+            guardrail_refs:
+              - CI-034
+
+      - id: PDO-QUOTA-001
+        status: done
+        title: Shorten mutmut result artifact retention
+        overview:
+          problem: mutmut-results used the default retention.
+          goal: Keep those artifacts for one day.
+        decision: >-
+          In the context of Actions quota, facing a long-lived cache artifact,
+          we decided retention-days 1, to achieve storage that falls off,
+          accepting that yesterday's mutmut log is gone.
+        guardrail_refs:
+          - CI-004
+        tasks:
+          - id: PDO-QUOTA-001-T1
+            status: done
+            title: Set mutmut retention to one day
+            instructions:
+              files:
+                - .github/workflows/devops-scheduled.yml
+            verification:
+              - grep -q retention-days .github/workflows/devops-scheduled.yml
+            guardrail_refs:
+              - CI-004
+
+      - id: PDO-PIN-018
+        status: done
+        title: Pin guardrails 1.8.0 and scaffold 1.7.0
+        overview:
+          problem: The requested pins were superseded by 1.9.0 and 1.8.0.
+          goal: Close the request as done by the newer pin.
+        decision: >-
+          In the context of a pin request for 1.8.0 and 1.7.0, facing a newer
+          org tag, we decided to land 1.9.0 and 1.8.0, to achieve one bump,
+          accepting that the original issue closes as done.
+        guardrail_refs:
+          - SC-DEP-004
+        tasks:
+          - id: PDO-PIN-018-T1
+            status: done
+            title: Bump the guardrails and scaffold gitlinks
+            instructions:
+              files:
+                - docs/guardrails
+            verification:
+              - sh scripts/check-submodule-pins.sh
+            guardrail_refs:
+              - SC-DEP-004
+
+      - id: PDO-PIN-002
+        status: done
+        title: Re-pin guardrails 1.8.0 and point script-only repos away from python-quality
+        overview:
+          problem: Script-only repos were being pointed at python-quality.
+          goal: The pin is current, and script-only repos use common-doc-verify.
+        decision: >-
+          In the context of a script-only repo, facing a full app quality
+          workflow, we decided common-doc-verify is the job to call, to achieve
+          a gate that does not require an installable app, accepting that
+          python-quality stays for applications.
+        guardrail_refs:
+          - CI-018
+        tasks:
+          - id: PDO-PIN-002-T1
+            status: done
+            title: Document the script-only boundary
+            instructions:
+              files:
+                - docs/workflows.md
+            verification:
+              - grep -q common-doc-verify docs/workflows.md
+            guardrail_refs:
+              - CI-018

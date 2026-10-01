@@ -71,7 +71,8 @@ invalid and must not be filed.
 | Design flaw | Dual license/SBOM paths vs commondevops; baking threshold numbers into scripts |
 
 Identify **improvements, bugs, and design flaws** in workflows, scripts, gates, and docs —
-not only process/docs hygiene.
+not only process/docs hygiene. Prefer local `uv run` and `pytest` before recommending
+Actions-only verification. This repo does not publish a Docker Hub or GitHub Packages image.
 
 ### 4. Optional: alternatives (lightweight)
 

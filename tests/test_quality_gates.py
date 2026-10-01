@@ -107,7 +107,7 @@ def test_high_passes_with_full_artifacts(tmp_out: Path) -> None:
 
 
 def test_low_has_no_semgrep_gate_rows(tmp_out: Path) -> None:
-    """Semgrep SARIF policy applies only to High strictness."""
+    """Semgrep SARIF policy is off at Low and on at Medium and High."""
     passed, rows = qg.evaluate(tmp_out, 'Low')
     assert passed
     assert not any('Semgrep' in str(r.get('gate', '')) for r in rows)

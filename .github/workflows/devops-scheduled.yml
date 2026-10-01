@@ -17,9 +17,9 @@ jobs:
     name: Scheduled — workflow lint (actionlint + zizmor)
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
-      scripts_ref: b3c462bed0de4f6475e6be7875c4ababd831acc6
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -28,12 +28,12 @@ jobs:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
   scheduled-openssf-scorecard:
     name: Scheduled — OpenSSF Scorecard
-    if: (github.event.repository.fork == false) && github.actor != 'dependabot[bot]'
+    if: (github.event.repository.fork == false) && github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@b3c462bed0de4f6475e6be7875c4ababd831acc6
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.
@@ -85,6 +85,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: mutmut-results
+          retention-days: 1
           path: |
             .mutmut-cache
             .mutmut

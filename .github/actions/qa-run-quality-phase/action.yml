@@ -20,6 +20,10 @@ inputs:
       artifact behavior
     required: false
     default: Medium
+  mypy-strict:
+    description: When true, mypy runs with --strict
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -31,6 +35,7 @@ runs:
         DEVOPS_DIR: ${{ inputs.devops-checkout-path }}
         APP_DIR: ${{ inputs.workspace }}/${{ inputs.working-directory }}
         STRICTNESS_LEVEL: ${{ inputs.strictness-level }}
+        MYPY_STRICT: ${{ inputs.mypy-strict == true && '1' || '0' }}
       run: |-
         set -euo pipefail
         export PATH="$HOME/.local/bin:$PATH"

@@ -5,6 +5,7 @@
 dependency_update_interval: monthly              # SC-DEP-003
 dependency_update_open_pr_limit: 5               # SC-DEP-002
 dependency_update_blocked_semver_levels: none    # SC-DEP-003
+dependency_update_cooldown_days: 7               # SC-DEP-006 — version updates; security updates are exempt
 
 # SPDX license policy for SC-LIC-001.
 # Prefer license_allow_list (SPDX expressions). license_deny_list is the legacy substring shape.

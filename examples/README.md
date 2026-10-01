@@ -5,7 +5,7 @@
 | `call-python-quality.yml` | Minimal `workflow_call` usage from an application repository |
 
 Copy the YAML into **your app** repository (for example `.github/workflows/quality.yml`), replace
-the SemVer tag (`2.1.1`) with your DevOps repo coordinates, and ensure
+the SemVer tag (`3.0.0`) with your DevOps repo coordinates, and ensure
 [caller permissions](../docs/workflows.md#caller-permissions) match what the reusable workflow
 needs.
 

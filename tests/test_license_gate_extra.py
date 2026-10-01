@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 
 
-def test_license_gate_skip_missing_sbom(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """No SBOM file exits 0."""
+def test_license_gate_missing_sbom_fails_closed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """No SBOM file exits 1."""
     from scripts import license_gate
 
     monkeypatch.setenv('SPDX_SBOM_PATH', str(tmp_path / 'nope.json'))
     monkeypatch.setenv('LICENSE_DENY_LIST', '[]')
-    assert license_gate.main() == 0
+    assert license_gate.main() == 1
 
 
 def test_license_gate_invalid_json(monkeypatch: pytest.MonkeyPatch) -> None:

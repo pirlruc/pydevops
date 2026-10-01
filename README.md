@@ -19,14 +19,14 @@ See **[`examples/call-python-quality.yml`](./examples/call-python-quality.yml)**
 ## Versioning
 
 Pin callers to SemVer tags, for example `@2.0.0`. The reusable workflow checks out **`.devops`**
-from the **same repo and ref** as that `uses:` pin (via `github.workflow_ref`) when
+from the **same repo and ref** as that `uses:` pin (`devops_repository` and `devops_ref`) when
 **`devops_repository`** / **`devops_ref`** are omitted; set those inputs only to override (forks,
 drift).
 
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@2.1.1
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.0.0
     with:
       strictness_level: High
       docstring_format: Google
@@ -36,7 +36,7 @@ jobs:
       caller_pat: ${{ secrets.caller_pat }}
 ```
 
-Cutting a release: land `main`, create an annotated tag (`git tag -a 2.1.1 -m "Release 2.1.1"`),
+Cutting a release: land `main`, create an annotated tag (`git tag -a 3.0.0 -m "Release 3.0.0"`),
 and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `2.0.0`.
 PyPI publish stays `workflow_dispatch`. This repo does not publish container images, so
 Docker Hub / GitHub Packages docs are not applicable.
