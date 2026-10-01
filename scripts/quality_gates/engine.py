@@ -12,6 +12,13 @@ from scripts.quality_gates.config import normalized_strictness_level
 from scripts.quality_gates.evaluation import evaluate, evaluate_semgrep_shield_only
 
 
+def _evaluate(root: Path, strictness: str, *, shield_only: bool) -> tuple[bool, list]:
+    """Dispatch the full gate set or the Semgrep-only shield."""
+    if shield_only:
+        return evaluate_semgrep_shield_only(root, strictness)
+    return evaluate(root, strictness)
+
+
 def main() -> int:
     """CLI entrypoint: read ``QUALITY_OUTPUT_DIR`` and ``STRICTNESS_LEVEL``."""
     parser = argparse.ArgumentParser(prog='python -m scripts.quality_gates')
@@ -26,10 +33,7 @@ def main() -> int:
     strictness = normalized_strictness_level(raw)
 
     try:
-        if args.semgrep_shield_only:
-            passed, rows = evaluate_semgrep_shield_only(root, strictness)
-        else:
-            passed, rows = evaluate(root, strictness)
+        passed, rows = _evaluate(root, strictness, shield_only=args.semgrep_shield_only)
     except ThresholdError as exc:
         print(f'CI-022: {exc}', file=sys.stderr)
         return 1
