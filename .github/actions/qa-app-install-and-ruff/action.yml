@@ -21,6 +21,10 @@ inputs:
   app-install-command:
     required: false
     default: ''
+  installable-app:
+    description: When false, do not uv sync an application package
+    required: false
+    default: 'true'
 runs:
   using: composite
   steps:
@@ -31,8 +35,13 @@ runs:
         WD: ${{ inputs.working-directory }}
         INSTALL_CMD: ${{ inputs.app-install-command }}
         EVENT: ${{ inputs.github-event-name }}
+        INSTALLABLE: ${{ inputs.installable-app }}
       run: |
         set -euo pipefail
+        if [ "${INSTALLABLE}" = "false" ]; then
+          echo "installable_app=false; skipping package install"
+          exit 0
+        fi
         cd "$WS/$WD"
         run_install() {
           # Login shell + one parse (avoid eval); input must be trusted workflow config

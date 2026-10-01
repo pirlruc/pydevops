@@ -13,8 +13,8 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | methodologies (links only; not a submodule) | tag **1.8.0** |
 | commondevops caller pin | **5.2.6** `8aad4ba4a597a87565d6d3d1a92a8bdd7568921c` |
 | ci-python image | **Not used**. No Docker Hub or GitHub Packages page. |
-| Latest annotated tag | **`3.0.0`** after this release |
-| Package version | **3.0.0** (`pyproject.toml`, same as the git tag) |
+| Latest annotated tag | **`3.0.1`** |
+| Package version | **3.0.1** (`pyproject.toml`, same as the git tag) |
 
 ## Delivery status
 

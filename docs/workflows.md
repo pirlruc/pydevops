@@ -11,8 +11,16 @@ These workflows are intended to be referenced from **your app** repo via
 `uses: pirlruc/pydevops/.github/workflows/…@vX.Y.Z` (pin the workflow definition to a tag or SHA you
 trust). **`devops_repository`** and **`devops_ref`** are required for every caller except
 `pirlruc/pydevops` itself, and they must equal the `uses:` pin (CI-034).
-`github.workflow_ref` is the caller workflow, not this file. A script-only repository
-should call [common-doc-verify](https://github.com/pirlruc/commondevops) instead of
+`github.workflow_ref` is the caller workflow, not this file. A repository whose
+`pyproject.toml` is not an installable app sets `installable_app: false`: package
+install, mypy, and coverage floors are skipped. Protobuf generation and extra
+services such as Postgres stay on the caller. When
+`docs/guardrails/python/profile.thresholds.yml` is in the app checkout, coverage,
+complexity, maintainability, and docstring floors come from that file; a missing
+key fails closed. If the file is absent, the strictness enum is the fallback.
+Semgrep error-level findings fail Medium and High (PY-SEC-002). A script-only
+repository with no `pyproject.toml` should call
+[common-doc-verify](https://github.com/pirlruc/commondevops) instead of
 `python-quality`. The caller job must grant the permission union in
 [`examples/call-python-quality.yml`](../examples/call-python-quality.yml) (CI-031).
 

@@ -107,8 +107,11 @@ if [[ "${want_static}" == "1" ]]; then
   fi
 
   # Mypy is blocking (PDO-STRICT-001). MYPY_STRICT=1 adds --strict.
+  # PACKAGE_MODE=scripts has nothing to typecheck as a package (PDO-PYPROJECT-001).
   mypy_rc=0
-  if command -v mypy >/dev/null 2>&1; then
+  if [[ "${PACKAGE_MODE:-app}" == "scripts" ]]; then
+    echo "PACKAGE_MODE=scripts; skipping mypy" >"$OUT/mypy.txt"
+  elif command -v mypy >/dev/null 2>&1; then
     mkdir -p "$OUT/mypy-reports/lineprecision" "$OUT/mypy-reports/anyexprs"
     mypy_args=(. --exclude '\.devops' --show-error-codes
       --lineprecision-report "$OUT/mypy-reports/lineprecision"
@@ -234,7 +237,9 @@ if [[ "${want_security}" == "1" ]]; then
   fi
 fi
 
-if [[ "${want_test}" == "1" ]]; then
+if [[ "${want_test}" == "1" && "${PACKAGE_MODE:-app}" == "scripts" ]]; then
+  echo "PACKAGE_MODE=scripts; skipping pytest and coverage" >"$OUT/pytest.txt"
+elif [[ "${want_test}" == "1" ]]; then
   # Pytest + coverage (expects deps installed in app venv)
   if command -v pytest >/dev/null 2>&1; then
     _py_rc=0
