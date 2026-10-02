@@ -7,7 +7,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (release **3.1.1**; ci-python image stays **3.1.0**) |
+| Branch | `main` (release **3.1.2** publishes Hub tags; pinned image stays **3.1.0** until write-back) |
 | `docs/guardrails` | tag **1.10.0** → `e2db476f…` |
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
@@ -15,7 +15,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (included in tag **6.2.0**) |
 | ci-python (debian, unsuffixed) | `3.1.0` `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
 | ci-python (alpine) | `3.1.0-alpine` `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
-| Latest annotated tag | **`3.1.1`** |
+| Latest annotated tag | **`3.1.2`** |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -32,6 +32,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-GATE-001 self-CI floors / Gitleaks pin | Done (this wave) |
 | PDO-DEP-001 Dependabot private git | **Done** ([#144](https://github.com/pirlruc/pydevops/issues/144)) — `registries: github-private` on github-actions; PAT includes pydevops (self-clone HTTP 200, 2026-09-13). |
 | PDO-PIN-001 guardrails 1.6.0 | Done (this wave) |
+| PDO-IMG-001 ci-python | Done — GHCR 3.1.0; Hub publish is release 3.1.2 |
 
 ## Wave E (2026-09-11)
 
@@ -124,7 +125,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. After tag **2.1.1**, dispatch `publish-pypi.yml` with `tag=2.1.1` (skip 2.1.0).
+1. After the 3.1.2 image publish finishes, write the new digests back into
+   `python-quality.yml` and the registry docs.
 2. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
 3. PyPI publish stays `workflow_dispatch`.
 
@@ -153,4 +155,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
-*Last updated: 2026-10-02 (ci-python docs match GHCR 3.1.0; tip tag 3.1.1)*
+*Last updated: 2026-10-02 (PDO-IMG-001 done; release 3.1.2 publishes Docker Hub)*

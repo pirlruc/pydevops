@@ -5,10 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.1.2] - 2026-10-02
+
 ### Changed
 
-- Document that ci-python 3.1.0 is on GHCR only. The next publish adds
-  Docker Hub, a `-debian` tag, and `latest-alpine`.
+- Publish ci-python to Docker Hub `pirlruc/ci-python`. Debian also gets a
+  `-debian` tag. Alpine gets `latest-alpine`.
 
 ## [3.1.1] - 2026-10-02
 

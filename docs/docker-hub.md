@@ -13,12 +13,12 @@ no `HEALTHCHECK`.
 | Base | Debian 13 via `dhi.io/python` for the unsuffixed tag; Alpine 3.24 for `-alpine` |
 
 Release 3.1.0 is on GitHub Packages
-(`ghcr.io/pirlruc/ci-python`). This Docker Hub repository is not created yet.
-The image workflow pushes `pirlruc/ci-python` on the next image publish.
-`python-quality.yml` already runs static, supply-chain, and test jobs in the
+(`ghcr.io/pirlruc/ci-python`). Docker Hub repository `pirlruc/ci-python`
+exists. Release 3.1.2 is the first publish to that repository.
+`python-quality.yml` runs static, supply-chain, and test jobs in the
 GHCR image. dast stays on the host.
 
-### Tags (GHCR 3.1.0; Hub on the next publish)
+### Tags (GHCR 3.1.0; Hub tags arrive with 3.1.2)
 
 | Tag | Meaning |
 |-----|---------|

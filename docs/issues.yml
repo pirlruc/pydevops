@@ -841,7 +841,7 @@ milestones:
               - CI-018
 
       - id: PDO-IMG-001
-        status: open
+        status: done
         title: Publish a ci-python quality image
         overview:
           problem: >-
@@ -864,7 +864,7 @@ milestones:
           - SC-SIGN-001
         tasks:
           - id: PDO-IMG-001-T1
-            status: open
+            status: done
             title: Publish ci-python and switch python-quality
             instructions:
               files:
