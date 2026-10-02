@@ -177,9 +177,15 @@ jobs:
     name: Job 1 — Shield (secrets + Semgrep SARIF)
     needs: devops-coordinates
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/pirlruc/ci-lint@sha256:38b9afe1086295b011e69d092cf06ee133c17b9784e82a19826db7432ae35c45
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     permissions:
       contents: read
+      packages: read
       security-events: write
       actions: write
     steps:
@@ -238,9 +244,15 @@ jobs:
     name: Job 2 — Static analysis (Gatekeeper)
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
       contents: read
+      packages: read
       actions: write
     steps:
       - name: Harden runner with audited egress
@@ -269,13 +281,16 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
-      - name: Prepare runner quality toolchain
-        uses: ./.devops/.github/actions/qa-install-toolchain
-        with:
-          workspace: ${{ github.workspace }}
-          devops-checkout-path: ${{ github.workspace }}/.devops
-          working-directory: ${{ inputs.working_directory }}
-          python-version: ${{ inputs.python_version }}
+      - name: Sync DevOps dependencies
+        env:
+          PY: ${{ inputs.python_version }}
+          DEVOPS: ${{ github.workspace }}/.devops
+        run: |
+          set -euo pipefail
+          if [[ "${PY}" != "3.13" ]]; then
+            uv python install "${PY}"
+          fi
+          uv sync --directory "${DEVOPS}"
       - name: Create quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
       - name: Install app and run style checks
@@ -311,9 +326,15 @@ jobs:
     name: Job 3 — Supply chain & SBOM
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
       contents: read
+      packages: read
       actions: write
     steps:
       - name: Harden runner with audited egress
@@ -342,13 +363,16 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
-      - name: Prepare runner quality toolchain
-        uses: ./.devops/.github/actions/qa-install-toolchain
-        with:
-          workspace: ${{ github.workspace }}
-          devops-checkout-path: ${{ github.workspace }}/.devops
-          working-directory: ${{ inputs.working_directory }}
-          python-version: ${{ inputs.python_version }}
+      - name: Sync DevOps dependencies
+        env:
+          PY: ${{ inputs.python_version }}
+          DEVOPS: ${{ github.workspace }}/.devops
+        run: |
+          set -euo pipefail
+          if [[ "${PY}" != "3.13" ]]; then
+            uv python install "${PY}"
+          fi
+          uv sync --directory "${DEVOPS}"
       - name: Create quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
       - name: Install app and run style checks
@@ -383,9 +407,15 @@ jobs:
     name: Job 4 — Tests & coverage
     needs: [devops-coordinates, quality-static]
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
       contents: read
+      packages: read
       actions: write
     steps:
       - name: Harden runner with audited egress
@@ -414,13 +444,16 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
-      - name: Prepare runner quality toolchain
-        uses: ./.devops/.github/actions/qa-install-toolchain
-        with:
-          workspace: ${{ github.workspace }}
-          devops-checkout-path: ${{ github.workspace }}/.devops
-          working-directory: ${{ inputs.working_directory }}
-          python-version: ${{ inputs.python_version }}
+      - name: Sync DevOps dependencies
+        env:
+          PY: ${{ inputs.python_version }}
+          DEVOPS: ${{ github.workspace }}/.devops
+        run: |
+          set -euo pipefail
+          if [[ "${PY}" != "3.13" ]]; then
+            uv python install "${PY}"
+          fi
+          uv sync --directory "${DEVOPS}"
       - name: Create quality output directory
         run: mkdir -p "$QUALITY_OUTPUT_DIR"
       - name: Install app and run style checks

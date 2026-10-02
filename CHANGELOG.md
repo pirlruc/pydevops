@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-10-02
+
+### Changed
+
+- Pin guardrails **1.10.0**.
+- `quality-static`, `quality-supply-chain`, and `quality-test` run in
+  ci-python **3.1.0**
+  `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101`.
+  They install another CPython only when `python_version` is not 3.13.
+  Shield runs in ci-lint **5.3.0**. dast stays on the host.
+
+## [3.1.0] - 2026-10-02
+
 ### Added
 
 - `ci-python` on DHI Debian 13 (unsuffixed) and Alpine 3.24 (`-alpine`).
