@@ -26,6 +26,33 @@ jobs:
       # back to github.token. Set the secret (contents:read on pirlruc/commondevops)
       # if private script checkout fails.
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
+  scheduled-secrets-sast:
+    name: Scheduled — secrets and SAST
+    permissions:
+      contents: read
+      security-events: write
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    with:
+      blocking: true
+      working_directory: .
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
+  scheduled-supply-chain:
+    name: Scheduled — supply chain
+    permissions:
+      contents: read
+      security-events: write
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    with:
+      blocking: true
+      working_directory: .
+      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
   scheduled-openssf-scorecard:
     name: Scheduled — OpenSSF Scorecard
     if: (github.event.repository.fork == false) && github.event.pull_request.user.login != 'dependabot[bot]'
@@ -45,6 +72,7 @@ jobs:
   scheduled-mutmut:
     name: Scheduled — mutation testing (Mutmut)
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: read
       actions: write
@@ -94,6 +122,7 @@ jobs:
   scheduled-eol:
     name: Scheduled — Python EOL watch
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       issues: write

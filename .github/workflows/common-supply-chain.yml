@@ -36,6 +36,13 @@ on:
 # CI-025
 permissions: {}
 
+concurrency:
+  group: >-
+    ${{ github.event_name == 'workflow_dispatch'
+        && format('dispatch-{0}-{1}', github.workflow, github.ref)
+        || format('call-{0}-{1}', github.workflow, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'workflow_dispatch' }}
+
 jobs:
   supply-chain:
     # CI-024

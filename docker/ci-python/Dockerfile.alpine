@@ -51,6 +51,7 @@ COPY --from=jscpd --chown=1000:1000 /opt/jscpd /opt/jscpd
 COPY --from=quality --chown=1000:1000 /opt/quality /opt/quality
 
 WORKDIR /workspace
+RUN find / -xdev -type f \( -perm -4000 -o -perm -2000 \) -exec chmod a-s {} +
 USER 1000:1000
 ENTRYPOINT []
 CMD ["sh"]

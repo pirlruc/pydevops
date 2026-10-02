@@ -144,4 +144,11 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   Token-free `pins` still runs on Dependabot pull requests (CI-024).
   `github-private` now covers `uv`, `npm`, and `pre-commit` too.
 
-*Last updated: 2026-10-02 (ci-python Debian and Alpine; quality workflow not switched yet)*
+- 2026-10-02: PDO-IMG-001 records the 12s measurement. Hub and GHCR docs
+  and a Dependabot docker entry are in. `python-quality` has timeouts and
+  concurrency. Scheduled secrets-sast and supply-chain are wired. zizmor
+  is hash-pin. harden-runner stays in audit mode: no private-repo run
+  showed it blocking egress, so no allowlist was added. Quality jobs stay
+  on the host until ci-python is published.
+
+*Last updated: 2026-10-02 (compliance wiring; ci-python not published)*
