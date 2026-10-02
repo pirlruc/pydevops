@@ -55,6 +55,7 @@ jobs:
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
+      structure_test_config: docker/ci-python/container-structure-test.yml
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -76,6 +77,7 @@ jobs:
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
+      structure_test_config: docker/ci-python/container-structure-test.yml
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

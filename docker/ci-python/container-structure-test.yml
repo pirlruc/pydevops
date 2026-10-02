@@ -1,0 +1,26 @@
+schemaVersion: "2.0.0"
+metadataTest:
+  cmd: ["sh"]
+  user: "1000:1000"
+commandTests:
+  - name: ruff
+    command: "ruff"
+    args: ["--version"]
+    exitCode: 0
+  - name: node
+    command: "node"
+    args: ["--version"]
+    exitCode: 0
+  - name: syft
+    command: "syft"
+    args: ["version"]
+    exitCode: 0
+  - name: jq
+    command: "jq"
+    args: ["--version"]
+    exitCode: 0
+  - name: "no setuid or setgid files"
+    command: "sh"
+    args:
+      - "-c"
+      - "! find / -xdev -type f -perm -4000 -print | grep -q . && ! find / -xdev -type f -perm -2000 -print | grep -q ."
