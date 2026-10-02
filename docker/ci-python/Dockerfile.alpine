@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1
+# Alpine variant. No DHI uv alpine tag, so uv comes from the astral image.
+# No HEALTHCHECK. kics-scan disable=b03a748a-542d-44f4-bb86-9199ab4fd2d5
+# Base tag in a comment for DOCKER-BUILD-003: dhi.io/python:3.13-alpine3.24-dev
+
+FROM dhi.io/node:24-alpine3.24-dev@sha256:baf0afb91dc5ac22e7bfdf5198fcada9f8585c755071256da43c2a0e965a3d08 AS jscpd
+WORKDIR /opt/jscpd
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+FROM dhi.io/python:3.13-alpine3.24-dev@sha256:b638b0f214ccf84e1bf0814dfcb81774e470f7aaa206f7bf77edd8ba357ee79a AS quality
+COPY --from=ghcr.io/astral-sh/uv:0.12.0@sha256:606e70c71c852d03f611b1e56a195d08648507018a7057fab82c4974c4eae105 \
+  /uv /usr/local/bin/uv
+COPY requirements-alpine.txt /tmp/requirements.txt
+RUN /usr/local/bin/uv venv /opt/quality --python /usr/bin/python3 \
+ && /usr/local/bin/uv pip install --python /opt/quality/bin/python --no-cache --require-hashes \
+      -r /tmp/requirements.txt \
+ && rm -f /tmp/requirements.txt
+
+FROM dhi.io/python:3.13-alpine3.24-dev@sha256:b638b0f214ccf84e1bf0814dfcb81774e470f7aaa206f7bf77edd8ba357ee79a
+
+LABEL org.opencontainers.image.title="ci-python" \
+      org.opencontainers.image.description="Python quality toolchain, Alpine 3.24 variant. Non-root 1000:1000, linux/amd64." \
+      org.opencontainers.image.source="https://github.com/pirlruc/pydevops" \
+      org.opencontainers.image.vendor="pirlruc" \
+      org.opencontainers.image.licenses="MIT"
+
+ENV PATH="/opt/quality/bin:/opt/jscpd/node_modules/.bin:/usr/local/bin:${PATH}" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+USER root
+RUN apk add --no-cache \
+      cloc=2.08-r0 \
+      jq=1.8.1_git20260609-r1 \
+      git=2.54.0-r0 \
+ && if ! id -u 1000 >/dev/null 2>&1; then \
+      printf 'ci:x:1000:1000::/home/ci:/bin/sh\n' >> /etc/passwd; \
+      printf 'ci:x:1000:\n' >> /etc/group; \
+    fi \
+ && mkdir -p /home/ci /workspace \
+ && chown -R 1000:1000 /workspace /home/ci
+
+COPY --from=dhi.io/syft:1-alpine3.24@sha256:ff505c41e35dbcdb067a75b059e2e2b25203442d3a4ba617270469b5e06f173b \
+  /usr/bin/syft /usr/local/bin/syft
+COPY --from=dhi.io/grype:0-alpine3.24@sha256:f13160a9da236a45e83456fd62e5f2f88746c36af5682e314975d27df27f408b \
+  /usr/bin/grype /usr/local/bin/grype
+COPY --from=dhi.io/node:24-alpine3.24-dev@sha256:baf0afb91dc5ac22e7bfdf5198fcada9f8585c755071256da43c2a0e965a3d08 \
+  /usr/bin/node /usr/local/bin/node
+COPY --from=jscpd --chown=1000:1000 /opt/jscpd /opt/jscpd
+COPY --from=quality --chown=1000:1000 /opt/quality /opt/quality
+
+WORKDIR /workspace
+USER 1000:1000
+ENTRYPOINT []
+CMD ["sh"]

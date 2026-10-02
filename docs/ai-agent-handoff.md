@@ -12,7 +12,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
 | commondevops caller pin | **5.2.6** `8aad4ba4a597a87565d6d3d1a92a8bdd7568921c` |
-| ci-python image | **Not used**. No Docker Hub or GitHub Packages page. |
+| ci-python image | Debian and Alpine Dockerfiles on `feature-ops-hardening`. Not published. |
 | Latest annotated tag | **`3.0.1`** |
 | Package version | **3.0.1** (`pyproject.toml`, same as the git tag) |
 
@@ -135,9 +135,13 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
+  quality CLIs installed three times per `python-quality` run. Added
+  `ci-python` Debian and Alpine. Not published. `python-quality` still
+  installs on the host.
 - 2026-09-30: guardrails **1.8.0** / scaffold **1.7.0**. Methodology decision
   links cite **1.6.0** (no methodologies submodule). Synced scaffold templates.
   Token-free `pins` still runs on Dependabot pull requests (CI-024).
   `github-private` now covers `uv`, `npm`, and `pre-commit` too.
 
-*Last updated: 2026-10-01 (3.0.0 scripts_ref contract, guardrails 1.9.0, uv 0.12.0)*
+*Last updated: 2026-10-02 (ci-python Debian and Alpine; quality workflow not switched yet)*

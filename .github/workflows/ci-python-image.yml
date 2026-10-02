@@ -1,0 +1,132 @@
+name: CI Python Image
+
+on:
+  release:
+    types: [published]
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker/ci-python/**"
+      - ".github/workflows/ci-python-image.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    permissions:
+      contents: read
+      security-events: write
+    uses: pirlruc/containerdevops/.github/workflows/container-lint.yml@d86b6f328d9ec5afeb0a24c0825255b129a6881e
+    with:
+      dockerfile: docker/ci-python/Dockerfile
+      working_directory: .
+      scripts_ref: d86b6f328d9ec5afeb0a24c0825255b129a6881e
+      runner_image: ""
+      run_infra_lint: false
+      run_secrets_scan: true
+      blocking: true
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  build:
+    needs: [lint]
+    permissions:
+      contents: read
+      packages: write
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@d86b6f328d9ec5afeb0a24c0825255b129a6881e
+    with:
+      context: docker/ci-python
+      dockerfile: docker/ci-python/Dockerfile
+      image_name: ci-python:ci
+      artifact_name: container-image-ci-python
+      handoff_package: ci-python
+      scripts_ref: d86b6f328d9ec5afeb0a24c0825255b129a6881e
+      blocking: true
+      size_class: ci_toolchain
+      dhi_login: true
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  build-alpine:
+    needs: [lint]
+    permissions:
+      contents: read
+      packages: write
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@d86b6f328d9ec5afeb0a24c0825255b129a6881e
+    with:
+      context: docker/ci-python
+      dockerfile: docker/ci-python/Dockerfile.alpine
+      image_name: ci-python:ci-alpine
+      artifact_name: container-image-ci-python-alpine
+      handoff_package: ci-python
+      scripts_ref: d86b6f328d9ec5afeb0a24c0825255b129a6881e
+      blocking: true
+      size_class: ci_toolchain
+      dhi_login: true
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  publish:
+    needs: [build]
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@d86b6f328d9ec5afeb0a24c0825255b129a6881e
+    with:
+      context: docker/ci-python
+      dockerfile: docker/ci-python/Dockerfile
+      image_name: ci-python
+      scripts_ref: d86b6f328d9ec5afeb0a24c0825255b129a6881e
+      platforms: linux/amd64
+      tag_alias_unsuffixed: true
+      image_title: ci-python
+      image_description: Python quality toolchain. Debian 13. Non-root 1000:1000.
+      sign: ${{ github.event.repository.visibility == 'public' }}
+      blocking: true
+      dhi_login: true
+      verify_command: ruff --version
+      source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build.outputs.handoff_package, needs.build.outputs.digest) }}
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  publish-alpine:
+    needs: [build-alpine]
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@d86b6f328d9ec5afeb0a24c0825255b129a6881e
+    with:
+      context: docker/ci-python
+      dockerfile: docker/ci-python/Dockerfile.alpine
+      image_name: ci-python
+      scripts_ref: d86b6f328d9ec5afeb0a24c0825255b129a6881e
+      platforms: linux/amd64
+      tag_suffix: -alpine
+      tag_alias_unsuffixed: false
+      tag_latest: false
+      image_title: ci-python
+      image_description: Python quality toolchain. Alpine 3.24. Non-root 1000:1000.
+      sign: ${{ github.event.repository.visibility == 'public' }}
+      blocking: true
+      dhi_login: true
+      verify_command: ruff --version
+      source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build-alpine.outputs.handoff_package, needs.build-alpine.outputs.digest) }}
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}

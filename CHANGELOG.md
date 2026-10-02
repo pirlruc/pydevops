@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- `ci-python` on DHI Debian 13 (unsuffixed) and Alpine 3.24 (`-alpine`).
+  Quality CLIs install from a hashed lock. jscpd comes from `npm ci`.
+  syft and grype are the same DHI donors as ci-supply-chain. A local timing
+  of apt plus the old syft/grype tarballs was 12s and did not include Node,
+  uv, or the twelve quality CLIs, which `python-quality` installs three
+  times. The image removes that repeat. SC-SIGN-001 is recorded. REL-PUB-004
+  now cites the Hub token; PyPI can use OIDC.
+
 ## [3.0.2] - 2026-10-02
 
 ### Fixed
