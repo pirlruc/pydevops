@@ -22,10 +22,10 @@ quality-tools = [
     "pre-commit==4.6.2",
     "pydoclint==0.9.1",
     "pylint-json2html==0.5.0",
-    "pylint==4.0.8",
+    "pylint==4.0.9",
     "pytest-cov==7.1.0",
     "pytest==9.1.1",
-    "ruff==0.16.8",
+    "ruff==0.16.9",
 ]
 scripts = [
     "radon>=6.0,<7",

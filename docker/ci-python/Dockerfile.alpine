@@ -3,12 +3,12 @@
 # No HEALTHCHECK. kics-scan disable=b03a748a-542d-44f4-bb86-9199ab4fd2d5
 # Base tag in a comment for DOCKER-BUILD-003: dhi.io/python:3.13-alpine3.24-dev
 
-FROM dhi.io/node:24-alpine3.24-dev@sha256:baf0afb91dc5ac22e7bfdf5198fcada9f8585c755071256da43c2a0e965a3d08 AS jscpd
+FROM dhi.io/node:26-alpine3.24-dev@sha256:b09308998e18eda6de6b0aaf2814f7c0564176927ce721d9514646b02e853904 AS jscpd
 WORKDIR /opt/jscpd
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-FROM dhi.io/python:3.13-alpine3.24-dev@sha256:b638b0f214ccf84e1bf0814dfcb81774e470f7aaa206f7bf77edd8ba357ee79a AS quality
+FROM dhi.io/python:3.14-alpine3.24-dev@sha256:b718c87cdd7bb7dc88d6bbe347f81123b9cf6f2dac6eec6d4828c2cd8262582d AS quality
 COPY --from=ghcr.io/astral-sh/uv:0.12.0@sha256:606e70c71c852d03f611b1e56a195d08648507018a7057fab82c4974c4eae105 \
   /uv /usr/local/bin/uv
 COPY requirements-alpine.txt /tmp/requirements.txt
@@ -17,7 +17,7 @@ RUN /usr/local/bin/uv venv /opt/quality --python /usr/bin/python3 \
       -r /tmp/requirements.txt \
  && rm -f /tmp/requirements.txt
 
-FROM dhi.io/python:3.13-alpine3.24-dev@sha256:b638b0f214ccf84e1bf0814dfcb81774e470f7aaa206f7bf77edd8ba357ee79a
+FROM dhi.io/python:3.14-alpine3.24-dev@sha256:b718c87cdd7bb7dc88d6bbe347f81123b9cf6f2dac6eec6d4828c2cd8262582d
 
 LABEL org.opencontainers.image.title="ci-python" \
       org.opencontainers.image.description="Python quality toolchain, Alpine 3.24 variant. Non-root 1000:1000, linux/amd64." \

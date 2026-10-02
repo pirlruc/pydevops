@@ -75,7 +75,7 @@ repos:
       - id: gitlint
         stages: [commit-msg]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
+    rev: v0.16.9
     hooks:
       - id: ruff-check
         args: [--fix]
@@ -100,7 +100,7 @@ repos:
         exclude: ^tests/
         stages: [pre-push]
   - repo: https://github.com/semgrep/pre-commit
-    rev: v1.177.0
+    rev: v1.178.0
     hooks:
       - id: semgrep-ci
         # Pinned ruleset (reproducible, lighter than `auto`). Swap for `auto` or a custom `semgrep.yml` if you prefer.
