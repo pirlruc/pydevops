@@ -17,9 +17,9 @@ jobs:
     name: Scheduled — workflow lint (actionlint + zizmor)
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@0b37bd52212bbe0d6eac70f955203d7582dfd9da
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
     with:
-      scripts_ref: 0b37bd52212bbe0d6eac70f955203d7582dfd9da
+      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -32,11 +32,11 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@0b37bd52212bbe0d6eac70f955203d7582dfd9da
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 0b37bd52212bbe0d6eac70f955203d7582dfd9da
+      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -45,11 +45,11 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@0b37bd52212bbe0d6eac70f955203d7582dfd9da
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 0b37bd52212bbe0d6eac70f955203d7582dfd9da
+      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -60,7 +60,7 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@0b37bd52212bbe0d6eac70f955203d7582dfd9da
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.

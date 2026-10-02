@@ -11,7 +11,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | `docs/guardrails` | tag **1.9.0** → `16a2c95c…` |
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
-| commondevops caller pin | `0b37bd52212bbe0d6eac70f955203d7582dfd9da` (feature-ops-hardening; not tagged) |
+| commondevops caller pin | tag **5.3.0** → `803bfe60ff30d5bbcefe7fe6e38070999a66531d` |
 | containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (feature-ops-hardening; not tagged) |
 | ci-python image | Debian and Alpine Dockerfiles on `feature-ops-hardening`. Not published. |
 | Latest annotated tag | **`3.0.1`** |
@@ -152,4 +152,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs stay
   on the host until ci-python is published.
 
-*Last updated: 2026-10-02 (ci-python structure test; containerdevops pin 2ad052e6; not published)*
+*Last updated: 2026-10-02 (commondevops pin is tag 5.3.0; ci-python not published)*
