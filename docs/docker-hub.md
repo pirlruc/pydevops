@@ -12,18 +12,23 @@ no `HEALTHCHECK`.
 | User | non-root `1000:1000` |
 | Base | Debian 13 via `dhi.io/python` for the unsuffixed tag; Alpine 3.24 for `-alpine` |
 
-The image is not published yet. Tags appear at the 3.1.0 release. Until then,
-`python-quality.yml` still installs the toolchain on the runner.
+Release 3.1.0 is on GitHub Packages
+(`ghcr.io/pirlruc/ci-python`). This Docker Hub repository is not created yet.
+The image workflow pushes `pirlruc/ci-python` on the next image publish.
+`python-quality.yml` already runs static, supply-chain, and test jobs in the
+GHCR image. dast stays on the host.
 
-### Tags (after 3.1.0)
+### Tags (GHCR 3.1.0; Hub on the next publish)
 
 | Tag | Meaning |
 |-----|---------|
-| `3.1.0` | First Debian analysis image |
-| `3.1.0-alpine` | Alpine analysis image |
+| `3.1.0` | Debian analysis. Digest `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
+| `3.1.0-alpine` | Alpine analysis. Digest `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
 | `latest` | Latest non-prerelease Debian publish |
 
-Prefer a digest. `latest` is never the only tag.
+3.1.0 has no `-debian` tag and no `latest-alpine`. The next publish adds both,
+matching `ci-lint`. Debian owns the unsuffixed tag. Prefer a digest. `latest`
+is never the only tag.
 
 ## Hardened local run
 
@@ -34,7 +39,7 @@ docker run --rm \
   --security-opt no-new-privileges \
   --tmpfs /tmp:rw,noexec,nosuid,size=256m \
   -v "$PWD:/workspace:ro" -w /workspace \
-  pirlruc/ci-python:3.1.0 \
+  ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101 \
   ruff --version
 ```
 
@@ -46,7 +51,7 @@ Node, and uv. Consumer project dependencies are not baked in. Jobs still run
 
 ## Verify a publish
 
-Pull by digest after the release writes the digest back. Signing is skipped
+Pull the 3.1.0 Debian digest above. Signing is skipped
 while the repo is private (`SC-SIGN-001`). The registry stores BuildKit
 provenance (`mode=max`) and an SBOM.
 

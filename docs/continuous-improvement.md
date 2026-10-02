@@ -72,12 +72,13 @@ invalid and must not be filed.
 
 Identify **improvements, bugs, and design flaws** in workflows, scripts, gates, and docs —
 not only process/docs hygiene. Prefer local `uv run` and `pytest` before recommending
-Actions-only verification. This repo does not publish a Docker Hub or GitHub Packages image.
+Actions-only verification. This repo publishes `ci-python`. Derive tags and digests
+from the image workflow and the registry docs.
 
 ### 4. Optional: alternatives (lightweight)
 
-Briefly weigh current defaults (in-repo license gate vs common-supply-chain; no ci-python
-image). Accept “current remains best” with a one-line justification.
+Briefly weigh current defaults (in-repo license gate vs common-supply-chain; job
+container vs host install). Accept “current remains best” with a one-line justification.
 
 ### 5. Emit or no-op
 
@@ -127,7 +128,8 @@ Task ids: `<EPIC-ID>-T1`, …
 | `scripts/` | Quality gates, CI runners, license gate (legacy path) |
 | `.github/dependencies/` | Pinned CLIs and Actions pin manifest |
 | `docs/` | Handoff, workflows reference, this prompt, authored `issues.yml` |
-| Docker Hub / GitHub Packages | Not a surface — this repo is PyPI-only |
+| `docker/ci-python/` | Debian and Alpine quality images. Unsuffixed owner is recorded in the image workflow |
+| Docker Hub / GitHub Packages | Registry pages for `ci-python`. Derive published tags from the checkout |
 | `.github/dependabot.yml` | Multi-ecosystem dependency updates |
 
 Ecosystem (URL only): [commondevops](https://github.com/pirlruc/commondevops),
@@ -144,7 +146,7 @@ Do not recommend removing these without **requires user decision**:
 3. CI-024 Dependabot skip on jobs needing Actions secrets (Scorecard, PyPI, PR comments)
 4. `docs/issues.yml` is the authored backlog
 5. Guardrails stay canonical in `pirlruc/guardrails` — record deviations here only
-6. Do **not** add a ci-python job image without measurement justifying it
+6. Do **not** move dast off the host, or drop the published `ci-python` image, without a decision
 
 ## Automation configuration
 

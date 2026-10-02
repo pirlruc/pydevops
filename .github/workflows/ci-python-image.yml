@@ -96,11 +96,16 @@ jobs:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
       image_name: ci-python
+      dockerhub_image: pirlruc/ci-python
       scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
       platforms: linux/amd64
+      tag_suffix: -debian
       tag_alias_unsuffixed: true
+      tag_latest: ${{ github.event_name != 'release' || github.event.release.prerelease == false }}
       image_title: ci-python
       image_description: Python quality toolchain. Debian 13. Non-root 1000:1000.
+      dockerhub_readme: docs/docker-hub.md
+      dockerhub_short_description: Python quality toolchain for CI jobs
       sign: ${{ github.event.repository.visibility == 'public' }}
       blocking: true
       dhi_login: true
@@ -124,11 +129,12 @@ jobs:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
       image_name: ci-python
+      dockerhub_image: pirlruc/ci-python
       scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
       platforms: linux/amd64
       tag_suffix: -alpine
       tag_alias_unsuffixed: false
-      tag_latest: false
+      tag_latest: ${{ github.event_name != 'release' || github.event.release.prerelease == false }}
       image_title: ci-python
       image_description: Python quality toolchain. Alpine 3.24. Non-root 1000:1000.
       sign: ${{ github.event.repository.visibility == 'public' }}
