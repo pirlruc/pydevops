@@ -839,3 +839,40 @@ milestones:
               - grep -q installable_app .github/workflows/python-quality.yml
             guardrail_refs:
               - CI-018
+
+      - id: PDO-IMG-001
+        status: open
+        title: Publish a ci-python quality image
+        overview:
+          problem: >-
+            python-quality installs Node, uv, cloc, jq, syft, grype, and about
+            twelve quality CLIs on the runner, three times per workflow.
+          goal: >-
+            A digest-pinned Debian image and an Alpine image hold that
+            toolchain. Jobs switch after the digest exists.
+        decision: >-
+          In the context of Python quality jobs, facing repeated unhashed
+          installs, we decided to bake the toolchain into ci-python on DHI
+          Debian and Alpine, to achieve CI-039 and a shorter job, accepting
+          that the workflow stays on the host until 3.1.0 is published.
+        acceptance_criteria:
+          - A local install of the cheap half of qa-install-toolchain was 12 seconds and did not include Node, uv, or the twelve CLIs
+          - Debian and Alpine images build and ruff runs
+          - python-quality stays on the host until the published digest is written back
+        guardrail_refs:
+          - CI-039
+          - SC-SIGN-001
+        tasks:
+          - id: PDO-IMG-001-T1
+            status: open
+            title: Publish ci-python and switch python-quality
+            instructions:
+              files:
+                - docker/ci-python/Dockerfile
+                - .github/workflows/ci-python-image.yml
+                - .github/workflows/python-quality.yml
+            verification:
+              - test -f docker/ci-python/Dockerfile
+              - test -f docker/ci-python/Dockerfile.alpine
+            guardrail_refs:
+              - CI-039

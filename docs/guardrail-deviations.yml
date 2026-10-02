@@ -9,6 +9,15 @@
 # Being stricter than the org default is always allowed and needs no entry here.
 
 deviations:
+  - id: SC-SIGN-001
+    why: >-
+      ci-python publishes images. Private Free-plan repository; Sigstore
+      keyless signing is unavailable. Publish sets sign=false. Registry
+      provenance is mode=max without a GitHub attestation.
+    epic: PDO-PIN-003
+    owner: pirlruc
+    approved_by: Engineering Lead
+    review: 2026-12-31
   - id: CI-032
     why: >-
       A user-owned private repository on GitHub Free cannot protect the
@@ -20,9 +29,9 @@ deviations:
     review: 2026-12-31
   - id: REL-PUB-004
     why: >-
-      GitHub Environments restricted to tag refs are not available on a
-      private Free-plan user repository. PyPI publish tokens stay in
-      repository secrets.
+      PyPI Trusted Publishing can use OIDC. GitHub Environments restricted to
+      tag refs are not available on a private Free-plan user repository, and
+      Docker Hub pushes for ci-python still need a token in repository secrets.
     epic: PDO-PIN-003
     owner: pirlruc
     approved_by: Engineering Lead

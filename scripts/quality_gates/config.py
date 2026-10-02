@@ -17,26 +17,177 @@ from scripts.org_thresholds import load_python_floors, require_python_floors
 
 
 @dataclass(frozen=True)
-class Thresholds:  # pylint: disable=too-many-instance-attributes
-    """Numeric thresholds for one strictness tier."""
+class _Coverage:
+    line_min: float
+    branch_min: float
 
-    coverage_line_min: float
-    coverage_branch_min: float
+
+@dataclass(frozen=True)
+class _Lint:
     pylint_score_min: float
+    duplication_max_pct: float
+    issues_per_kloc_slocs_max: float
+
+
+@dataclass(frozen=True)
+class _Complexity:
     cyclomatic_max: float
     cyclomatic_avg_max: float
     maintainability_index_min: float
     maintainability_index_avg_min: float
-    duplication_max_pct: float
-    issues_per_kloc_slocs_max: float
-    docstring_coverage_min: float
-    docstring_issues_per_kloc_cloc_max: float
-    mypy_type_coverage_min: float
-    mypy_imprecision_lt_pct: float
-    mypy_any_per_kloc_lt: float
+
+
+@dataclass(frozen=True)
+class _Docs:
+    coverage_min: float
+    issues_per_kloc_cloc_max: float
+
+
+@dataclass(frozen=True)
+class _Types:
+    coverage_min: float
+    imprecision_lt_pct: float
+    any_per_kloc_lt: float
+
+
+@dataclass(frozen=True)
+class _Security:
     vuln_high_max: int
     vuln_medium_max: int
     bandit_findings_max: int
+
+
+@dataclass(frozen=True)
+class Thresholds:
+    """Numeric thresholds for one strictness tier.
+
+    Fields are grouped so the dataclass stays under the pylint attribute cap.
+    Callers still use the flat names.
+    """
+
+    coverage: _Coverage
+    lint: _Lint
+    complexity: _Complexity
+    docs: _Docs
+    types: _Types
+    security: _Security
+
+    @property
+    def coverage_line_min(self) -> float:
+        """Minimum line coverage percent for this tier."""
+        return self.coverage.line_min
+
+    @property
+    def coverage_branch_min(self) -> float:
+        """Minimum branch coverage percent for this tier."""
+        return self.coverage.branch_min
+
+    @property
+    def pylint_score_min(self) -> float:
+        """Minimum pylint score for this tier."""
+        return self.lint.pylint_score_min
+
+    @property
+    def cyclomatic_max(self) -> float:
+        """Maximum cyclomatic complexity for this tier."""
+        return self.complexity.cyclomatic_max
+
+    @property
+    def cyclomatic_avg_max(self) -> float:
+        """Maximum average cyclomatic complexity for this tier."""
+        return self.complexity.cyclomatic_avg_max
+
+    @property
+    def maintainability_index_min(self) -> float:
+        """Minimum maintainability index for this tier."""
+        return self.complexity.maintainability_index_min
+
+    @property
+    def maintainability_index_avg_min(self) -> float:
+        """Minimum average maintainability index for this tier."""
+        return self.complexity.maintainability_index_avg_min
+
+    @property
+    def duplication_max_pct(self) -> float:
+        """Maximum duplication percent for this tier."""
+        return self.lint.duplication_max_pct
+
+    @property
+    def issues_per_kloc_slocs_max(self) -> float:
+        """Maximum issues per thousand lines for this tier."""
+        return self.lint.issues_per_kloc_slocs_max
+
+    @property
+    def docstring_coverage_min(self) -> float:
+        """Minimum docstring coverage percent for this tier."""
+        return self.docs.coverage_min
+
+    @property
+    def docstring_issues_per_kloc_cloc_max(self) -> float:
+        """Maximum docstring issues per thousand lines for this tier."""
+        return self.docs.issues_per_kloc_cloc_max
+
+    @property
+    def mypy_type_coverage_min(self) -> float:
+        """Minimum mypy type coverage percent for this tier."""
+        return self.types.coverage_min
+
+    @property
+    def mypy_imprecision_lt_pct(self) -> float:
+        """Maximum mypy imprecision percent for this tier."""
+        return self.types.imprecision_lt_pct
+
+    @property
+    def mypy_any_per_kloc_lt(self) -> float:
+        """Maximum mypy Any expressions per thousand lines for this tier."""
+        return self.types.any_per_kloc_lt
+
+    @property
+    def vuln_high_max(self) -> int:
+        """Maximum high vulnerabilities for this tier."""
+        return self.security.vuln_high_max
+
+    @property
+    def vuln_medium_max(self) -> int:
+        """Maximum medium vulnerabilities for this tier."""
+        return self.security.vuln_medium_max
+
+    @property
+    def bandit_findings_max(self) -> int:
+        """Maximum Bandit findings for this tier."""
+        return self.security.bandit_findings_max
+
+
+def _tier(values: dict[str, float | int]) -> Thresholds:
+    """Build one tier from the flat names callers already use."""
+    return Thresholds(
+        coverage=_Coverage(values['coverage_line_min'], values['coverage_branch_min']),
+        lint=_Lint(
+            values['pylint_score_min'],
+            values['duplication_max_pct'],
+            values['issues_per_kloc_slocs_max'],
+        ),
+        complexity=_Complexity(
+            values['cyclomatic_max'],
+            values['cyclomatic_avg_max'],
+            values['maintainability_index_min'],
+            values['maintainability_index_avg_min'],
+        ),
+        docs=_Docs(
+            values['docstring_coverage_min'],
+            values['docstring_issues_per_kloc_cloc_max'],
+        ),
+        types=_Types(
+            values['mypy_type_coverage_min'],
+            values['mypy_imprecision_lt_pct'],
+            values['mypy_any_per_kloc_lt'],
+        ),
+        security=_Security(
+            int(values['vuln_high_max']),
+            int(values['vuln_medium_max']),
+            int(values['bandit_findings_max']),
+        ),
+    )
 
 
 def _repo_root() -> Path:
@@ -52,7 +203,7 @@ def load_org_python_floors() -> dict[str, float]:
 
 def _build_strictness() -> dict[str, Thresholds]:
     org = load_org_python_floors()
-    high = Thresholds(
+    high = _tier(dict(
         coverage_line_min=org['statement_coverage'],
         coverage_branch_min=org['branch_coverage'],
         pylint_score_min=9.5,
@@ -70,8 +221,8 @@ def _build_strictness() -> dict[str, Thresholds]:
         vuln_high_max=0,
         vuln_medium_max=5,
         bandit_findings_max=0,
-    )
-    medium = Thresholds(
+    ))
+    medium = _tier(dict(
         coverage_line_min=85.0,
         coverage_branch_min=80.0,
         pylint_score_min=8.0,
@@ -89,8 +240,8 @@ def _build_strictness() -> dict[str, Thresholds]:
         vuln_high_max=0,
         vuln_medium_max=10,
         bandit_findings_max=3,
-    )
-    low = Thresholds(
+    ))
+    low = _tier(dict(
         coverage_line_min=70.0,
         coverage_branch_min=65.0,
         pylint_score_min=7.0,
@@ -108,7 +259,7 @@ def _build_strictness() -> dict[str, Thresholds]:
         vuln_high_max=2,
         vuln_medium_max=25,
         bandit_findings_max=15,
-    )
+    ))
     return {'Low': low, 'Medium': medium, 'High': high}
 
 
@@ -123,13 +274,19 @@ def apply_consumer_floors(base: Thresholds, path: Path) -> Thresholds:
     floors = require_python_floors(path)
     return replace(
         base,
-        coverage_line_min=floors['statement_coverage'],
-        coverage_branch_min=floors['branch_coverage'],
-        cyclomatic_max=floors['max_cyclomatic_complexity'],
-        cyclomatic_avg_max=floors['avg_cyclomatic_complexity'],
-        maintainability_index_min=floors['min_maintainability_index'],
-        maintainability_index_avg_min=floors['avg_maintainability_index'],
-        docstring_coverage_min=floors['doc_coverage'],
+        coverage=replace(
+            base.coverage,
+            line_min=floors['statement_coverage'],
+            branch_min=floors['branch_coverage'],
+        ),
+        complexity=replace(
+            base.complexity,
+            cyclomatic_max=floors['max_cyclomatic_complexity'],
+            cyclomatic_avg_max=floors['avg_cyclomatic_complexity'],
+            maintainability_index_min=floors['min_maintainability_index'],
+            maintainability_index_avg_min=floors['avg_maintainability_index'],
+        ),
+        docs=replace(base.docs, coverage_min=floors['doc_coverage']),
     )
 
 

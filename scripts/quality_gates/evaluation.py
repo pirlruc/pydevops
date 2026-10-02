@@ -58,101 +58,116 @@ from scripts.quality_gates.readers_radon import (
 from scripts.quality_gates.readers_ruff_jscpd import jscpd_duplication_pct, ruff_issue_count
 
 
-def collect_gate_results(  # pylint: disable=too-many-locals,too-many-statements
+def _extend(
+    rows: list[dict[str, Any]],
+    failures: list[str],
+    result: tuple[list[dict[str, Any]], list[str]],
+) -> None:
+    """Append one gate's rows and failure labels."""
+    gate_rows, gate_failures = result
+    rows.extend(gate_rows)
+    failures.extend(gate_failures)
+
+
+def _coverage_and_lint(
     root: Path,
+    thresholds: Thresholds,
     strictness: str,
-) -> tuple[list[dict[str, Any]], list[str]]:
-    """Run all gate checks and return (rows, failure labels)."""
-    sn = normalized_strictness_level(strictness)
-    t: Thresholds = resolve_thresholds(strictness)
-    rows: list[dict[str, Any]] = []
-    failures: list[str] = []
-    scripts_only = scripts_only_package()
-
+    scripts_only: bool,
+    rows: list[dict[str, Any]],
+    failures: list[str],
+) -> None:
+    """Coverage, pylint, and pytest rows. Scripts-only skips coverage."""
     if not scripts_only:
-        art_rows, art_fail = enforce_high_artifact_presence(root, sn)
-        rows.extend(art_rows)
-        failures.extend(art_fail)
-
-    if scripts_only:
+        _extend(rows, failures, enforce_high_artifact_presence(root, strictness))
+        line_cov, branch_cov = load_coverage_totals(root)
+        _extend(rows, failures, gate_coverage_line(line_cov, thresholds, strictness))
+        _extend(rows, failures, gate_coverage_branch(branch_cov, thresholds, strictness))
+    else:
         rows.append({
             'gate': 'Package mode',
             'actual': 'scripts',
             'required': 'skip install, mypy, and coverage floors',
             'ok': True,
         })
-    else:
-        line_cov, branch_cov = load_coverage_totals(root)
-        r, f = gate_coverage_line(line_cov, t, sn)
-        rows.extend(r)
-        failures.extend(f)
-        r, f = gate_coverage_branch(branch_cov, t, sn)
-        rows.extend(r)
-        failures.extend(f)
-
-    r, f = gate_pylint(pylint_score(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
-
+    _extend(rows, failures, gate_pylint(pylint_score(root), thresholds, strictness))
     if not scripts_only:
-        r, f = gate_pytest_exit(pytest_exit_code(root), sn)
-        rows.extend(r)
-        failures.extend(f)
+        _extend(rows, failures, gate_pytest_exit(pytest_exit_code(root), strictness))
 
-    r, f = gate_cyclomatic(radon_cc_max(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
 
-    r, f = gate_cyclomatic_avg(radon_cc_avg(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
+def _complexity(
+    root: Path,
+    thresholds: Thresholds,
+    strictness: str,
+    rows: list[dict[str, Any]],
+    failures: list[str],
+) -> tuple[int, int]:
+    """Complexity and duplication rows. Returns cloc sloc and comment counts."""
+    _extend(rows, failures, gate_cyclomatic(radon_cc_max(root), thresholds, strictness))
+    _extend(rows, failures, gate_cyclomatic_avg(radon_cc_avg(root), thresholds, strictness))
+    _extend(rows, failures, gate_maintainability(radon_mi_min(root), thresholds, strictness))
+    _extend(rows, failures, gate_maintainability_avg(radon_mi_avg(root), thresholds, strictness))
+    _extend(rows, failures, gate_duplication(jscpd_duplication_pct(root), thresholds))
+    sloc, comment_lines = cloc_slocs_comments(root)
+    _extend(
+        rows,
+        failures,
+        gate_issues_per_kloc(sloc, pylint_issue_count(root), ruff_issue_count(root), thresholds),
+    )
+    return sloc, comment_lines
 
-    r, f = gate_maintainability(radon_mi_min(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
 
-    r, f = gate_maintainability_avg(radon_mi_avg(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
-
-    r, f = gate_duplication(jscpd_duplication_pct(root), t)
-    rows.extend(r)
-    failures.extend(f)
-
-    sloc, cloc = cloc_slocs_comments(root)
-    r, f = gate_issues_per_kloc(sloc, pylint_issue_count(root), ruff_issue_count(root), t)
-    rows.extend(r)
-    failures.extend(f)
-
+def _docs_and_security(
+    root: Path,
+    thresholds: Thresholds,
+    strictness: str,
+    scripts_only: bool,
+    sloc: int,
+    comment_lines: int,
+    rows: list[dict[str, Any]],
+    failures: list[str],
+) -> None:
+    """Docs, types, and security rows."""
     if not scripts_only:
-        r, f = gate_mypy(root, sloc, t, sn)
-        rows.extend(r)
-        failures.extend(f)
+        _extend(rows, failures, gate_mypy(root, sloc, thresholds, strictness))
+    _extend(
+        rows,
+        failures,
+        gate_docstring_coverage(interrogate_coverage(root), thresholds, strictness),
+    )
+    _extend(
+        rows,
+        failures,
+        gate_docstring_issue_rate(comment_lines, pydoclint_issue_count(root), thresholds),
+    )
+    _extend(rows, failures, gate_bandit(root, thresholds))
+    _extend(rows, failures, gate_vulnerabilities(root, thresholds))
+    _extend(rows, failures, gate_gitleaks(root))
+    _extend(rows, failures, gate_semgrep(root, strictness))
 
-    r, f = gate_docstring_coverage(interrogate_coverage(root), t, sn)
-    rows.extend(r)
-    failures.extend(f)
 
-    r, f = gate_docstring_issue_rate(cloc, pydoclint_issue_count(root), t)
-    rows.extend(r)
-    failures.extend(f)
-
-    r, f = gate_bandit(root, t)
-    rows.extend(r)
-    failures.extend(f)
-
-    r, f = gate_vulnerabilities(root, t)
-    rows.extend(r)
-    failures.extend(f)
-
-    r, f = gate_gitleaks(root)
-    rows.extend(r)
-    failures.extend(f)
-
-    r, f = gate_semgrep(root, sn)
-    rows.extend(r)
-    failures.extend(f)
-
+def collect_gate_results(
+    root: Path,
+    strictness: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Run all gate checks and return (rows, failure labels)."""
+    normalized = normalized_strictness_level(strictness)
+    thresholds = resolve_thresholds(strictness)
+    rows: list[dict[str, Any]] = []
+    failures: list[str] = []
+    scripts_only = scripts_only_package()
+    _coverage_and_lint(root, thresholds, normalized, scripts_only, rows, failures)
+    sloc, comment_lines = _complexity(root, thresholds, normalized, rows, failures)
+    _docs_and_security(
+        root,
+        thresholds,
+        normalized,
+        scripts_only,
+        sloc,
+        comment_lines,
+        rows,
+        failures,
+    )
     return rows, failures
 
 

@@ -6,8 +6,7 @@
 # Personal-account private git (Dependabot secrets — not Actions):
 #   DEPENDABOT_GITHUB_TOKEN — Contents: Read on private submodules
 #     (github-scaffold, guardrails) and reusable-workflow hosts (commondevops).
-#   DOCKERHUB_* — unused here (no docker ecosystem); keep as Dependabot secrets
-#     if a docker entry is added later.
+#   DOCKERHUB_USERNAME / DOCKERHUB_TOKEN — dhi.io pulls for ci-python.
 # Gitleaks install is version.txt + linux-amd64.sha256 (GitHub release tarball).
 # A Dependabot docker entry on .github/dependencies/gitleaks 400'd because the
 # sentinel Dockerfile is not what CI pulls. Do not re-add docker until install
@@ -21,6 +20,11 @@ registries:
     url: https://github.com
     username: x-access-token
     password: ${{secrets.DEPENDABOT_GITHUB_TOKEN}}
+  dhi:
+    type: docker-registry
+    url: https://dhi.io
+    username: ${{secrets.DOCKERHUB_USERNAME}}
+    password: ${{secrets.DOCKERHUB_TOKEN}}
 
 multi-ecosystem-groups:
   all-dependencies:
@@ -103,6 +107,15 @@ updates:
     multi-ecosystem-group: all-dependencies
     registries:
       - github-private
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: docker
+    directory: /docker/ci-python
+    patterns: ["*"]
+    multi-ecosystem-group: all-dependencies
+    registries:
+      - dhi
     cooldown:
       default-days: 7
 

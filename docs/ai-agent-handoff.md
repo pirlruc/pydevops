@@ -11,8 +11,9 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | `docs/guardrails` | tag **1.9.0** → `16a2c95c…` |
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
-| commondevops caller pin | **5.2.6** `8aad4ba4a597a87565d6d3d1a92a8bdd7568921c` |
-| ci-python image | **Not used**. No Docker Hub or GitHub Packages page. |
+| commondevops caller pin | tag **5.3.0** → `803bfe60ff30d5bbcefe7fe6e38070999a66531d` |
+| containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (feature-ops-hardening; not tagged) |
+| ci-python image | Debian and Alpine Dockerfiles on `feature-ops-hardening`. Not published. |
 | Latest annotated tag | **`3.0.1`** |
 | Package version | **3.0.1** (`pyproject.toml`, same as the git tag) |
 
@@ -135,9 +136,20 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
+  quality CLIs installed three times per `python-quality` run. Added
+  `ci-python` Debian and Alpine. Not published. `python-quality` still
+  installs on the host.
 - 2026-09-30: guardrails **1.8.0** / scaffold **1.7.0**. Methodology decision
   links cite **1.6.0** (no methodologies submodule). Synced scaffold templates.
   Token-free `pins` still runs on Dependabot pull requests (CI-024).
   `github-private` now covers `uv`, `npm`, and `pre-commit` too.
 
-*Last updated: 2026-10-01 (3.0.0 scripts_ref contract, guardrails 1.9.0, uv 0.12.0)*
+- 2026-10-02: PDO-IMG-001 records the 12s measurement. Hub and GHCR docs
+  and a Dependabot docker entry are in. `python-quality` has timeouts and
+  concurrency. Scheduled secrets-sast and supply-chain are wired. zizmor
+  is hash-pin. harden-runner stays in audit mode: no private-repo run
+  showed it blocking egress, so no allowlist was added. Quality jobs stay
+  on the host until ci-python is published.
+
+*Last updated: 2026-10-02 (commondevops pin is tag 5.3.0; ci-python not published)*

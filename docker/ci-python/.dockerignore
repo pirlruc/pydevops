@@ -1,0 +1,5 @@
+*
+!requirements.txt
+!requirements-alpine.txt
+!package.json
+!package-lock.json
