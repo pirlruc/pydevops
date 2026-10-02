@@ -7,14 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (release **3.0.0**) |
-| `docs/guardrails` | tag **1.9.0** → `16a2c95c…` |
+| Branch | `main` (release **3.1.0**; digest write-back is 3.1.1) |
+| `docs/guardrails` | tag **1.10.0** → `e2db476f…` |
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
 | commondevops caller pin | tag **5.3.0** → `803bfe60ff30d5bbcefe7fe6e38070999a66531d` |
-| containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (feature-ops-hardening; not tagged) |
-| ci-python image | Debian and Alpine Dockerfiles on `feature-ops-hardening`. Not published. |
-| Latest annotated tag | **`3.0.1`** |
+| containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (included in tag **6.2.0**) |
+| ci-python (debian, unsuffixed) | `3.1.0` `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
+| ci-python (alpine) | `3.1.0-alpine` `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
+| Latest annotated tag | **`3.1.0`** |
 | Package version | **3.0.1** (`pyproject.toml`, same as the git tag) |
 
 ## Delivery status
@@ -152,4 +153,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs stay
   on the host until ci-python is published.
 
-*Last updated: 2026-10-02 (commondevops pin is tag 5.3.0; ci-python not published)*
+*Last updated: 2026-10-02 (ci-python 3.1.0 digests; quality jobs use the image; guardrails 1.10.0)*
