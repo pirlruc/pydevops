@@ -57,6 +57,8 @@ jobs:
       dhi_login: true
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   build-alpine:
     needs: [lint]
@@ -76,6 +78,8 @@ jobs:
       dhi_login: true
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   publish:
     needs: [build]
@@ -102,6 +106,8 @@ jobs:
       source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build.outputs.handoff_package, needs.build.outputs.digest) }}
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   publish-alpine:
     needs: [build-alpine]
@@ -130,3 +136,5 @@ jobs:
       source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build-alpine.outputs.handoff_package, needs.build-alpine.outputs.digest) }}
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

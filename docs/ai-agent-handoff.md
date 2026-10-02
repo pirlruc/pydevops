@@ -11,7 +11,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | `docs/guardrails` | tag **1.9.0** → `16a2c95c…` |
 | `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
 | methodologies (links only; not a submodule) | tag **1.8.0** |
-| commondevops caller pin | **5.2.6** `8aad4ba4a597a87565d6d3d1a92a8bdd7568921c` |
+| commondevops caller pin | `1eaf78aedffbfc1921daa2623150db9fb722879d` (feature-ops-hardening; not tagged) |
 | ci-python image | Debian and Alpine Dockerfiles on `feature-ops-hardening`. Not published. |
 | Latest annotated tag | **`3.0.1`** |
 | Package version | **3.0.1** (`pyproject.toml`, same as the git tag) |

@@ -74,70 +74,87 @@ class Thresholds:
 
     @property
     def coverage_line_min(self) -> float:
+        """Minimum line coverage percent for this tier."""
         return self.coverage.line_min
 
     @property
     def coverage_branch_min(self) -> float:
+        """Minimum branch coverage percent for this tier."""
         return self.coverage.branch_min
 
     @property
     def pylint_score_min(self) -> float:
+        """Minimum pylint score for this tier."""
         return self.lint.pylint_score_min
 
     @property
     def cyclomatic_max(self) -> float:
+        """Maximum cyclomatic complexity for this tier."""
         return self.complexity.cyclomatic_max
 
     @property
     def cyclomatic_avg_max(self) -> float:
+        """Maximum average cyclomatic complexity for this tier."""
         return self.complexity.cyclomatic_avg_max
 
     @property
     def maintainability_index_min(self) -> float:
+        """Minimum maintainability index for this tier."""
         return self.complexity.maintainability_index_min
 
     @property
     def maintainability_index_avg_min(self) -> float:
+        """Minimum average maintainability index for this tier."""
         return self.complexity.maintainability_index_avg_min
 
     @property
     def duplication_max_pct(self) -> float:
+        """Maximum duplication percent for this tier."""
         return self.lint.duplication_max_pct
 
     @property
     def issues_per_kloc_slocs_max(self) -> float:
+        """Maximum issues per thousand lines for this tier."""
         return self.lint.issues_per_kloc_slocs_max
 
     @property
     def docstring_coverage_min(self) -> float:
+        """Minimum docstring coverage percent for this tier."""
         return self.docs.coverage_min
 
     @property
     def docstring_issues_per_kloc_cloc_max(self) -> float:
+        """Maximum docstring issues per thousand lines for this tier."""
         return self.docs.issues_per_kloc_cloc_max
 
     @property
     def mypy_type_coverage_min(self) -> float:
+        """Minimum mypy type coverage percent for this tier."""
         return self.types.coverage_min
 
     @property
     def mypy_imprecision_lt_pct(self) -> float:
+        """Maximum mypy imprecision percent for this tier."""
         return self.types.imprecision_lt_pct
 
     @property
     def mypy_any_per_kloc_lt(self) -> float:
+        """Maximum mypy Any expressions per thousand lines for this tier."""
         return self.types.any_per_kloc_lt
 
     @property
     def vuln_high_max(self) -> int:
+        """Maximum high vulnerabilities for this tier."""
         return self.security.vuln_high_max
 
     @property
     def vuln_medium_max(self) -> int:
+        """Maximum medium vulnerabilities for this tier."""
         return self.security.vuln_medium_max
 
     @property
     def bandit_findings_max(self) -> int:
+        """Maximum Bandit findings for this tier."""
         return self.security.bandit_findings_max
 
 

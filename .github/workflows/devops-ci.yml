@@ -74,10 +74,10 @@ jobs:
   scaffold:
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@1eaf78aedffbfc1921daa2623150db9fb722879d
     with:
       blocking: true
-      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+      scripts_ref: 1eaf78aedffbfc1921daa2623150db9fb722879d
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -85,7 +85,7 @@ jobs:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@1eaf78aedffbfc1921daa2623150db9fb722879d
     with:
       blocking: true
       shell_scripts: scripts/*.sh
@@ -93,7 +93,7 @@ jobs:
       yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
-      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+      scripts_ref: 1eaf78aedffbfc1921daa2623150db9fb722879d
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -102,11 +102,11 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@1eaf78aedffbfc1921daa2623150db9fb722879d
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+      scripts_ref: 1eaf78aedffbfc1921daa2623150db9fb722879d
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -166,9 +166,9 @@ jobs:
       == 'true'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@1eaf78aedffbfc1921daa2623150db9fb722879d
     with:
-      scripts_ref: 8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+      scripts_ref: 1eaf78aedffbfc1921daa2623150db9fb722879d
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -189,7 +189,7 @@ jobs:
       contents: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@8aad4ba4a597a87565d6d3d1a92a8bdd7568921c
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@1eaf78aedffbfc1921daa2623150db9fb722879d
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Without it, ossf/scorecard-action fails with
