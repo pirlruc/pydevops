@@ -155,4 +155,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
-*Last updated: 2026-10-02 (PDO-IMG-001 done; release 3.1.2 publishes Docker Hub)*
+*Last updated: 2026-10-07 (phase-3 review issues appended to docs/issues.yml)*
