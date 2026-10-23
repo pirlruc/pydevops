@@ -50,6 +50,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: read
       security-events: write
     uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
     with:

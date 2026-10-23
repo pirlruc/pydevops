@@ -102,7 +102,7 @@ jobs:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
-      security-events: write
+      packages: read
     uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
     with:
       blocking: true
@@ -167,6 +167,7 @@ jobs:
       == 'true'
     permissions:
       contents: read
+      packages: read
     uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
     with:
       scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
