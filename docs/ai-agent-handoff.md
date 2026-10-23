@@ -7,15 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main` at **3.2.0** (`47391b7`). Digest write-back is tag **3.2.1** with no GitHub Release |
-| `docs/guardrails` | tag **1.12.0** → `f4baf6198006c6b898eee9cec451b66b87129bd3` |
+| Branch | `main`. **3.2.2** is an annotated tag only (guardrails 1.13.1). **3.2.1** records the 3.2.0 digests and has no GitHub Release |
+| `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
 | `.github/scaffold` | tag **1.10.0** → `1d9901f7e7e5785abb7cac6f5d46e0e8e2023ff8` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
 | commondevops caller pin | tag **5.4.1** → `d03953476f3d5fa1081a0834d9882007ff26dd91` |
 | containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.0`** until the digest write-back is tagged **3.2.1** |
+| Latest annotated tag | **`3.2.1`** until **3.2.2** is tagged |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -163,6 +163,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
+- 2026-10-23: **3.2.2** — guardrails 1.13.1. Hub Overview push when `docs/docker-hub.md` changes. Tag only. No GitHub Release.
 - 2026-10-23: Hub Overview dispatch for `ci-python`. It does not republish the image.
 - 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
   three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
@@ -174,4 +175,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (Hub Overview dispatch for ci-python)*
+*Last updated: 2026-10-23 (guardrails 1.13.1, Hub Overview push, tag 3.2.2)*
