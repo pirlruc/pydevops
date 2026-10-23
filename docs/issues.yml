@@ -878,7 +878,7 @@ milestones:
               - CI-039
 
       - id: PDO-PRIV-001
-        status: open
+        status: done
         title: Keep the private GHCR pull on ci-lint and ci-python
         overview:
           problem: >-
@@ -897,11 +897,11 @@ milestones:
         - python-quality.yml jobs that pull ghcr.io set credentials and packages read
         tasks:
         - id: PDO-PRIV-001-T1
-          status: open
+          status: done
           title: Confirm the credential blocks remain
           instructions:
             files:
             - .github/workflows/python-quality.yml
             - docs/github-packages.md
           verification:
-          - rg -n 'credentials:' .github/workflows/python-quality.yml
+          - "rg -n 'credentials:' .github/workflows/python-quality.yml"

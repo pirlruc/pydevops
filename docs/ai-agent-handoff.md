@@ -15,7 +15,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.1`** until **3.2.2** is tagged |
+| Latest annotated tag | **`3.2.2`** |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -131,8 +131,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
    Leave it unset until then.
 4. PyPI publish stays `workflow_dispatch`.
-5. PDO-PRIV-001: the four `ghcr.io/pirlruc` jobs in `python-quality.yml`
-   set `packages: read` and `container.credentials` (confirmed 2026-10-23).
+5. PDO-PRIV-001 is done. The four `ghcr.io/pirlruc` jobs in `python-quality.yml`
+   set `packages: read` and `container.credentials`.
 6. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
    `.github/workflows/hub-description.yml`. It calls
    [container-hub-description](https://github.com/pirlruc/containerdevops/blob/6.3.0/.github/workflows/container-hub-description.yml)
@@ -168,11 +168,10 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
   three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
   Confirm those expiries before Thursday 06:17 UTC.
-- 2026-10-23: PDO-PRIV-001 records the private GHCR credential block. The
-  pull stays on `packages: read` and `container.credentials`. Confirmed on
-  the four job containers.
+- 2026-10-23: PDO-PRIV-001 is done. The credential blocks were already on
+  the four job containers. The manifest close does not change the workflows.
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (guardrails 1.13.1, Hub Overview push, tag 3.2.2)*
+*Last updated: 2026-10-23 (PDO-PRIV-001 closed)*
