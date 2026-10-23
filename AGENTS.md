@@ -20,6 +20,9 @@ the same text. Other agents apply a skill when its description matches.
 - [dependency-updates](.agents/skills/dependency-updates/SKILL.md)
 - [supply-chain-artifacts](.agents/skills/supply-chain-artifacts/SKILL.md)
 - [release-publish](.agents/skills/release-publish/SKILL.md)
+- [ansible-roles](.agents/skills/ansible-roles/SKILL.md)
+- [opentofu-iac](.agents/skills/opentofu-iac/SKILL.md)
+- [sops-secrets](.agents/skills/sops-secrets/SKILL.md)
 
 ## Always-on rules
 
@@ -234,6 +237,40 @@ per-tool host-vs-Docker resolution table. Mirror that structure when adding cont
 
 ---
 
+# Local CI before push
+
+GitHub Actions is the merge gate, not the first place a change is tested. Run the repository's local parity script and fix failures on the machine before `git push`.
+
+## Order
+
+1. The repo's host-first script, usually `scripts/check-ci-local.sh` or `common/scripts/check-ci-local.sh`. See [build-test-environments.mdc](.cursor/rules/build-test-environments.mdc).
+2. Docker only for the tools that script queues. Do not install those tools on the system OS.
+3. Push one pull request per repo when the local run is green. Do not push to watch a workflow fail and then push again.
+
+A workflow that only runs on GitHub (a private registry login, a release publish) still gets a local stand-in where the repo has one: `docker build`, the image's structure test, and the scanner image.
+
+---
+
+# Public docs hygiene
+
+README, Docker Hub Overview, GitHub Packages description, and GitHub Release notes are for someone using the repository or the image. Cite [DOC-PUB-001](https://github.com/pirlruc/guardrails/blob/1.12.0/markdown/guardrails.md).
+
+## Write
+
+- What the image or repository is, how to pull or call it, and which tag or digest to pin.
+- Inputs, outputs, and permissions a caller must grant.
+- Links as GitHub URLs. See [cross-repo-links.mdc](.cursor/rules/cross-repo-links.mdc).
+
+## Do not write
+
+- Instructions addressed to an agent, session transcripts, plan names, or task-ledger notes.
+- Machine-local paths (`/home/…`, a home-directory checkout).
+- `docs/ai-agent-handoff.md` as a primary entry. That file is for maintainers.
+
+Hub Overview pages cannot follow a relative link to a sibling markdown file. Cross-image links on those pages are absolute GitHub URLs.
+
+---
+
 # Cross-repo linkage
 
 Every repository is standalone. Where a sibling repo happens to sit on disk is incidental to the machine it was
@@ -333,7 +370,7 @@ issue text by hand.
 
 Field definitions: [guardrails deviation rule](https://github.com/pirlruc/guardrails#deviation-rule).
 Process and approval flow:
-[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.8.0/github-issue-adr/docs/process/guardrail-compliance.md).
+[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.9.1/github-issue-adr/docs/process/guardrail-compliance.md).
 
 ## Related
 
@@ -344,7 +381,7 @@ Process and approval flow:
 
 # github-issue-adr methodology
 
-[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.8.0/github-issue-adr) is the methodology for every
+[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.9.1/github-issue-adr) is the methodology for every
 repo carrying this scaffold. Do not introduce a second decision-record format alongside it.
 
 ## Core model

@@ -42,10 +42,6 @@ and publish a GitHub Release. Prefer tags without a `v` prefix to match existing
 PyPI publish stays `workflow_dispatch`. The `ci-python` image is published to Docker Hub and GHCR.
 Pin it by digest. The pull command and the tag table are in the image docs linked above.
 
-## Maintainers
-
-The handoff for the next maintainer is [docs/ai-agent-handoff.md](./docs/ai-agent-handoff.md).
-
 ## Repository layout
 
 | Path                                       | Purpose                                                                           |
