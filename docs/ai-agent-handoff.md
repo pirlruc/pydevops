@@ -155,4 +155,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
-*Last updated: 2026-10-06 (Hub and GHCR ci-python 3.1.2 digests)*
+- 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
+  three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
+  Confirm those expiries before Thursday 06:17 UTC.
+
+*Last updated: 2026-10-23 (token audit wired to the read PATs)*
