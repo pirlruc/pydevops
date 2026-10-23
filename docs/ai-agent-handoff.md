@@ -133,6 +133,10 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 4. PyPI publish stays `workflow_dispatch`.
 5. PDO-PRIV-001: the four `ghcr.io/pirlruc` jobs in `python-quality.yml`
    set `packages: read` and `container.credentials` (confirmed 2026-10-23).
+6. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
+   `.github/workflows/hub-description.yml`. It calls
+   [container-hub-description](https://github.com/pirlruc/containerdevops/blob/6.3.0/.github/workflows/container-hub-description.yml)
+   and does not republish the image.
 
 ## Major themes (quality gates)
 
@@ -159,6 +163,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
+- 2026-10-23: Hub Overview dispatch for `ci-python`. It does not republish the image.
 - 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
   three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
   Confirm those expiries before Thursday 06:17 UTC.
@@ -169,4 +174,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (3.2.0 image digests; tag 3.2.1 only)*
+*Last updated: 2026-10-23 (Hub Overview dispatch for ci-python)*
