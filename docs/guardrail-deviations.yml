@@ -20,9 +20,11 @@ deviations:
     review: 2026-12-31
   - id: CI-032
     why: >-
-      A user-owned private repository on GitHub Free cannot protect the
-      default branch or tags. Callers pin this repo by commit SHA (CI-018).
-      Do not add a ruleset that only exists while the repository is public.
+      The repository is public and has an active default-branch ruleset
+      (deletion, non-fast-forward, and pull request). It returns to private
+      on the Free plan, where that ruleset cannot be enforced. Callers pin
+      this repo by commit SHA (CI-018). The ruleset stays for the public
+      window and is not the private-repo control.
     epic: PDO-PIN-003
     owner: pirlruc
     approved_by: Engineering Lead

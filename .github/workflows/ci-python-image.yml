@@ -85,6 +85,42 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  scan-posture:
+    needs: build
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
+    with:
+      image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build.outputs.handoff_package, needs.build.outputs.digest) }}
+      results_artifact: container-scan-posture-debian
+      sarif_category: trivy-posture-debian
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
+      pkg_types: os,library
+      ignorefile: none
+      blocking: false
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  scan-posture-alpine:
+    needs: build-alpine
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
+    with:
+      image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build-alpine.outputs.handoff_package, needs.build-alpine.outputs.digest) }}
+      results_artifact: container-scan-posture-alpine
+      sarif_category: trivy-posture-alpine
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
+      pkg_types: os,library
+      ignorefile: none
+      blocking: false
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
   publish:
     needs: [build]
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish)
