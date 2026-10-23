@@ -69,6 +69,17 @@ jobs:
     secrets:
       repo_token: ${{ secrets.SCORECARD_TOKEN }}
 
+  token-audit:
+    name: Scheduled — token audit
+    permissions: {}
+    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
+    with:
+      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
+    secrets:
+      guardrails_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
+      containerdevops_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
   scheduled-mutmut:
     name: Scheduled — mutation testing (Mutmut)
     runs-on: ubuntu-latest
