@@ -44,6 +44,7 @@ jobs:
     name: Scheduled — supply chain
     permissions:
       contents: read
+      actions: read
       security-events: write
     uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
@@ -58,6 +59,7 @@ jobs:
     if: (github.event.repository.fork == false) && github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
+      actions: read
       security-events: write
       id-token: write
     uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@d03953476f3d5fa1081a0834d9882007ff26dd91

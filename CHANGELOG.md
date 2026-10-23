@@ -22,7 +22,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   links that name the current process cite **1.9.1**.
 - Callers pin commondevops **5.4.1**
   (`d03953476f3d5fa1081a0834d9882007ff26dd91`) and containerdevops **6.3.0**
-  (`dd884203c9ffe30e4d4da838cc9e88a888a484a1`).
+  (`dd884203c9ffe30e4d4da838cc9e88a888a484a1`). The scaffold job grants
+  `issues: read`. Scorecard and supply-chain jobs grant `actions: read`
+  for the nested SARIF upload.
 - `scripts/check-ci-docker.sh` uses ci-lint **5.4.1-alpine**.
 - ci-python refreshes certifi, virtualenv, the Debian base, and the jq pin.
 - Alpine bases move to Python `sha256:d51c377a…` (created 2026-10-11) and
