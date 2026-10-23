@@ -193,7 +193,7 @@ milestones:
             - .github/workflows/
         acceptance_criteria:
           - Every workflow has top-level permissions default-deny
-          - Every actions/checkout sets persist-credentials: false
+          - "Every actions/checkout sets persist-credentials: false"
           - Jobs needing secrets skip dependabot[bot]
         guardrail_refs:
           - CI-025
@@ -275,7 +275,7 @@ milestones:
             - README.md
             - examples/call-python-quality.yml
         acceptance_criteria:
-          - workflows.md trigger text matches on: in devops-ci.yml and devops-scheduled.yml
+          - "workflows.md trigger text matches on: in devops-ci.yml and devops-scheduled.yml"
           - Consumer examples pin an annotated tag that exists
           - Dependabot cadence documented as monthly in workflows.md
         guardrail_refs:
@@ -409,7 +409,7 @@ milestones:
           https://github.com/pirlruc/github-scaffold/blob/main/templates/dependabot.example.yml
         out_of_scope:
           - Creating or rotating DEPENDABOT_GITHUB_TOKEN (operator-only)
-          - Uncommenting registries: before that Dependabot secret exists
+          - "Uncommenting registries: before that Dependabot secret exists"
           - Treating an Actions secret as a substitute
         architecture:
           target: .github/dependabot.yml
@@ -418,7 +418,7 @@ milestones:
             - docs/ai-agent-handoff.md
         acceptance_criteria:
           - Operator has created Dependabot secret DEPENDABOT_GITHUB_TOKEN (not an Actions secret)
-          - Top-level registries: github-private is uncommented and referenced from updates entries that clone private git
+          - "Top-level registries: github-private is uncommented and referenced from updates entries that clone private git"
           - Dependabot Updates no longer fail cloning pirlruc/github-scaffold
         guardrail_refs:
           - SC-DEP-001
@@ -641,7 +641,7 @@ milestones:
               files:
                 - .github/workflows/python-quality.yml
             verification:
-              - grep -q 'UV_PYTHON: \"3.13\"' .github/workflows/python-quality.yml
+              - "grep -q 'UV_PYTHON: \"3.13\"' .github/workflows/python-quality.yml"
             guardrail_refs:
               - PY-RUN-003
 
@@ -876,3 +876,32 @@ milestones:
               - test -f docker/ci-python/Dockerfile.alpine
             guardrail_refs:
               - CI-039
+
+      - id: PDO-PRIV-001
+        status: open
+        title: Keep the private GHCR pull on ci-lint and ci-python
+        overview:
+          problem: >-
+            All GitHub packages are private. python-quality.yml already sets
+            packages read and container.credentials. A later edit can drop that
+            and the pull fails.
+          goal: >-
+            The workflow docs and the jobs keep that pull for every ghcr.io/pirlruc
+            job container.
+        decision: >-
+          In the context of private packages, facing a job container pull, we
+          decided to keep the credential block, to achieve the same pull after
+          the access grant, accepting that the caller repo must be on the package
+          access list.
+        acceptance_criteria:
+        - python-quality.yml jobs that pull ghcr.io set credentials and packages read
+        tasks:
+        - id: PDO-PRIV-001-T1
+          status: open
+          title: Confirm the credential blocks remain
+          instructions:
+            files:
+            - .github/workflows/python-quality.yml
+            - docs/github-packages.md
+          verification:
+          - rg -n 'credentials:' .github/workflows/python-quality.yml

@@ -158,5 +158,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
   three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
   Confirm those expiries before Thursday 06:17 UTC.
+- 2026-10-23: PDO-PRIV-001 records the private GHCR credential block. The
+  pull stays on `packages: read` and `container.credentials`.
 
-*Last updated: 2026-10-23 (token audit wired to the read PATs)*
+*Last updated: 2026-10-23 (PDO-PRIV-001; token audit wired)*
