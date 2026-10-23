@@ -7,15 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-pydevops-320` releases **3.2.0**. `main` includes #206, #211, and #212 |
+| Branch | `main` at **3.2.0** (`47391b7`). Digest write-back is tag **3.2.1** with no GitHub Release |
 | `docs/guardrails` | tag **1.12.0** → `f4baf6198006c6b898eee9cec451b66b87129bd3` |
 | `.github/scaffold` | tag **1.10.0** → `1d9901f7e7e5785abb7cac6f5d46e0e8e2023ff8` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
 | commondevops caller pin | tag **5.4.1** → `d03953476f3d5fa1081a0834d9882007ff26dd91` |
 | containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
-| ci-python (debian, unsuffixed) | `3.1.2` `sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b` |
-| ci-python (alpine) | `3.1.2-alpine` `sha256:df3d72b78a63da5992ff95689c1fda03f2857224f4d383da689476e7b1c87219` |
-| Latest annotated tag | **`3.1.2`** until **3.2.0** is tagged |
+| ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
+| ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
+| Latest annotated tag | **`3.2.0`** until the digest write-back is tagged **3.2.1** |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -87,7 +87,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
-- Keep a **single** commondevops SHA (`b3c462be…` / tag 5.1.2).
+- Callers pin commondevops **5.4.1**. The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
@@ -125,9 +125,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. After the 3.2.0 image publish finishes, write the new ci-python digests
-   back with an annotated tag and no GitHub Release. A release event
-   republishes the images and moves `latest`.
+1. Tag **3.2.1** after this digest write-back merges. No GitHub Release.
 2. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.
 3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
@@ -171,4 +169,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (3.2.0 pins; braces ignore; private GHCR confirmed)*
+*Last updated: 2026-10-23 (3.2.0 image digests; tag 3.2.1 only)*
