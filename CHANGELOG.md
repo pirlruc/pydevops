@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.2.2] - 2026-10-23
+
+### Changed
+
+- Pin guardrails **1.13.1** (`1945211a`). No Kotlin consumer. Existing
+  caller SHAs are unchanged. This tag does not publish a GitHub Release.
+- Hub Overview updates on a push to `main` when `docs/docker-hub*.md`
+  changes. That path does not publish an image.
+
 ## [3.2.1] - 2026-10-23
 
 ### Changed

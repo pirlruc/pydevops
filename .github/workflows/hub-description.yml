@@ -1,9 +1,15 @@
 # Push the ci-python Docker Hub Overview without rebuilding the image.
 # The called workflow is containerdevops 6.3.0.
+# Push to main when the Hub page changes. A release event republishes the image.
 
 name: Hub description
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/docker-hub*.md"
+      - ".github/workflows/hub-description.yml"
   workflow_dispatch:
 
 permissions:
