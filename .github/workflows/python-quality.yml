@@ -237,7 +237,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-shield-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-static:
@@ -319,7 +319,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-static-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-supply-chain:
@@ -400,7 +400,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-security-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-test:
@@ -481,7 +481,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-test-artifacts
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-report:
@@ -533,28 +533,28 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-shield-artifacts
           path: _merge/shield
       - name: Download static artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-static-artifacts
           path: _merge/static
       - name: Download supply-chain artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-security-artifacts
           path: _merge/security
       - name: Download test artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-test-artifacts
           path: _merge/test
       - name: Merge downloaded artifacts
@@ -601,7 +601,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
       - name: Build release distributions (tag runs)
@@ -612,7 +612,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') && github.ref_type == 'tag'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: release-dist
           path: ${{ format('{0}/dist', inputs.working_directory) }}
       - name: Render pull request comment body
@@ -635,7 +635,7 @@ jobs:
           == github.repository
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: pr-quality-comment
           path: quality-pr-comment.md
           if-no-files-found: ignore
@@ -689,7 +689,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         continue-on-error: true
         with:
-          retention-days: 7
+          retention-days: 1
           name: pr-quality-comment
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
@@ -778,7 +778,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          retention-days: 7
+          retention-days: 1
           name: dast-reports
           path: |
             report_html.html
@@ -825,13 +825,13 @@ jobs:
       - name: Download quality bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: quality-bundle
           path: bundle
       - name: Download release distributions
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 7
+          retention-days: 1
           name: release-dist
           path: dist
       - name: Create release with dist and quality bundle

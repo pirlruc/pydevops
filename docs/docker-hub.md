@@ -48,7 +48,7 @@ Node, and uv. Consumer project dependencies are not baked in. Jobs still run
 
 ## Verify a publish
 
-Pull the 3.1.2 Debian digest above. Signing is skipped
+Pull the 3.2.0 Debian digest above. Signing is skipped
 while the repo is private (`SC-SIGN-001`). The registry stores BuildKit
 provenance (`mode=max`) and an SBOM.
 
