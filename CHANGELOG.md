@@ -25,6 +25,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   (`dd884203c9ffe30e4d4da838cc9e88a888a484a1`).
 - `scripts/check-ci-docker.sh` uses ci-lint **5.4.1-alpine**.
 - ci-python refreshes certifi, virtualenv, the Debian base, and the jq pin.
+- Alpine bases move to Python `sha256:d51c377a…` (created 2026-10-11) and
+  Node `sha256:44264a18…` (created 2026-10-21). The previous Python digest
+  was 30 days old.
 - Mutmut reads `mutmut_pytest.ini` and does not fail on `--cov-fail-under`.
 - `python-quality` jobs that pull `ghcr.io/pirlruc` keep `packages: read`
   and `container.credentials`.
