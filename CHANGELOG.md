@@ -5,11 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-10-23
+
 ### Added
 
 - The Thursday token audit checks `GUARDRAILS_READ_TOKEN`,
   `CONTAINERDEVOPS_READ_TOKEN`, and `COMMONDEVOPS_READ_TOKEN`. It does not
   pass a Scorecard token.
+- Time-boxed ignore for braces `GHSA-vfj7-8cjw-p6xm` in
+  `docker/ci-python/package-lock.json`. jscpd 4.0.5 has no patched braces.
+  Review 2027-01-31.
+
+### Changed
+
+- Pin guardrails **1.12.0** and github-scaffold **1.10.0**. Methodology
+  links that name the current process cite **1.9.1**.
+- Callers pin commondevops **5.4.1**
+  (`d03953476f3d5fa1081a0834d9882007ff26dd91`) and containerdevops **6.3.0**
+  (`dd884203c9ffe30e4d4da838cc9e88a888a484a1`).
+- `scripts/check-ci-docker.sh` uses ci-lint **5.4.1-alpine**.
+- ci-python refreshes certifi, virtualenv, the Debian base, and the jq pin.
+- Mutmut reads `mutmut_pytest.ini` and does not fail on `--cov-fail-under`.
+- `python-quality` jobs that pull `ghcr.io/pirlruc` keep `packages: read`
+  and `container.credentials`.
 
 ## [3.1.2] - 2026-10-02
 

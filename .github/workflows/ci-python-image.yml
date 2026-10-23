@@ -26,11 +26,11 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/containerdevops/.github/workflows/container-lint.yml@2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+    uses: pirlruc/containerdevops/.github/workflows/container-lint.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
     with:
       dockerfile: docker/ci-python/Dockerfile
       working_directory: .
-      scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
       runner_image: ""
       run_infra_lint: false
       run_secrets_scan: true
@@ -44,18 +44,19 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
       image_name: ci-python:ci
       artifact_name: container-image-ci-python
       handoff_package: ci-python
-      scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
       structure_test_config: docker/ci-python/container-structure-test.yml
+      ignorefile: docker/ci-python/.trivyignore.yaml
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -66,18 +67,19 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
       image_name: ci-python:ci-alpine
       artifact_name: container-image-ci-python-alpine
       handoff_package: ci-python
-      scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
       structure_test_config: docker/ci-python/container-structure-test.yml
+      ignorefile: docker/ci-python/.trivyignore.yaml
     secrets:
       scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -91,13 +93,13 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
       image_name: ci-python
       dockerhub_image: pirlruc/ci-python
-      scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
       platforms: linux/amd64
       tag_suffix: -debian
       tag_alias_unsuffixed: true
@@ -124,13 +126,13 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
       image_name: ci-python
       dockerhub_image: pirlruc/ci-python
-      scripts_ref: 2ad052e69d2587cdaf8ccac59b9dae5c60f5560b
+      scripts_ref: dd884203c9ffe30e4d4da838cc9e88a888a484a1
       platforms: linux/amd64
       tag_suffix: -alpine
       tag_alias_unsuffixed: false
