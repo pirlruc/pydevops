@@ -11,16 +11,16 @@ Same contents as the Docker Hub page. Not a product runtime — no `HEALTHCHECK`
 | User | non-root `1000:1000` |
 | Base | Debian 13 (`ci-python`); Alpine 3.24 (`-alpine`) |
 
-Published at 3.1.0. Debian owns the unsuffixed tag. There is no `3.1.0-debian`
-tag and no `latest-alpine` on this release. The next publish adds both.
-`python-quality.yml` pins the Debian digest for static, supply-chain, and test.
+Published at 3.1.2 on GHCR and Docker Hub. Debian owns the unsuffixed tag.
+`3.1.2-debian` and `latest-alpine` exist. Platform manifests match the Hub
+page. `python-quality.yml` pins a digest for static, supply-chain, and test.
 dast stays on the host.
 
 ## Authentication
 
 ```bash
 echo "$CR_PAT" | docker login ghcr.io -u USERNAME --password-stdin
-docker pull ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101
+docker pull ghcr.io/pirlruc/ci-python@sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b
 ```
 
 ## Hardened local run
@@ -32,7 +32,7 @@ docker run --rm \
   --security-opt no-new-privileges \
   --tmpfs /tmp:rw,noexec,nosuid,size=256m \
   -v "$PWD:/workspace:ro" -w /workspace \
-  ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101 \
+  ghcr.io/pirlruc/ci-python@sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b \
   ruff --version
 ```
 
@@ -45,7 +45,7 @@ jobs:
     permissions:
       packages: read
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101
+      image: ghcr.io/pirlruc/ci-python@sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

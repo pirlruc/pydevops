@@ -9,7 +9,8 @@ Locust) and **Mutmut** (scheduled).
 
 - **[Which workflow is for apps vs this repo](./.github/workflows/README.md)** (short index)
 - **[Workflows (inputs, secrets, permissions, Dependabot)](./docs/workflows.md)**
-- **[AI / maintainer handoff](./docs/ai-agent-handoff.md)**
+- **[ci-python on Docker Hub](./docs/docker-hub.md)**
+- **[ci-python on GitHub Packages](./docs/github-packages.md)**
 
 ## Example app integration
 
@@ -26,7 +27,7 @@ drift).
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.0.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.1.2
     with:
       strictness_level: High
       docstring_format: Google
@@ -36,10 +37,14 @@ jobs:
       caller_pat: ${{ secrets.caller_pat }}
 ```
 
-Cutting a release: land `main`, create an annotated tag (`git tag -a 3.0.0 -m "Release 3.0.0"`),
+Cutting a release: land `main`, create an annotated tag (`git tag -a 3.1.2 -m "Release 3.1.2"`),
 and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `2.0.0`.
-PyPI publish stays `workflow_dispatch`. This repo does not publish container images, so
-Docker Hub / GitHub Packages docs are not applicable.
+PyPI publish stays `workflow_dispatch`. The `ci-python` image is published to Docker Hub and GHCR.
+Pin it by digest. The pull command and the tag table are in the image docs linked above.
+
+## Maintainers
+
+The handoff for the next maintainer is [docs/ai-agent-handoff.md](./docs/ai-agent-handoff.md).
 
 ## Repository layout
 
@@ -50,7 +55,8 @@ Docker Hub / GitHub Packages docs are not applicable.
 | `.github/workflows/publish-pypi.yml`       | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`)             |
 | `.github/workflows/devops-ci.yml`          | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
 | `.github/workflows/devops-scheduled.yml`   | **This repo:** Thursday lint/Scorecard/Mutmut/EOL |
-| `docs/`                                    | Workflows, handoff, issues, deviations |
+| `docs/`                                    | Workflows, image docs, issues, deviations |
+| `docker/ci-python/`                        | Published `ci-python` image |
 | `.github/dependabot.yml`                   | uv, pip/npm under `dependencies/`, GitHub Actions                                 |
 | `.github/dependencies/`                    | Pinned tools, `uv-version.txt`, jscpd npm package                                 |
 | `.github/config/`                          | zizmor, Semgrep rules, `python-support-versions.json`                             |

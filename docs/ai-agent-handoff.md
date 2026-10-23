@@ -13,8 +13,8 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | methodologies (links only; not a submodule) | tag **1.8.0** |
 | commondevops caller pin | tag **5.3.0** → `803bfe60ff30d5bbcefe7fe6e38070999a66531d` |
 | containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (included in tag **6.2.0**) |
-| ci-python (debian, unsuffixed) | `3.1.0` `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
-| ci-python (alpine) | `3.1.0-alpine` `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
+| ci-python (debian, unsuffixed) | `3.1.2` `sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b` |
+| ci-python (alpine) | `3.1.2-alpine` `sha256:df3d72b78a63da5992ff95689c1fda03f2857224f4d383da689476e7b1c87219` |
 | Latest annotated tag | **`3.1.2`** |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
@@ -32,7 +32,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | PDO-GATE-001 self-CI floors / Gitleaks pin | Done (this wave) |
 | PDO-DEP-001 Dependabot private git | **Done** ([#144](https://github.com/pirlruc/pydevops/issues/144)) — `registries: github-private` on github-actions; PAT includes pydevops (self-clone HTTP 200, 2026-09-13). |
 | PDO-PIN-001 guardrails 1.6.0 | Done (this wave) |
-| PDO-IMG-001 ci-python | Done — GHCR 3.1.0; Hub publish is release 3.1.2 |
+| PDO-IMG-001 ci-python | Done — Hub and GHCR 3.1.2 |
 
 ## Wave E (2026-09-11)
 
@@ -155,4 +155,10 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   showed it blocking egress, so no allowlist was added. Quality jobs use
   the GHCR image from 3.1.1. dast stays on the host.
 
-*Last updated: 2026-10-07 (phase-3 review issues appended to docs/issues.yml)*
+- 2026-10-23: scheduled token audit pins commondevops **5.4.1** and checks the
+  three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
+  Confirm those expiries before Thursday 06:17 UTC.
+- 2026-10-23: PDO-PRIV-001 records the private GHCR credential block. The
+  pull stays on `packages: read` and `container.credentials`.
+
+*Last updated: 2026-10-23 (PDO-PRIV-001; token audit wired)*

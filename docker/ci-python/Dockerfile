@@ -8,7 +8,7 @@ WORKDIR /opt/jscpd
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-FROM dhi.io/python:3.13-debian13-dev@sha256:cb32401c177600c7bacdb96a49ef51dd10d9967a868614288c428acc41e65604 AS quality
+FROM dhi.io/python:3.13-debian13-dev@sha256:9f749050e3565136aa368b8f2314b88070522eac1778a0a149d3186bb0923af4 AS quality
 COPY --from=dhi.io/uv:0-debian13@sha256:f62f9c40d79d02b2a24dc6fce9e4860c27833b08a9501517537d665d4dc1caa6 \
   /uv /usr/local/bin/uv
 COPY requirements.txt /tmp/requirements.txt
@@ -17,7 +17,7 @@ RUN /usr/local/bin/uv venv /opt/quality --python /usr/bin/python3 \
       -r /tmp/requirements.txt \
  && rm -f /tmp/requirements.txt
 
-FROM dhi.io/python:3.13-debian13-dev@sha256:cb32401c177600c7bacdb96a49ef51dd10d9967a868614288c428acc41e65604
+FROM dhi.io/python:3.13-debian13-dev@sha256:9f749050e3565136aa368b8f2314b88070522eac1778a0a149d3186bb0923af4
 
 LABEL org.opencontainers.image.title="ci-python" \
       org.opencontainers.image.description="Python quality toolchain: uv, quality CLIs, jscpd, syft, grype, cloc, jq. Debian 13. Non-root 1000:1000, linux/amd64." \
@@ -33,9 +33,9 @@ USER root
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       cloc=2.04-1 \
-      jq=1.8.2-1+dhi1 \
+      jq=1.8.2-1+deb13u0+dhi1 \
       git=1:2.47.3-0+deb13u1+dhi2 \
-      ca-certificates=20250419+dhi2 \
+      ca-certificates=20250419+deb13u1+dhi0 \
  && rm -rf /var/lib/apt/lists/* \
  && if ! id -u 1000 >/dev/null 2>&1; then \
       printf 'ci:x:1000:1000::/home/ci:/bin/sh\n' >> /etc/passwd; \

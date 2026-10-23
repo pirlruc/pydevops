@@ -12,23 +12,20 @@ no `HEALTHCHECK`.
 | User | non-root `1000:1000` |
 | Base | Debian 13 via `dhi.io/python` for the unsuffixed tag; Alpine 3.24 for `-alpine` |
 
-Release 3.1.0 is on GitHub Packages
-(`ghcr.io/pirlruc/ci-python`). Docker Hub repository `pirlruc/ci-python`
-exists. Release 3.1.2 is the first publish to that repository.
+Release 3.1.2 is published to Docker Hub and GitHub Packages.
 `python-quality.yml` runs static, supply-chain, and test jobs in the
 GHCR image. dast stays on the host.
 
-### Tags (GHCR 3.1.0; Hub tags arrive with 3.1.2)
+### Tags
 
 | Tag | Meaning |
 |-----|---------|
-| `3.1.0` | Debian analysis. Digest `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
-| `3.1.0-alpine` | Alpine analysis. Digest `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
-| `latest` | Latest non-prerelease Debian publish |
+| `3.1.2` / `3.1.2-debian` / `latest` / `latest-debian` | Debian `sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b` |
+| `3.1.2-alpine` / `latest-alpine` | Alpine `sha256:df3d72b78a63da5992ff95689c1fda03f2857224f4d383da689476e7b1c87219` |
+| `3.1.0` | Previous GHCR Debian analysis. Digest `sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101` |
+| `3.1.0-alpine` | Previous GHCR Alpine analysis. Digest `sha256:05571768e616c05a32d66919cf748da6108b79a879136f68acf29198a81fd32b` |
 
-3.1.0 has no `-debian` tag and no `latest-alpine`. The next publish adds both,
-matching `ci-lint`. Debian owns the unsuffixed tag. Prefer a digest. `latest`
-is never the only tag.
+Debian owns the unsuffixed tag. Prefer a digest. `latest` is never the only tag.
 
 ## Hardened local run
 
@@ -39,7 +36,7 @@ docker run --rm \
   --security-opt no-new-privileges \
   --tmpfs /tmp:rw,noexec,nosuid,size=256m \
   -v "$PWD:/workspace:ro" -w /workspace \
-  ghcr.io/pirlruc/ci-python@sha256:00b55d327ee2a8c78d4d428281819d64db4fad8a965e2cdb1c1b45c091831101 \
+  pirlruc/ci-python@sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b \
   ruff --version
 ```
 
@@ -51,7 +48,7 @@ Node, and uv. Consumer project dependencies are not baked in. Jobs still run
 
 ## Verify a publish
 
-Pull the 3.1.0 Debian digest above. Signing is skipped
+Pull the 3.1.2 Debian digest above. Signing is skipped
 while the repo is private (`SC-SIGN-001`). The registry stores BuildKit
 provenance (`mode=max`) and an SBOM.
 

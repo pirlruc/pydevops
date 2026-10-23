@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- The Thursday token audit checks `GUARDRAILS_READ_TOKEN`,
+  `CONTAINERDEVOPS_READ_TOKEN`, and `COMMONDEVOPS_READ_TOKEN`. It does not
+  pass a Scorecard token.
+
 ## [3.1.2] - 2026-10-02
 
 ### Changed
