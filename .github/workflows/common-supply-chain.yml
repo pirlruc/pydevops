@@ -47,11 +47,15 @@ jobs:
   supply-chain:
     # CI-024
     if: github.event.pull_request.user.login != 'dependabot[bot]'
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
       blocking: ${{ inputs.blocking }}
       working_directory: ${{ inputs.working_directory }}
       license_deny_list: ${{ inputs.license_deny_list }}
-      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
+      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
     secrets:
       checkout_token: ${{ secrets.checkout_token }}

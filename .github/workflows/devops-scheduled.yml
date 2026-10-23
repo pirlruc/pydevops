@@ -17,9 +17,9 @@ jobs:
     name: Scheduled — workflow lint (actionlint + zizmor)
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
-      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
+      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
@@ -32,11 +32,11 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
+      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -44,12 +44,13 @@ jobs:
     name: Scheduled — supply chain
     permissions:
       contents: read
+      actions: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 803bfe60ff30d5bbcefe7fe6e38070999a66531d
+      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -58,9 +59,10 @@ jobs:
     if: (github.event.repository.fork == false) && github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
+      actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@803bfe60ff30d5bbcefe7fe6e38070999a66531d
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.

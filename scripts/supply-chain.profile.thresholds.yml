@@ -8,7 +8,10 @@ dependency_update_blocked_semver_levels: none    # SC-DEP-003
 dependency_update_cooldown_days: 7               # SC-DEP-006 — version updates; security updates are exempt
 
 # SPDX license policy for SC-LIC-001.
-# Prefer license_allow_list (SPDX expressions). license_deny_list is the legacy substring shape.
-# Empty deny list with an empty allow list means the gate runs but denies nothing; missing file fails closed (CI-022).
-license_deny_list: []                            # SC-LIC-001
+# Prefer license_allow_list (SPDX expressions). license_deny_list is the legacy substring shape
+# and must stay a one-line JSON array: scripts/license_gate.py parses it with json.loads.
+# Substrings are case-insensitive. "GPL" is omitted because it matches inside "LGPL".
+# "AGPL-3.0" covers AGPL-3.0-only and AGPL-3.0-or-later. "CC-BY-NC" covers the non-commercial
+# Creative Commons family. An empty allow list does not waive this deny list.
+license_deny_list: ["AGPL-3.0", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "CC-BY-NC"]  # SC-LIC-001
 license_allow_list: []                           # SC-LIC-001

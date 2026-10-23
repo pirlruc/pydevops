@@ -3,19 +3,19 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-10-01)
+## Branch / pins (2026-10-23)
 
 | Item | Value |
 |------|-------|
-| Branch | `main` (release **3.1.2** publishes Hub tags; pinned image stays **3.1.0** until write-back) |
-| `docs/guardrails` | tag **1.10.0** → `e2db476f…` |
-| `.github/scaffold` | tag **1.8.0** → `ac9059fd…` |
-| methodologies (links only; not a submodule) | tag **1.8.0** |
-| commondevops caller pin | tag **5.3.0** → `803bfe60ff30d5bbcefe7fe6e38070999a66531d` |
-| containerdevops caller pin | `2ad052e69d2587cdaf8ccac59b9dae5c60f5560b` (included in tag **6.2.0**) |
+| Branch | `feature-pydevops-320` releases **3.2.0**. `main` includes #206, #211, and #212 |
+| `docs/guardrails` | tag **1.12.0** → `f4baf6198006c6b898eee9cec451b66b87129bd3` |
+| `.github/scaffold` | tag **1.10.0** → `1d9901f7e7e5785abb7cac6f5d46e0e8e2023ff8` |
+| methodologies (links only; not a submodule) | tag **1.9.1** |
+| commondevops caller pin | tag **5.4.1** → `d03953476f3d5fa1081a0834d9882007ff26dd91` |
+| containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
 | ci-python (debian, unsuffixed) | `3.1.2` `sha256:0406ae7d5d15466c4d1c6a48ae28b749ee101674d3e2d2c69f3888675c427a1b` |
 | ci-python (alpine) | `3.1.2-alpine` `sha256:df3d72b78a63da5992ff95689c1fda03f2857224f4d383da689476e7b1c87219` |
-| Latest annotated tag | **`3.1.2`** |
+| Latest annotated tag | **`3.1.2`** until **3.2.0** is tagged |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -125,10 +125,16 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. After the 3.1.2 image publish finishes, write the new digests back into
-   `python-quality.yml` and the registry docs.
-2. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
-3. PyPI publish stays `workflow_dispatch`.
+1. After the 3.2.0 image publish finishes, write the new ci-python digests
+   back with an annotated tag and no GitHub Release. A release event
+   republishes the images and moves `latest`.
+2. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
+   upstream fix in jscpd 4.0.5 / braces 3.0.3.
+3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
+   Leave it unset until then.
+4. PyPI publish stays `workflow_dispatch`.
+5. PDO-PRIV-001: the four `ghcr.io/pirlruc` jobs in `python-quality.yml`
+   set `packages: read` and `container.credentials` (confirmed 2026-10-23).
 
 ## Major themes (quality gates)
 
@@ -159,6 +165,10 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   three read PATs this repo has. It does not pass `SCORECARD_TOKEN`.
   Confirm those expiries before Thursday 06:17 UTC.
 - 2026-10-23: PDO-PRIV-001 records the private GHCR credential block. The
-  pull stays on `packages: read` and `container.credentials`.
+  pull stays on `packages: read` and `container.credentials`. Confirmed on
+  the four job containers.
+- 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
+  commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
+  is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (PDO-PRIV-001; token audit wired)*
+*Last updated: 2026-10-23 (3.2.0 pins; braces ignore; private GHCR confirmed)*
