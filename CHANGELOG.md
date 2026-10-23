@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.2.1] - 2026-10-23
+
+### Changed
+
+- Record the published 3.2.0 linux/amd64 manifests. Debian
+  `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c`.
+  Alpine
+  `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83`.
+  `python-quality` pins the Debian manifest. This tag does not publish a
+  GitHub Release.
+
 ## [3.2.0] - 2026-10-23
 
 ### Added
