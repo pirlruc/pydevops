@@ -51,11 +51,11 @@ jobs:
       contents: read
       actions: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@d03953476f3d5fa1081a0834d9882007ff26dd91
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
     with:
       blocking: ${{ inputs.blocking }}
       working_directory: ${{ inputs.working_directory }}
       license_deny_list: ${{ inputs.license_deny_list }}
-      scripts_ref: d03953476f3d5fa1081a0834d9882007ff26dd91
+      scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
     secrets:
       checkout_token: ${{ secrets.checkout_token }}
