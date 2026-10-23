@@ -1,0 +1,23 @@
+# Push the ci-python Docker Hub Overview without rebuilding the image.
+# The called workflow is containerdevops 6.3.0.
+
+name: Hub description
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci-python:
+    permissions:
+      contents: read
+    uses: pirlruc/containerdevops/.github/workflows/container-hub-description.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
+    with:
+      dockerhub_image: pirlruc/ci-python
+      dockerhub_readme: docs/docker-hub.md
+      dockerhub_short_description: Python quality toolchain for CI jobs
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_DESCRIPTION_TOKEN: ${{ secrets.DOCKERHUB_DESCRIPTION_TOKEN }}
