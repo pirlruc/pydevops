@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- Quality artifacts keep one day. The braces ignore expires 2026-11-22.
+- Advisory scan-posture jobs scan `os,library` with ignores off.
+- mutmut 3.8 reads `[tool.mutmut]` so the stats pytest does not load coverage.
+- Pin github-scaffold **1.10.2** (`c8eddcfb`). Hub verify text names the
+  3.2.0 digest.
+
 ## [3.2.2] - 2026-10-23
 
 ### Changed
