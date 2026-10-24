@@ -7,15 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main`. **3.2.2** is an annotated tag only (guardrails 1.13.1). **3.2.1** records the 3.2.0 digests and has no GitHub Release |
+| Branch | `main` at `9c52f4aa`. **3.2.3** is an annotated tag on that commit and has no GitHub Release. There is no 3.3.0. The changelog heading stays `[Unreleased]`. Do not move `3.2.3`. The repo is public; the owner can set it private. |
 | `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
-| `.github/scaffold` | tag **1.10.0** → `1d9901f7e7e5785abb7cac6f5d46e0e8e2023ff8` |
+| `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
 | commondevops caller pin | tag **5.4.1** → `d03953476f3d5fa1081a0834d9882007ff26dd91` |
 | containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.2`** |
+| Latest annotated tag | **`3.2.3`** on `9c52f4aa`. No GitHub Release |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -125,7 +125,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. Tag **3.2.1** after this digest write-back merges. No GitHub Release.
+1. **3.2.3** is already tagged. Do not cut 3.3.0 or a GitHub Release for it. Image contents did not change. Hub pages stay on 3.2.0.
 2. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.
 3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
@@ -146,6 +146,8 @@ Central evaluation remains **`python -m scripts.quality_gates`**. High floors lo
 Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality.yml` stay in-repo.
 
 ## Recent history
+
+- 2026-10-24: **3.2.3** on `9c52f4aa` (PR 218). Mutmut 3.8 uses a real `[tool.mutmut]` list. No GitHub Release. No 3.3.0. `ci-python` was not republished. Do not move `3.2.3`.
 
 - 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
   quality CLIs installed three times per `python-quality` run. Added
@@ -174,4 +176,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-23 (PDO-PRIV-001 closed)*
+*Last updated: 2026-10-24 (annotated tag 3.2.3, scaffold pin 1.10.2)*

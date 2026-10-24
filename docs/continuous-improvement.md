@@ -147,6 +147,7 @@ Do not recommend removing these without **requires user decision**:
 4. `docs/issues.yml` is the authored backlog
 5. Guardrails stay canonical in `pirlruc/guardrails` — record deviations here only
 6. Do **not** move dast off the host, or drop the published `ci-python` image, without a decision
+7. A workflow-only annotated tag has no GitHub Release. Do not cut a release only to move a changelog heading or reprint Hub. The git tag does not carry an image digest
 
 ## Automation configuration
 
