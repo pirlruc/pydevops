@@ -1,5 +1,5 @@
 # Push the ci-python Docker Hub Overview without rebuilding the image.
-# The called workflow is containerdevops 6.3.0.
+# The called workflow is containerdevops 6.3.5.
 # Push to main when the Hub page changes. A release event republishes the image.
 
 name: Hub description
@@ -19,7 +19,7 @@ jobs:
   ci-python:
     permissions:
       contents: read
-    uses: pirlruc/containerdevops/.github/workflows/container-hub-description.yml@dd884203c9ffe30e4d4da838cc9e88a888a484a1
+    uses: pirlruc/containerdevops/.github/workflows/container-hub-description.yml@c92c83bd4ccb9f0040f11ca9e99bc1b4f50b652e
     with:
       dockerhub_image: pirlruc/ci-python
       dockerhub_readme: docs/docker-hub.md

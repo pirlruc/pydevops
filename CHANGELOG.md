@@ -3,11 +3,17 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [3.2.4] - 2026-10-27
 
 ### Changed
 
-- Quality artifacts keep one day. The braces ignore expires 2026-11-22.
+- virtualenv is 21.14.11. The withdrawn braces advisory is no longer ignored.
+- gitleaks is 8.30.1 and the sentinel image is pinned by digest. grype is 0.121.0.
+- Image and Hub callers use containerdevops 6.3.5. Lint callers grant
+  `packages: read`. Scan callers grant `actions: read`.
+- commondevops stays at 5.4.4 until tag 5.5.1 exists. The ci-lint job
+  image stays at 5.3.0 until 5.5.0 is published.
+- Quality artifacts keep one day.
 - Advisory scan-posture jobs scan `os,library` with ignores off.
 - mutmut 3.8 reads `[tool.mutmut]` so the stats pytest does not load coverage.
 - Pin github-scaffold **1.10.2** (`c8eddcfb`). Hub verify text names the
