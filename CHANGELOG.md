@@ -3,6 +3,13 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Fixed
+
+- Mutmut stats collection copies `scripts` and `src` into the mutant tree.
+  The 3.2.4 dispatch still failed with `No module named 'scripts'`.
+
 ## [3.2.4] - 2026-10-27
 
 ### Changed

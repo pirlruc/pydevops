@@ -147,7 +147,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
-- 2026-10-27: **3.2.4** on `7732db2` (PR 220). Annotated tag only. `ci-python` was not republished. The ci-lint job image stays at the 5.3.0 digest until commondevops 5.5.0 exists. Do not move `3.2.3` or `3.2.4`.
+- 2026-10-27: **3.2.4** on `7732db2` (PR 220). Annotated tag only. `ci-python` was not republished. The ci-lint job image stays at the 5.3.0 digest until commondevops 5.5.0 exists. Dispatch https://github.com/pirlruc/pydevops/actions/runs/40605271764 started and Mutmut failed collecting stats (`No module named 'scripts'`). The follow-up copies `scripts` and `src` into the mutant tree. Do not move `3.2.3` or `3.2.4`.
 - 2026-10-24: **3.2.3** on `9c52f4aa` (PR 218). Mutmut 3.8 uses a real `[tool.mutmut]` list. No GitHub Release. No 3.3.0. `ci-python` was not republished. Do not move `3.2.3`.
 
 - 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
