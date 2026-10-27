@@ -4,27 +4,29 @@
 # Epic body, so nothing is copied into docs/issues.yml or into issue text by hand.
 #
 # Field definitions: https://github.com/pirlruc/guardrails#deviation-rule
-# Approval flow:     https://github.com/pirlruc/methodologies/blob/1.9.1/github-issue-adr/docs/process/guardrail-compliance.md
+# Approval flow:     https://github.com/pirlruc/methodologies/blob/1.9.2/github-issue-adr/docs/process/guardrail-compliance.md
 #
 # Being stricter than the org default is always allowed and needs no entry here.
 
 deviations:
   - id: SC-SIGN-001
     why: >-
-      ci-python publishes images. Private Free-plan repository; Sigstore
-      keyless signing is unavailable. Publish sets sign=false. Registry
-      provenance is mode=max without a GitHub attestation.
+      The repository is public today, so publish signs while visibility stays
+      public. It returns to private on the Free plan, where keyless signing
+      stops (sign is keyed on visibility == public). Registry provenance
+      stays mode=max. The agent does not change visibility.
     epic: PDO-PIN-003
     owner: pirlruc
     approved_by: Engineering Lead
     review: 2026-12-31
   - id: CI-032
     why: >-
-      The repository is public and has an active default-branch ruleset
-      (deletion, non-fast-forward, and pull request). It returns to private
-      on the Free plan, where that ruleset cannot be enforced. Callers pin
-      this repo by commit SHA (CI-018). The ruleset stays for the public
-      window and is not the private-repo control.
+      The default-branch ruleset requires pins, scaffold / verify, and
+      Detect changed paths. The release-tags ruleset blocks tag deletion,
+      non-fast-forward, and update. The repository returns to private on
+      the Free plan, where rulesets cannot be enforced. Callers pin this
+      repo by commit SHA (CI-018). The rulesets stay for the public window
+      and are not the private-repo control.
     epic: PDO-PIN-003
     owner: pirlruc
     approved_by: Engineering Lead

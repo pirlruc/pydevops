@@ -27,7 +27,7 @@ drift).
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.1.2
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.2.4
     with:
       strictness_level: High
       docstring_format: Google

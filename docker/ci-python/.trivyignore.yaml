@@ -1,9 +1,3 @@
-# jscpd 4.0.5 installs braces 3.0.3 from docker/ci-python/package-lock.json.
-# No patched braces release. Review 2026-11-22. SC-TRIAGE-001.
-vulnerabilities:
-  - id: GHSA-vfj7-8cjw-p6xm
-    paths:
-      - "opt/jscpd/node_modules/braces/**"
-      - "opt/jscpd/package-lock.json"
-    expired_at: 2026-11-22
-    statement: jscpd 4.0.5 depends on braces 3.0.3. No upstream fix. The lockfile is docker/ci-python/package-lock.json.
+# Review: 2026-11-22. braces GHSA-vfj7-8cjw-p6xm was withdrawn on
+# 2026-10-23. The list is empty.
+vulnerabilities: []
