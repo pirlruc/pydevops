@@ -21,11 +21,12 @@ deviations:
     review: 2026-12-31
   - id: CI-032
     why: >-
-      The default-branch ruleset requires status checks, but the check list
-      is empty, so nothing is enforced. There is no tag ruleset. The
-      repository returns to private on the Free plan, where rulesets cannot
-      be enforced. Callers pin this repo by commit SHA (CI-018). The ruleset
-      stays for the public window and is not the private-repo control.
+      The default-branch ruleset requires pins, scaffold / verify, and
+      Detect changed paths. The release-tags ruleset blocks tag deletion,
+      non-fast-forward, and update. The repository returns to private on
+      the Free plan, where rulesets cannot be enforced. Callers pin this
+      repo by commit SHA (CI-018). The rulesets stay for the public window
+      and are not the private-repo control.
     epic: PDO-PIN-003
     owner: pirlruc
     approved_by: Engineering Lead
