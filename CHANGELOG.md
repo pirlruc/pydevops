@@ -3,6 +3,13 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.6] - 2026-10-27
+
+### Fixed
+
+- Mutmut `source_paths` is `scripts`. The default guess is `src`, whose
+  only module is an empty package, so 3.2.5 stopped with no covered mutant.
+
 ## [3.2.5] - 2026-10-27
 
 ### Fixed

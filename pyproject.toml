@@ -122,5 +122,6 @@ exclude-newer = "7 days"
 default-groups = ["dev", "scripts"]
 
 [tool.mutmut]
+source_paths = ["scripts"]
 pytest_add_cli_args = ["-c", "mutmut_pytest.ini", "-p", "no:cov"]
 also_copy = ["mutmut_pytest.ini", "scripts", "src"]
