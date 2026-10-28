@@ -49,7 +49,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - gitleaks is 8.30.1 and the sentinel image is pinned by digest. grype is 0.121.0.
 - Image and Hub callers use containerdevops 6.3.5. Lint callers grant
   `packages: read`. Scan callers grant `actions: read`.
-- commondevops stays at 5.4.4 until tag 5.5.2 exists. The ci-lint job
+- commondevops stays at 5.4.4 until tag 5.5.1 exists. The ci-lint job
   image stays at 5.3.0 until 5.5.0 is published.
 - Quality artifacts keep one day.
 - Advisory scan-posture jobs scan `os,library` with ignores off.
