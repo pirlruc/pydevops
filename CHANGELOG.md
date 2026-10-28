@@ -3,6 +3,13 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.8] - 2026-10-28
+
+### Changed
+
+- The quality job image is ci-lint 5.5.0 linux/amd64
+  `sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba`.
+
 ## [3.2.7] - 2026-10-27
 
 ### Fixed
