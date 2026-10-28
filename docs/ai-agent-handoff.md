@@ -11,7 +11,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
 | `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | tag **5.5.3** → `c8ab7171a3897bddc58e3fd8c508529ca9803571`. `scripts_ref` matches. pydevops can pull private `ci-lint` and `ci-supply-chain`. |
+| commondevops caller pin | `71bdc6832998e77d5dd89afda9d9ff98570034b8`. Tag 5.5.3 stays `c8ab717`. `scripts_ref` matches. Dependabot passes `DEPENDABOT_GITHUB_TOKEN`. pydevops can pull private `ci-lint` and `ci-supply-chain`. |
 | containerdevops caller pin | tag **6.3.5** → `c92c83bd4ccb9f0040f11ca9e99bc1b4f50b652e` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
@@ -180,4 +180,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (Dependabot 221, 222, 224, and 225 merged)*
+*Last updated: 2026-10-28 (virtualenv 21.14.13, jscpd 5.3.2 drops spark-md5, commondevops pin `71bdc68`)*

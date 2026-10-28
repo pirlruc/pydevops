@@ -119,6 +119,9 @@ quote-style = "single"
 
 [tool.uv]
 exclude-newer = "7 days"
+# CVE-2026-115586 is fixed in virtualenv 21.14.13 (uploaded 2026-10-22),
+# which is still inside the 7-day window. Drop this override after 2026-10-30.
+exclude-newer-package = { virtualenv = "2026-10-23T00:00:00Z" }
 default-groups = ["dev", "scripts"]
 
 [tool.mutmut]

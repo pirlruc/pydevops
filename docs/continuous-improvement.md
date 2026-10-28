@@ -143,7 +143,7 @@ Do not recommend removing these without **requires user decision**:
 
 1. Consumers pin reusable workflows by **commit SHA**
 2. Top-level default-deny `permissions:` and `persist-credentials: false` (CI-025)
-3. CI-024 Dependabot skip on jobs needing Actions secrets (Scorecard, PyPI, PR comments)
+3. CI-024 Dependabot skip stays on Scorecard, PyPI, and PR comments. Scaffold and doc verify run and pass `DEPENDABOT_GITHUB_TOKEN`
 4. `docs/issues.yml` is the authored backlog
 5. Guardrails stay canonical in `pirlruc/guardrails` — record deviations here only
 6. Do **not** move dast off the host, or drop the published `ci-python` image, without a decision

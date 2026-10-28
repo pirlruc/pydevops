@@ -5,10 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dependabot pull requests pass `DEPENDABOT_GITHUB_TOKEN` into scaffold
+  and doc verify. Actions runs pass `COMMONDEVOPS_READ_TOKEN`.
+- virtualenv is 21.14.13 (CVE-2026-115586). The 7-day uv window still
+  hides that upload, so `exclude-newer-package` allows virtualenv through
+  2026-10-23. Drop that override after 2026-10-30.
+- The ci-python npm lock installs jscpd 5.3.2. jscpd 4.0.5 pulled
+  spark-md5 3.0.2, which grant denies (WTFPL). The image is not republished.
+
 ### Changed
 
-- commondevops callers pin 5.5.3 (`c8ab7171a3897bddc58e3fd8c508529ca9803571`).
-  `scripts_ref` matches that commit. Dispatch concurrency is per workflow.
+- commondevops callers pin `71bdc6832998e77d5dd89afda9d9ff98570034b8`.
+  `scripts_ref` matches that commit. Tag 5.5.3 stays `c8ab717`.
+  `common-doc-verify` at that commit runs on Dependabot.
+  Dispatch concurrency is per workflow.
   Job containers pass the 5.5.0 linux/amd64 manifests and do not
   forward `checkout_token`. That secret is the registry password, and
   the read PAT cannot see the package. `github.token` can.
