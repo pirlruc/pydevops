@@ -10,7 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - The quality job image stays on the pullable ci-lint digest.
   5.5.0 is a private package and other repositories cannot pull it.
 
-- commondevops callers pin 5.5.1 (`c866096b836f288415b3c1040621ca9bbb372982`), which includes the
+- commondevops callers pin 5.5.2 (`83d4b87eb8eef920ca86d7ad63bf13145a025957`), which includes the
   dispatch concurrency fix. scripts_ref matches that commit.
 
 ## [3.2.8] - 2026-10-28
@@ -49,7 +49,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - gitleaks is 8.30.1 and the sentinel image is pinned by digest. grype is 0.121.0.
 - Image and Hub callers use containerdevops 6.3.5. Lint callers grant
   `packages: read`. Scan callers grant `actions: read`.
-- commondevops stays at 5.4.4 until tag 5.5.1 exists. The ci-lint job
+- commondevops stays at 5.4.4 until tag 5.5.2 exists. The ci-lint job
   image stays at 5.3.0 until 5.5.0 is published.
 - Quality artifacts keep one day.
 - Advisory scan-posture jobs scan `os,library` with ignores off.
