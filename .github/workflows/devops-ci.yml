@@ -108,6 +108,7 @@ jobs:
       blocking: true
       working_directory: .
       scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -171,6 +172,7 @@ jobs:
     uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
       scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
       blocking: true
     secrets:
       # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
