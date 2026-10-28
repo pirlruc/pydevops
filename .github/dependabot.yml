@@ -59,6 +59,12 @@ updates:
       - github-private
     cooldown:
       default-days: 7
+    # Security updates ignore multi-ecosystem groups and opened one PR per
+    # package. Group them.
+    groups:
+      uv-security:
+        applies-to: security-updates
+        patterns: ["*"]
 
   - package-ecosystem: pip
     directory: /.github/dependencies/dast-python
