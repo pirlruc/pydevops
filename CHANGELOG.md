@@ -14,6 +14,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   2026-10-23. Drop that override after 2026-10-30.
 - The ci-python npm lock installs jscpd 5.3.2. jscpd 4.0.5 pulled
   spark-md5 3.0.2, which grant denies (WTFPL). The image is not republished.
+- ci-python pip locks pin filelock 4.2.4. 4.0.9 in
+  `docker/ci-python/requirements.txt` is CVE-2026-112940. The image is
+  not republished.
 
 ### Changed
 
