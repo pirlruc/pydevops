@@ -147,7 +147,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
-- 2026-10-27: **3.2.4** on `7732db2` is scanners only. **3.2.5** copied `scripts` into the mutant tree. **3.2.6** sets `source_paths` to `scripts` (the default guess is the empty `src` package). **3.2.7** aliases `Function._nodeid` because mutmut 3.8.0 still reads it and pytest 9 removed it. No image republish. The ci-lint job image stays at the 5.3.0 digest until the 5.5.0 amd64 digest is written back. Do not move `3.2.3` through `3.2.7`.
+- 2026-10-28: **3.2.4** through **3.2.9**. Mutmut `source_paths` is `scripts`. pytest 9 needs the `_nodeid` alias. The 3.2.7 dispatch scored 67.87% (gate 85%). The quality job image stays on the pullable digest; ci-lint 5.5.0 is private. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.9`.
 - 2026-10-24: **3.2.3** on `9c52f4aa` (PR 218). Mutmut 3.8 uses a real `[tool.mutmut]` list. No GitHub Release. No 3.3.0. `ci-python` was not republished. Do not move `3.2.3`.
 
 - 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
@@ -177,4 +177,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-27 (annotated tag 3.2.4, no image republish)*
+*Last updated: 2026-10-28 (annotated tag 3.2.9, no image republish)*
