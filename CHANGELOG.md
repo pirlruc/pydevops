@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- The quality job image stays on the pullable ci-lint digest.
+  5.5.0 is a private package and other repositories cannot pull it.
+
 - commondevops callers pin 5.5.1 (`c866096b836f288415b3c1040621ca9bbb372982`), which includes the
   dispatch concurrency fix. scripts_ref matches that commit.
 
