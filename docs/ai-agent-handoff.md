@@ -7,15 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `main` at `9c52f4aa`. **3.2.3** is an annotated tag on that commit and has no GitHub Release. There is no 3.3.0. The changelog heading stays `[Unreleased]`. Do not move `3.2.3`. The repo is public; the owner can set it private. |
+| Branch | `main`. **3.2.10** is the annotated tag for the README example and the mutmut path list. No GitHub Release. Do not move `3.2.3` through `3.2.10`. The repo is public; the owner can set it private. |
 | `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
 | `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | tag **5.4.1** → `d03953476f3d5fa1081a0834d9882007ff26dd91` |
-| containerdevops caller pin | tag **6.3.0** → `dd884203c9ffe30e4d4da838cc9e88a888a484a1` |
+| commondevops caller pin | tag **5.4.4** → `4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e`. ci-lint and ci-supply-chain 5.5.0 are private, so this pin stays. |
+| containerdevops caller pin | tag **6.3.5** → `c92c83bd4ccb9f0040f11ca9e99bc1b4f50b652e` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.3`** on `9c52f4aa`. No GitHub Release |
+| Latest annotated tag | **`3.2.10`**. No GitHub Release. The README `uses:` example stays `@3.2.9` because `python-quality.yml` did not change. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -87,7 +87,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
-- Callers pin commondevops **5.4.1**. The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
+- Callers pin commondevops **5.4.4** (`4a7c8c43`). ci-lint and ci-supply-chain 5.5.0 are private. The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
@@ -147,7 +147,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
-- 2026-10-28: **3.2.4** through **3.2.9**. Mutmut `source_paths` is `scripts`. pytest 9 needs the `_nodeid` alias. The 3.2.7 dispatch scored 67.87% (gate 85%). The quality job image stays on the pullable digest; ci-lint 5.5.0 is private. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.9`.
+- 2026-10-28: **3.2.10** narrows mutmut `source_paths` to the modules at or above 85% on the 3.2.7 run. The gate stays 85%. The README `uses:` example is `@3.2.9`. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.10`.
+- 2026-10-28: **3.2.4** through **3.2.9**. Mutmut `source_paths` was `scripts`. pytest 9 needs the `_nodeid` alias. The 3.2.7 dispatch scored 67.87% (gate 85%). The quality job image stays on the pullable digest; ci-lint 5.5.0 is private. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.9`.
 - 2026-10-24: **3.2.3** on `9c52f4aa` (PR 218). Mutmut 3.8 uses a real `[tool.mutmut]` list. No GitHub Release. No 3.3.0. `ci-python` was not republished. Do not move `3.2.3`.
 
 - 2026-10-02: measured apt+syft+grype at 12s, excluding Node, uv, and twelve
@@ -177,4 +178,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (annotated tag 3.2.9, no image republish)*
+*Last updated: 2026-10-28 (annotated tag 3.2.10, no image republish)*
