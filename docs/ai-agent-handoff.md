@@ -147,6 +147,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-10-28: uv security updates are one Dependabot group (`uv-security`, `applies-to: security-updates`). Version updates stay in `all-dependencies`. Open pull requests 221, 222, 224, and 225 are still one package each until Dependabot replaces them.
 - 2026-10-28: commondevops callers pin 5.5.3 (`c8ab717`). `scripts_ref` matches, so a `devops-scheduled.yml` dispatch no longer shares one concurrency group across those reusables. Job containers pass the 5.5.0 linux/amd64 manifests (`ci-lint` `4d96a023…`, `ci-supply-chain` Debian `b43eb3a9…`) and do not forward `checkout_token`. That PAT is the registry password and cannot see the package. `github.token` can. The mutmut gate stays 85%. Do not move `3.2.3` or `3.2.10`. No image republish.
 - 2026-10-28: **3.2.10** on `14c6499` (PR 232). Mutmut `source_paths` is the eight modules at or above 85% on the 3.2.7 run. The gate stays 85%. Dispatch https://github.com/pirlruc/pydevops/actions/runs/40617845190 scored 91.75% (278 killed, 25 survived). Supply-chain, workflow lint, and secrets-sast were cancelled by the `4a7c8c43` dispatch concurrency group before any step ran. The README `uses:` example is `@3.2.9`. Do not move `3.2.3` through `3.2.10`.
 - 2026-10-28: **3.2.4** through **3.2.9**. Mutmut `source_paths` was `scripts`. pytest 9 needs the `_nodeid` alias. The 3.2.7 dispatch scored 67.87% (gate 85%). The quality job image stays on the pullable digest; ci-lint 5.5.0 is private. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.9`.
@@ -179,4 +180,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (commondevops callers pin 5.5.3 `c8ab717`; mutmut gate stays 85%)*
+*Last updated: 2026-10-28 (uv security updates grouped; commondevops callers pin 5.5.3)*

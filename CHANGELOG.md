@@ -14,6 +14,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   the read PAT cannot see the package. `github.token` can.
   Tags `3.2.3` and `3.2.10` stay put. The mutmut gate stays 85%. No image
   republish.
+- uv security updates use one Dependabot group (`applies-to: security-updates`).
+  Version updates stay in `all-dependencies`.
 
 ## [3.2.10] - 2026-10-28
 
