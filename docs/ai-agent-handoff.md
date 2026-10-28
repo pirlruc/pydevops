@@ -7,15 +7,15 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 
 | Item | Value |
 |------|-------|
-| Branch | `feature-mutmut-restore`. Target release **3.3.0**, digest tag **3.3.1**. Do not move `3.2.3` through `3.2.10`. The repo is public; the owner can set it private. |
+| Branch | `main`. GitHub Release **3.3.0** published `ci-python`. Tag **3.3.1** records those manifests and does not republish. Do not move `3.2.3` through `3.3.0`. The repo is public; the owner can set it private. |
 | `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
 | `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
 | commondevops caller pin | tag **5.6.2** → `b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12`. Job containers use the 5.6.1 linux/amd64 manifests. |
 | containerdevops caller pin | tag **6.3.6** → `b419c24cbaf09f39d73fa0146a71155f1a4fbd54` |
-| ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
-| ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.10`** until Release **3.3.0** publishes `ci-python`. README `uses:` example is `@3.3.0`. |
+| ci-python (debian, unsuffixed) | `3.3.0` linux/amd64 `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd` (tag index `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`) |
+| ci-python (alpine) | `3.3.0-alpine` linux/amd64 `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05` (tag index `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`) |
+| Latest annotated tag | **`3.3.1`** records the 3.3.0 digests. README `uses:` example is `@3.3.1`. Release **3.3.0** published the image. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -126,7 +126,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. **3.2.3** is already tagged. Do not cut 3.3.0 or a GitHub Release for it. Image contents did not change. Hub pages stay on 3.2.0.
+1. Callers pin **3.3.1**. Do not cut a second GitHub Release for the digest write-back. Do not move `3.2.3` through `3.3.0`.
 2. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.
 3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
@@ -148,7 +148,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
-- 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Not committed in this note.
+- 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (https://github.com/pirlruc/pydevops/actions/runs/40761650692). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
+- 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Merged as pull request 241.
 - 2026-10-28: PR 239 merged as `8abeabd`. The Alpine pip lock pins msgpack 1.2.3. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40682682559 on that commit succeeded, including supply-chain and mutmut. Do not dispatch it again unless a new finding lands. The image is not republished. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%.
 - 2026-10-28: PR 238 merged as `52d8b22`. ci-python pip locks pin filelock 4.2.4. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40681089801 on that commit cleared trivy and grant. Grype still failed on msgpack 1.2.2 in `requirements-alpine.txt` (GHSA-j586-36cw-2gc2, fixed in 1.2.3). The Alpine lock now pins 1.2.3. The image is not republished.
 - 2026-10-28: PR 237 merged as `37cb98f`. Dependabot scaffold and doc verify pass `DEPENDABOT_GITHUB_TOKEN`. virtualenv is 21.14.13 (`exclude-newer-package` through 2026-10-23; drop after 2026-10-30). jscpd 5.3.2 drops spark-md5. commondevops pin is `71bdc68`. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40678919180 cleared grant and `uv.lock`. It still failed on filelock 4.0.9 in `docker/ci-python/requirements.txt` (CVE-2026-112940, fixed in 4.2.1). The follow-up pins 4.2.4 in both pip locks. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%. No image republish.
@@ -185,4 +186,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (mutmut scripts score 87.46% on feature-mutmut-restore)*
+*Last updated: 2026-10-28 (3.3.0 published ci-python; 3.3.1 records the linux/amd64 digests; tags 3.2.3–3.3.0 stay)*

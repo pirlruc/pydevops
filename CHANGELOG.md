@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-10-28
+
+### Changed
+
+- Job containers and the Hub/GHCR pages record the 3.3.0 manifests.
+  Actions pins are the `linux/amd64` image manifests. Debian index
+  `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`,
+  linux/amd64
+  `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd`.
+  Alpine index
+  `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`,
+  linux/amd64
+  `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05`.
+  No image republish. Tags 3.2.3 through 3.3.0 stay put.
+
+## [3.3.0] - 2026-10-28
+
 ### Changed
 
 - Mutmut covers `scripts/` again. Vendored `lint-doc-links.py` and
@@ -26,12 +43,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   hides that upload, so `exclude-newer-package` allows virtualenv through
   2026-10-23. Drop that override after 2026-10-30.
 - The ci-python npm lock installs jscpd 5.3.2. jscpd 4.0.5 pulled
-  spark-md5 3.0.2, which grant denies (WTFPL). The image is not republished.
+  spark-md5 3.0.2, which grant denies (WTFPL).
 - ci-python pip locks pin filelock 4.2.4. 4.0.9 in
-  `docker/ci-python/requirements.txt` is CVE-2026-112940. The image is
-  not republished.
+  `docker/ci-python/requirements.txt` is CVE-2026-112940.
 - The Alpine pip lock pins msgpack 1.2.3. 1.2.2 is GHSA-j586-36cw-2gc2.
-  The image is not republished.
 
 ## [3.2.10] - 2026-10-28
 
