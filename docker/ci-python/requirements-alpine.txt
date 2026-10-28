@@ -433,9 +433,9 @@ docstring-parser-fork==0.0.16 \
     --hash=sha256:9ecf861ceab8b87d1297a71001c15a1956ad02e87434ee6473643a5988094f7c \
     --hash=sha256:c024c97af582d6acf85a14f0b332b3a2ab08626648d251c25e47191f33064386
     # via pydoclint
-filelock==4.0.3 \
-    --hash=sha256:30cd166e2aee2c7534ce2c33c6367c4cd051b8368e20e2c4eb0c34f699bacfab \
-    --hash=sha256:87296d60478e14204fd9406e79831400fef76693bae2895deec236c98e87a8aa
+filelock==4.2.4 \
+    --hash=sha256:301241438c57936ef93f4243a94f2559022268bfcf9b375a9a72eb0f8db8358e \
+    --hash=sha256:c6d8663535e1650ee430507b4ffbac7b464dd64b7647ea0112a9f406499d163d
     # via
     #   cachecontrol
     #   python-discovery
