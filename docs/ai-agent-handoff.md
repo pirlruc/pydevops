@@ -147,6 +147,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-10-28: PR 238 merged as `52d8b22`. ci-python pip locks pin filelock 4.2.4. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40681089801 on that commit cleared trivy and grant. Grype still failed on msgpack 1.2.2 in `requirements-alpine.txt` (GHSA-j586-36cw-2gc2, fixed in 1.2.3). The Alpine lock now pins 1.2.3. The image is not republished.
 - 2026-10-28: PR 237 merged as `37cb98f`. Dependabot scaffold and doc verify pass `DEPENDABOT_GITHUB_TOKEN`. virtualenv is 21.14.13 (`exclude-newer-package` through 2026-10-23; drop after 2026-10-30). jscpd 5.3.2 drops spark-md5. commondevops pin is `71bdc68`. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40678919180 cleared grant and `uv.lock`. It still failed on filelock 4.0.9 in `docker/ci-python/requirements.txt` (CVE-2026-112940, fixed in 4.2.1). The follow-up pins 4.2.4 in both pip locks. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%. No image republish.
 - 2026-10-28: uv security updates are one Dependabot group (`uv-security`, `applies-to: security-updates`). Version updates stay in `all-dependencies`. Pull requests 225 (filelock 4.2.1, `c44cdf5`), 221 (msgpack 1.2.3, `94870e2`), 222 (certifi 2026.10.18, `461c546`), and 224 (pylint 4.0.9, `2d2cee9`) are merged. 224 also syncs `.github/dependencies/quality-tools/requirements.txt`, which the scripts job regenerates from `pyproject.toml`.
 - 2026-10-28: commondevops callers pin 5.5.3 (`c8ab717`). `scripts_ref` matches, so a `devops-scheduled.yml` dispatch no longer shares one concurrency group across those reusables. Job containers pass the 5.5.0 linux/amd64 manifests (`ci-lint` `4d96a023…`, `ci-supply-chain` Debian `b43eb3a9…`) and do not forward `checkout_token`. That PAT is the registry password and cannot see the package. `github.token` can. The mutmut gate stays 85%. Do not move `3.2.3` or `3.2.10`. No image republish.
@@ -181,4 +182,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (ci-python filelock 4.2.4, virtualenv 21.14.13, commondevops pin `71bdc68`)*
+*Last updated: 2026-10-28 (alpine msgpack 1.2.3, ci-python filelock 4.2.4, commondevops pin `71bdc68`)*
