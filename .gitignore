@@ -37,6 +37,7 @@ pytestdebug.log
 quality-output/
 .mutmut-cache/
 .mutmut/
+mutants/
 mutmut-results*
 report_html.html
 *.sarif

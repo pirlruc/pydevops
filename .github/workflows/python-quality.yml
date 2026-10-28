@@ -178,7 +178,7 @@ jobs:
     needs: devops-coordinates
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/pirlruc/ci-lint@sha256:38b9afe1086295b011e69d092cf06ee133c17b9784e82a19826db7432ae35c45
+      image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
