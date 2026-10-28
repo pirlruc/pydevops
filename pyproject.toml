@@ -125,18 +125,12 @@ exclude-newer-package = { virtualenv = "2026-10-23T00:00:00Z" }
 default-groups = ["dev", "scripts"]
 
 [tool.mutmut]
-# Modules whose 3.2.7 run killed at least 85% of mutants. The 85% gate
-# stays. The rest of scripts/ is still tested; it is not mutated until
-# those modules clear the same bar.
-source_paths = [
-  "scripts/radon_metrics.py",
-  "scripts/quality_gates/gates_mypy.py",
-  "scripts/quality_gates/readers_bandit.py",
-  "scripts/quality_gates/readers_grype_gitleaks.py",
-  "scripts/quality_gates/readers_mypy_anyexprs.py",
-  "scripts/quality_gates/readers_mypy_lineprecision.py",
-  "scripts/quality_gates/readers_radon.py",
-  "scripts/quality_gates/readers_ruff_jscpd.py",
+# The 85% gate applies to scripts/. Vendored scaffold copies are omitted,
+# matching [tool.coverage.run] omit.
+source_paths = ["scripts"]
+do_not_mutate = [
+  "scripts/lint-doc-links.py",
+  "scripts/validate-yaml.py",
 ]
 pytest_add_cli_args = ["-c", "mutmut_pytest.ini", "-p", "no:cov"]
 also_copy = ["mutmut_pytest.ini", "scripts", "src"]

@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- Mutmut covers `scripts/` again. Vendored `lint-doc-links.py` and
+  `validate-yaml.py` stay out of the mutation set, matching coverage.
+  The 85% gate is unchanged. Local score is 87.46% (4448 killed, 638 survived).
+- commondevops callers pin tag 5.6.2
+  (`b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12`). Job containers use the
+  5.6.1 linux/amd64 manifests. containerdevops callers pin tag 6.3.6
+  (`b419c24cbaf09f39d73fa0146a71155f1a4fbd54`).
+  Tags `3.2.3` through `3.2.10` stay put.
+- uv security updates use one Dependabot group (`applies-to: security-updates`).
+  Version updates stay in `all-dependencies`.
+
 ### Fixed
 
 - Dependabot pull requests pass `DEPENDABOT_GITHUB_TOKEN` into scaffold
@@ -19,20 +32,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   not republished.
 - The Alpine pip lock pins msgpack 1.2.3. 1.2.2 is GHSA-j586-36cw-2gc2.
   The image is not republished.
-
-### Changed
-
-- commondevops callers pin `71bdc6832998e77d5dd89afda9d9ff98570034b8`.
-  `scripts_ref` matches that commit. Tag 5.5.3 stays `c8ab717`.
-  `common-doc-verify` at that commit runs on Dependabot.
-  Dispatch concurrency is per workflow.
-  Job containers pass the 5.5.0 linux/amd64 manifests and do not
-  forward `checkout_token`. That secret is the registry password, and
-  the read PAT cannot see the package. `github.token` can.
-  Tags `3.2.3` and `3.2.10` stay put. The mutmut gate stays 85%. No image
-  republish.
-- uv security updates use one Dependabot group (`applies-to: security-updates`).
-  Version updates stay in `all-dependencies`.
 
 ## [3.2.10] - 2026-10-28
 

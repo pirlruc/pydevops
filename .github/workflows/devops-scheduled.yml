@@ -18,10 +18,10 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@71bdc6832998e77d5dd89afda9d9ff98570034b8
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     with:
-      scripts_ref: 71bdc6832998e77d5dd89afda9d9ff98570034b8
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
+      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       blocking: true
 
   scheduled-secrets-sast:
@@ -29,12 +29,12 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@71bdc6832998e77d5dd89afda9d9ff98570034b8
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 71bdc6832998e77d5dd89afda9d9ff98570034b8
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
+      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
 
   scheduled-supply-chain:
     name: Scheduled — supply chain
@@ -43,12 +43,12 @@ jobs:
       actions: read
       packages: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@71bdc6832998e77d5dd89afda9d9ff98570034b8
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 71bdc6832998e77d5dd89afda9d9ff98570034b8
-      container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:b43eb3a99bc4c2003eb64ef5d6d0cdcbbc22d78904aa6b24d76ad0426035a7f6
+      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:dc83deb4465d5989a03b14ccabef46c3f3426231048b962c69b8e434a7200d48
 
   scheduled-openssf-scorecard:
     name: Scheduled — OpenSSF Scorecard
@@ -58,7 +58,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@71bdc6832998e77d5dd89afda9d9ff98570034b8
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.
@@ -70,9 +70,9 @@ jobs:
   token-audit:
     name: Scheduled — token audit
     permissions: {}
-    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@71bdc6832998e77d5dd89afda9d9ff98570034b8
+    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     with:
-      scripts_ref: 71bdc6832998e77d5dd89afda9d9ff98570034b8
+      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
     secrets:
       guardrails_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
       containerdevops_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}

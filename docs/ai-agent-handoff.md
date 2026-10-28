@@ -3,19 +3,19 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-10-23)
+## Branch / pins (2026-10-28)
 
 | Item | Value |
 |------|-------|
-| Branch | `main`. **3.2.10** is the annotated tag for the README example and the mutmut path list. No GitHub Release. Do not move `3.2.3` through `3.2.10`. The repo is public; the owner can set it private. |
+| Branch | `feature-mutmut-restore`. Target release **3.3.0**, digest tag **3.3.1**. Do not move `3.2.3` through `3.2.10`. The repo is public; the owner can set it private. |
 | `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
 | `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | `71bdc6832998e77d5dd89afda9d9ff98570034b8`. Tag 5.5.3 stays `c8ab717`. `scripts_ref` matches. Dependabot passes `DEPENDABOT_GITHUB_TOKEN`. pydevops can pull private `ci-lint` and `ci-supply-chain`. |
-| containerdevops caller pin | tag **6.3.5** → `c92c83bd4ccb9f0040f11ca9e99bc1b4f50b652e` |
+| commondevops caller pin | tag **5.6.2** → `b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12`. Job containers use the 5.6.1 linux/amd64 manifests. |
+| containerdevops caller pin | tag **6.3.6** → `b419c24cbaf09f39d73fa0146a71155f1a4fbd54` |
 | ci-python (debian, unsuffixed) | `3.2.0` linux/amd64 `sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c` (tag index `sha256:ee88446f…`) |
 | ci-python (alpine) | `3.2.0-alpine` linux/amd64 `sha256:a0d5e489f3f866d9597652187a357dbad575bc2f244597d357260af58e016a83` (tag index `sha256:879d8309…`) |
-| Latest annotated tag | **`3.2.10`**. No GitHub Release. The README `uses:` example stays `@3.2.9` because `python-quality.yml` did not change. |
+| Latest annotated tag | **`3.2.10`** until Release **3.3.0** publishes `ci-python`. README `uses:` example is `@3.3.0`. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -87,6 +87,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
+- Mutmut 3 keeps a survived verdict until that mutant's result is cleared. Adding tests does not re-run mutants whose exit code is already stored. Clear survived (and no-test) entries in `mutants/scripts/**/*.meta` before `mutmut run` when the goal is to kill existing survivors. Killed results can stay cached.
 - Callers pin commondevops **5.5.3** (`c8ab717`). The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
@@ -147,6 +148,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Not committed in this note.
 - 2026-10-28: PR 239 merged as `8abeabd`. The Alpine pip lock pins msgpack 1.2.3. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40682682559 on that commit succeeded, including supply-chain and mutmut. Do not dispatch it again unless a new finding lands. The image is not republished. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%.
 - 2026-10-28: PR 238 merged as `52d8b22`. ci-python pip locks pin filelock 4.2.4. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40681089801 on that commit cleared trivy and grant. Grype still failed on msgpack 1.2.2 in `requirements-alpine.txt` (GHSA-j586-36cw-2gc2, fixed in 1.2.3). The Alpine lock now pins 1.2.3. The image is not republished.
 - 2026-10-28: PR 237 merged as `37cb98f`. Dependabot scaffold and doc verify pass `DEPENDABOT_GITHUB_TOKEN`. virtualenv is 21.14.13 (`exclude-newer-package` through 2026-10-23; drop after 2026-10-30). jscpd 5.3.2 drops spark-md5. commondevops pin is `71bdc68`. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40678919180 cleared grant and `uv.lock`. It still failed on filelock 4.0.9 in `docker/ci-python/requirements.txt` (CVE-2026-112940, fixed in 4.2.1). The follow-up pins 4.2.4 in both pip locks. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%. No image republish.
@@ -183,4 +185,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-28 (scheduled supply-chain green on `8abeabd`, alpine msgpack 1.2.3)*
+*Last updated: 2026-10-28 (mutmut scripts score 87.46% on feature-mutmut-restore)*
