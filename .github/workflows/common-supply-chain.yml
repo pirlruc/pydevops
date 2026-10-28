@@ -59,5 +59,3 @@ jobs:
       license_deny_list: ${{ inputs.license_deny_list }}
       scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
       container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:b43eb3a99bc4c2003eb64ef5d6d0cdcbbc22d78904aa6b24d76ad0426035a7f6
-    secrets:
-      checkout_token: ${{ secrets.checkout_token }}

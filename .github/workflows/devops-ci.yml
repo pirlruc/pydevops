@@ -109,9 +109,6 @@ jobs:
       working_directory: .
       scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
       container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
-    secrets:
-      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
-
   changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
@@ -174,11 +171,7 @@ jobs:
       scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
       container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
       blocking: true
-    secrets:
-      # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
-      # back to github.token. Set the secret (contents:read on pirlruc/commondevops)
-      # if private script checkout fails.
-      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
   ci-supply-chain:
     name: CI — supply chain (Scorecard)
     needs: changes
