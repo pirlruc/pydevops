@@ -3,6 +3,67 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+
+- commondevops callers pin 5.5.3 (`c8ab7171a3897bddc58e3fd8c508529ca9803571`).
+  `scripts_ref` matches that commit. Dispatch concurrency is per workflow.
+  Job containers pass the 5.5.0 linux/amd64 manifests and do not
+  forward `checkout_token`. That secret is the registry password, and
+  the read PAT cannot see the package. `github.token` can.
+  Tags `3.2.3` and `3.2.10` stay put. The mutmut gate stays 85%. No image
+  republish.
+- uv security updates use one Dependabot group (`applies-to: security-updates`).
+  Version updates stay in `all-dependencies`.
+
+## [3.2.10] - 2026-10-28
+
+### Changed
+
+- The README caller example pins `python-quality.yml@3.2.9`. The
+  annotated-tag example is `3.2.9`.
+- Mutmut `source_paths` is the modules whose 3.2.7 run already scored
+  at least 85% (3451 killed, 1634 survived, 67.87% across all of
+  `scripts/`). The gate stays 85%. `no_tests` modules were already
+  outside that score.
+
+## [3.2.9] - 2026-10-28
+
+### Fixed
+
+- The quality job image returns to the pullable ci-lint digest.
+  5.5.0 is a private package. Other repositories get
+  `manifest unknown`.
+
+## [3.2.8] - 2026-10-28
+
+### Changed
+
+- The quality job image is ci-lint 5.5.0 linux/amd64
+  `sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba`.
+
+## [3.2.7] - 2026-10-27
+
+### Fixed
+
+- Stats collection aliases ``Function._nodeid`` for pytest 9. mutmut 3.8
+  still reads the private attribute, and 3.2.6 stopped there.
+
+## [3.2.6] - 2026-10-27
+
+### Fixed
+
+- Mutmut `source_paths` is `scripts`. The default guess is `src`, whose
+  only module is an empty package, so 3.2.5 stopped with no covered mutant.
+
+## [3.2.5] - 2026-10-27
+
+### Fixed
+
+- Mutmut stats collection copies `scripts` and `src` into the mutant tree.
+  The 3.2.4 dispatch still failed with `No module named 'scripts'`.
+
 ## [3.2.4] - 2026-10-27
 
 ### Changed

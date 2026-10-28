@@ -27,7 +27,7 @@ drift).
 ```yaml
 jobs:
   quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.2.4
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.2.9
     with:
       strictness_level: High
       docstring_format: Google
@@ -37,7 +37,7 @@ jobs:
       caller_pat: ${{ secrets.caller_pat }}
 ```
 
-Cutting a release: land `main`, create an annotated tag (`git tag -a 3.1.2 -m "Release 3.1.2"`),
+Cutting a release: land `main`, create an annotated tag (`git tag -a 3.2.9 -m "Release 3.2.9"`),
 and publish a GitHub Release. Prefer tags without a `v` prefix to match existing `1.0.0` / `2.0.0`.
 PyPI publish stays `workflow_dispatch`. The `ci-python` image is published to Docker Hub and GHCR.
 Pin it by digest. The pull command and the tag table are in the image docs linked above.
