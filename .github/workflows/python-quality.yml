@@ -245,7 +245,7 @@ jobs:
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c
+      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -327,7 +327,7 @@ jobs:
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c
+      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -408,7 +408,7 @@ jobs:
     needs: [devops-coordinates, quality-static]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:03cc8582f6751498ed2de1893f05123f1338bc802530dbea0b5b1bf52c3d004c
+      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

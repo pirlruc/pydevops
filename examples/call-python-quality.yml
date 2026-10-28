@@ -18,10 +18,10 @@ jobs:
       contents: read
       pull-requests: write
       security-events: write
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.3.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.3.1
     with:
       devops_repository: pirlruc/pydevops
-      devops_ref: 3.3.0
+      devops_ref: 3.3.1
       strictness_level: Medium
       docstring_format: Google
       enable_dast: false
