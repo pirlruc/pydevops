@@ -17,6 +17,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 - ci-python pip locks pin filelock 4.2.4. 4.0.9 in
   `docker/ci-python/requirements.txt` is CVE-2026-112940. The image is
   not republished.
+- The Alpine pip lock pins msgpack 1.2.3. 1.2.2 is GHSA-j586-36cw-2gc2.
+  The image is not republished.
 
 ### Changed
 
