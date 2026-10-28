@@ -3,6 +3,13 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.7] - 2026-10-27
+
+### Fixed
+
+- Stats collection aliases ``Function._nodeid`` for pytest 9. mutmut 3.8
+  still reads the private attribute, and 3.2.6 stopped there.
+
 ## [3.2.6] - 2026-10-27
 
 ### Fixed
