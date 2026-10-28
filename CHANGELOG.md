@@ -3,6 +3,14 @@
 All notable changes to this repository are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [3.2.9] - 2026-10-28
+
+### Fixed
+
+- The quality job image returns to the pullable ci-lint digest.
+  5.5.0 is a private package. Other repositories get
+  `manifest unknown`.
+
 ## [3.2.8] - 2026-10-28
 
 ### Changed
