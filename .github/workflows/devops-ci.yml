@@ -75,10 +75,10 @@ jobs:
     permissions:
       contents: read
       issues: read
-    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
       blocking: true
-      scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+      scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -86,7 +86,7 @@ jobs:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
       blocking: true
       shell_scripts: scripts/*.sh
@@ -94,7 +94,7 @@ jobs:
       yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
-      scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+      scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
     secrets:
       checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
@@ -103,14 +103,12 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
-    secrets:
-      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
-
+      scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
   changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
@@ -168,15 +166,12 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
-      scripts_ref: 4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+      scripts_ref: c8ab7171a3897bddc58e3fd8c508529ca9803571
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:4d96a0235459c9e2cc724a724f42008dcdc3294940c57edb8b33b11e38efddba
       blocking: true
-    secrets:
-      # Optional. Unset COMMONDEVOPS_READ_TOKEN is empty and the reusable falls
-      # back to github.token. Set the secret (contents:read on pirlruc/commondevops)
-      # if private script checkout fails.
-      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+
   ci-supply-chain:
     name: CI — supply chain (Scorecard)
     needs: changes
@@ -192,7 +187,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@4a7c8c431090f32bb0febcd42f5ac8ef2d405e0e
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@c8ab7171a3897bddc58e3fd8c508529ca9803571
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Without it, ossf/scorecard-action fails with
