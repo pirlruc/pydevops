@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.10] - 2026-10-31
+
+### Fixed
+
+- The reporting job runs the consolidator and the pull-request comment as
+  modules. Running them as files left `scripts` off `sys.path`, so a green
+  gate still failed the job.
+
 ## [3.3.9] - 2026-10-31
 
 ### Fixed
