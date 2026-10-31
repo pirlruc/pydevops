@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.6] - 2026-10-31
+
+### Fixed
+
+- The static phase names each tool as it starts, ignores `.devops` even
+  when pylint is given an absolute path, and uses the image `jscpd`
+  instead of `npx` when that binary is present.
+
 ## [3.3.5] - 2026-10-31
 
 ### Fixed
