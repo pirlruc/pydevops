@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.7] - 2026-10-31
+
+### Fixed
+
+- Pylint also gets `--ignore=.devops,build,.gradle`. `ignore-paths` was
+  not enough, and the static job stayed inside pylint until it was cancelled.
+
 ## [3.3.6] - 2026-10-31
 
 ### Fixed

@@ -88,8 +88,9 @@ if [[ "${want_static}" == "1" ]]; then
   # Pylint (JSON + score line for quality_gates)
   echo "quality: pylint"
   if command -v pylint >/dev/null 2>&1; then
-    pylint . --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
-    pylint . --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
+    # --ignore matches directory names. ignore-paths alone still walked .devops.
+    pylint . --ignore=".devops,build,.gradle" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
+    pylint . --ignore=".devops,build,.gradle" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
     if grep -oE 'rated at [0-9.]+/10' "$OUT/pylint_full.txt" | tail -1 >"$OUT/pylint_score.txt" 2>/dev/null; then
       :
     else
