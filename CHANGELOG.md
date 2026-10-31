@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.2] - 2026-10-31
+
+### Fixed
+
+- python-quality job containers run as root. `ci-lint` and `ci-python` are
+  built as uid 1000, which cannot write the runner temp directory, and
+  `ci-lint` has no git. The shield job mounts the runner git.
+  No image republish.
+
 ## [3.3.1] - 2026-10-28
 
 ### Changed
