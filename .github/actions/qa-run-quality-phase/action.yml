@@ -40,7 +40,9 @@ runs:
         APP_DIR: ${{ inputs.workspace }}/${{ inputs.working-directory }}
         STRICTNESS_LEVEL: ${{ inputs.strictness-level }}
         MYPY_STRICT: ${{ inputs.mypy-strict == true && '1' || '0' }}
-        PACKAGE_MODE: ${{ inputs.installable-app == false && 'scripts' || 'app' }}
+        # Composite inputs are strings. Boolean false arrives as "false",
+        # and "false" == false is not true, so mypy ran on non-packages.
+        PACKAGE_MODE: ${{ (inputs.installable-app == false || inputs.installable-app == 'false') && 'scripts' || 'app' }}
         CONSUMER_THRESHOLDS: ${{ env.CONSUMER_THRESHOLDS }}
       run: |-
         set -euo pipefail
