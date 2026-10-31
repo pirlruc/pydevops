@@ -148,7 +148,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
-- 2026-10-31: **3.3.2** runs python-quality containers as root and mounts git into the `ci-lint` shield job. The images stay uid 1000 and `ci-lint` still has no git. No image republish. Do not move 3.3.1.
+- 2026-10-31: **3.3.3** shield uses gitleaks and semgrep on `PATH` and counts findings with `python3` when `jq` is absent. **3.3.2** runs the containers as root and mounts git into `ci-lint`. No image republish. Do not move 3.3.1 or 3.3.2.
 - 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (https://github.com/pirlruc/pydevops/actions/runs/40761650692). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
 - 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Merged as pull request 241.
 - 2026-10-28: PR 239 merged as `8abeabd`. The Alpine pip lock pins msgpack 1.2.3. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40682682559 on that commit succeeded, including supply-chain and mutmut. Do not dispatch it again unless a new finding lands. The image is not republished. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%.
@@ -187,4 +187,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-31 (3.3.2 python-quality containers run as root; no image republish)*
+*Last updated: 2026-10-31 (3.3.3 shield uses image gitleaks and semgrep; no image republish)*
