@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.3] - 2026-10-31
+
+### Fixed
+
+- The shield action uses gitleaks and semgrep already on `PATH`. `ci-lint`
+  ships both and has no `sudo` or `curl`, so the download step was failing
+  before a report existed. A missing `jq` is counted with `python3`.
+
 ## [3.3.2] - 2026-10-31
 
 ### Fixed

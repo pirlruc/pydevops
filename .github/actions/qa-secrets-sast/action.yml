@@ -22,14 +22,27 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends jq
+        # ci-lint already ships gitleaks and has no sudo or curl.
+        if command -v gitleaks >/dev/null 2>&1; then
+          echo "gitleaks already on PATH: $(command -v gitleaks)"
+          exit 0
+        fi
+        if command -v sudo >/dev/null 2>&1; then
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends jq curl
+        else
+          apt-get update -qq && apt-get install -y --no-install-recommends jq curl
+        fi
         GITLEAKS_VERSION="$(tr -d ' \n\r' < "${GITHUB_ACTION_PATH}/../../dependencies/gitleaks/version.txt")"
         GITLEAKS_SHA="$(tr -d ' \t\n\r' < "${GITHUB_ACTION_PATH}/../../dependencies/gitleaks/linux-amd64.sha256")"
         tmp=$(mktemp -d)
         trap 'rm -rf "$tmp"' EXIT
         curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o "$tmp/gitleaks.tgz"
         echo "${GITLEAKS_SHA}  $tmp/gitleaks.tgz" | sha256sum -c -
-        sudo tar -xzf "$tmp/gitleaks.tgz" -C /usr/local/bin gitleaks
+        if command -v sudo >/dev/null 2>&1; then
+          sudo tar -xzf "$tmp/gitleaks.tgz" -C /usr/local/bin gitleaks
+        else
+          tar -xzf "$tmp/gitleaks.tgz" -C /usr/local/bin gitleaks
+        fi
     - name: Write secret scan report files
       # PY-SEC-003 — secret scanning in CI.
       shell: bash
@@ -40,6 +53,7 @@ runs:
         set -euo pipefail
         mkdir -p "$OUT"
         cd "$WS"
+        git config --global --add safe.directory "$WS" || true
         gitleaks detect --source . --no-banner --verbose --redact \
           --report-format json --report-path "$OUT/gitleaks.json" --exit-code 0
         gitleaks detect --source . --no-banner --verbose --redact \
@@ -50,7 +64,11 @@ runs:
         OUT: ${{ inputs.quality-output-dir }}
       run: |
         set -euo pipefail
-        n=$(jq 'if . == null then 0 elif type == "array" then length else 0 end' "$OUT/gitleaks.json")
+        if command -v jq >/dev/null 2>&1; then
+          n=$(jq 'if . == null then 0 elif type == "array" then length else 0 end' "$OUT/gitleaks.json")
+        else
+          n=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(len(d) if isinstance(d, list) else 0)' "$OUT/gitleaks.json")
+        fi
         if [ "${n:-0}" -gt 0 ]; then
           echo "::error::Gitleaks reported ${n} finding(s). See gitleaks.json in artifacts."
           exit 1
@@ -67,6 +85,10 @@ runs:
         DEVOPS: ${{ inputs.devops-checkout-path }}
       run: |
         set -euo pipefail
+        if command -v semgrep >/dev/null 2>&1; then
+          echo "semgrep already on PATH: $(command -v semgrep)"
+          exit 0
+        fi
         SPEC=$(grep -v '^#' "$DEVOPS/.github/dependencies/semgrep/requirements.txt" | head -1 | tr -d ' \n\r')
         sudo apt-get update && sudo apt-get install -y --no-install-recommends pipx
         pipx ensurepath
