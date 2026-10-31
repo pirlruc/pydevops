@@ -71,16 +71,31 @@ def accumulate_pip_vulns(vulns: Any, highs: int, mediums: int) -> tuple[int, int
     return highs, mediums
 
 
+def pip_audit_rows(data: Any) -> list[Any] | None:
+    """Rows from a pip-audit JSON array or a ``{"dependencies": [...]}`` object.
+
+    pip-audit 2.10 writes the object form. Earlier releases wrote a bare array.
+    """
+    if isinstance(data, list):
+        return data
+
+    if isinstance(data, dict):
+        dependencies = data.get('dependencies')
+        if isinstance(dependencies, list):
+            return dependencies
+
+    return None
+
+
 def pip_audit_vulns(root: Path) -> tuple[int, int] | None:
     """Approximate high/medium counts from pip-audit JSON.
 
-    Returns ``None`` when ``pip_audit.json`` is missing, invalid JSON, or not a list.
+    Returns ``None`` when ``pip_audit.json`` is missing, invalid JSON, or neither
+    a list nor an object with a ``dependencies`` list.
     """
-    data = read_json(root / 'pip_audit.json')
-    if data is None or not isinstance(data, list):
+    rows = pip_audit_rows(read_json(root / 'pip_audit.json'))
+    if rows is None:
         return None
-
-    rows: list[Any] = data
     highs = mediums = 0
     for row in rows:
         vulns = pip_row_vulnerabilities(row)
