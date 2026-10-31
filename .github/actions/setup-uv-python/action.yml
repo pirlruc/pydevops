@@ -21,6 +21,15 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Ensure gzip for the uv archive
+      shell: bash
+      run: |
+        set -euo pipefail
+        if command -v gzip >/dev/null 2>&1; then
+          exit 0
+        fi
+        apt-get update -qq
+        apt-get install -y --no-install-recommends gzip
     - id: uv_version
       name: Read pinned installer version file
       shell: bash
