@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.8] - 2026-10-31
+
+### Fixed
+
+- `installable_app: false` now skips mypy. The composite action receives
+  that boolean as the string `false`, so the old comparison kept package mode.
+
 ## [3.3.7] - 2026-10-31
 
 ### Fixed
