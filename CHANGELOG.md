@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.5] - 2026-10-31
+
+### Fixed
+
+- The static, supply-chain, and test jobs install uv before `uv sync`.
+  `ci-python` does not ship uv, so those steps exited 127.
+
 ## [3.3.4] - 2026-10-31
 
 ### Fixed
