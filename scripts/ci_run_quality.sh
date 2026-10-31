@@ -24,7 +24,8 @@ case "$(echo "${STRICTNESS_LEVEL:-Medium}" | tr '[:upper:]' '[:lower:]')" in
 esac
 
 # When the DevOps repo is checked out into .devops/, exclude it from app scans
-IGNORE_PYLINT="${IGNORE_PYLINT:-^\\.devops/}"
+# Match .devops anywhere. A leading ^ misses the absolute path pylint records.
+IGNORE_PYLINT="${IGNORE_PYLINT:-\\.devops}"
 RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build}"
 PYTEST_IGNORE="${PYTEST_IGNORE:-.devops}"
 IFS=',' read -ra RUFF_EXCL_ITEMS <<< "$RUFF_EXCL"
@@ -85,6 +86,7 @@ if [[ "${want_static}" == "1" ]]; then
   fi
 
   # Pylint (JSON + score line for quality_gates)
+  echo "quality: pylint"
   if command -v pylint >/dev/null 2>&1; then
     pylint . --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
     pylint . --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
@@ -128,6 +130,7 @@ if [[ "${want_static}" == "1" ]]; then
   fi
 
   # pydoclint
+  echo "quality: pydoclint"
   if command -v pydoclint >/dev/null 2>&1; then
     # shellcheck disable=SC2086
     pydoclint . ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
@@ -140,6 +143,7 @@ if [[ "${want_static}" == "1" ]]; then
   fi
 
   # Interrogate (docstring coverage)
+  echo "quality: interrogate"
   if command -v interrogate >/dev/null 2>&1; then
     interrogate . -vv -e .devops >"$OUT/interrogate.txt" 2>&1 || true
   else
@@ -150,8 +154,13 @@ if [[ "${want_static}" == "1" ]]; then
     fi
   fi
 
-  # jscpd (pinned version from DevOps package.json when present; else fallback pin)
-  if command -v npx >/dev/null 2>&1; then
+  # jscpd. Prefer the image binary. npx can sit on the network with no log.
+  echo "quality: jscpd"
+  if command -v jscpd >/dev/null 2>&1; then
+    jscpd . --reporters json --output "$OUT" --format python \
+      --ignore "**/.devops/**" --ignore "**/docs/guardrails/**" --ignore "**/.github/scaffold/**" \
+      --min-lines 5 --min-tokens 50 2>"$OUT/jscpd.stderr" || true
+  elif command -v npx >/dev/null 2>&1; then
     JSCPD_PREFIX="${DEVOPS_DIR}/.github/dependencies/jscpd"
     if [[ -f "${JSCPD_PREFIX}/package.json" ]]; then
       JSCPD_VER=$(
@@ -175,6 +184,7 @@ if [[ "${want_static}" == "1" ]]; then
   fi
 
   # Radon
+  echo "quality: radon"
   if command -v radon >/dev/null 2>&1; then
     radon cc -j . >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
     radon mi -j . >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
