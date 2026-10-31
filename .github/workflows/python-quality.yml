@@ -311,6 +311,11 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
+      - name: Install uv
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: .
       - name: Sync DevOps dependencies
         env:
           PY: ${{ inputs.python_version }}
@@ -395,6 +400,11 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
+      - name: Install uv
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: .
       - name: Sync DevOps dependencies
         env:
           PY: ${{ inputs.python_version }}
@@ -478,6 +488,11 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-qa-uv-
+      - name: Install uv
+        uses: ./.devops/.github/actions/setup-uv-python
+        with:
+          python-version: ${{ inputs.python_version }}
+          working-directory: .
       - name: Sync DevOps dependencies
         env:
           PY: ${{ inputs.python_version }}
