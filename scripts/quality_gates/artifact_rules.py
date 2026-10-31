@@ -12,7 +12,7 @@ JSON_SHAPES: dict[str, tuple[type[Any] | tuple[type[Any], ...], str]] = {
     'gitleaks.json': (list, 'gitleaks.json must be a JSON array'),
     'semgrep.sarif': (dict, 'semgrep.sarif must be a JSON object (SARIF)'),
     'bandit.json': (dict, 'bandit.json must be a JSON object'),
-    'pip_audit.json': (list, 'pip_audit.json must be a JSON array'),
+    'pip_audit.json': ((list, dict), 'pip_audit.json must be a JSON array or object'),
     'grype.json': (dict, 'grype.json must be a JSON object'),
     'radon_cc.json': (dict, 'radon_cc.json must be a JSON object'),
     'radon_mi.json': (dict, 'radon_mi.json must be a JSON object'),

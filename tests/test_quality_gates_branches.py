@@ -108,6 +108,23 @@ def test_pip_audit_dict_row(tmp_path: Path) -> None:
     assert m >= 1
 
 
+def test_pip_audit_dependencies_object(tmp_path: Path) -> None:
+    """pip-audit 2.10 wraps rows in a dependencies object."""
+    payload = {
+        'dependencies': [
+            {'name': 'ok', 'version': '1', 'vulns': []},
+            {'name': 'bad', 'version': '1', 'vulns': [{'id': 'V1', 'severity': 'high'}]},
+        ],
+        'fixes': [],
+    }
+    (tmp_path / 'pip_audit.json').write_text(json.dumps(payload), encoding='utf-8')
+    result = qg._pip_audit_vulns(tmp_path)
+    assert result is not None
+    highs, mediums = result
+    assert highs == 1
+    assert mediums == 0
+
+
 def test_pip_audit_missing_returns_none(tmp_path: Path) -> None:
     """Missing pip_audit.json is treated as unreadable report, not zero vulns."""
     assert qg._pip_audit_vulns(tmp_path) is None

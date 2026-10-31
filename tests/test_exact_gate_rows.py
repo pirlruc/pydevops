@@ -516,7 +516,7 @@ def test_security_gates_exact_copy(tmp_path: Path) -> None:
     rows, fails = gate_vulnerabilities(tmp_path, t)
     assert rows[0]['gate'] == 'pip-audit report (JSON shape)'
     assert rows[0]['actual'] == 'missing or invalid pip_audit.json'
-    assert rows[0]['required'] == 'parseable JSON array'
+    assert rows[0]['required'] == 'JSON array or object with dependencies'
     assert rows[1]['gate'] == 'Grype report (JSON shape)'
     assert 'missing/invalid grype.json' in rows[1]['actual']
     assert rows[2]['gate'] == 'Vulnerabilities (High)'

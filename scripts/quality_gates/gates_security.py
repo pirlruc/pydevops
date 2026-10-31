@@ -50,7 +50,7 @@ def gate_vulnerabilities(
             {
                 'gate': 'pip-audit report (JSON shape)',
                 'actual': 'missing or invalid pip_audit.json',
-                'required': 'parseable JSON array',
+                'required': 'JSON array or object with dependencies',
                 'ok': False,
             },
         )

@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.3.9] - 2026-10-31
+
+### Fixed
+
+- pip-audit 2.10 writes `{"dependencies": [...]}`. The gate accepts that
+  object as well as the older JSON array.
+- Publish workflow pins `pypa/gh-action-pypi-publish` v1.14.3. v1.14.2 is
+  GHSA-5xjx-3w67-w9x9.
+
 ## [3.3.8] - 2026-10-31
 
 ### Fixed
