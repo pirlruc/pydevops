@@ -645,7 +645,7 @@ jobs:
           DEVOPS_ROOT: ${{ github.workspace }}/.devops
         run: |
           uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
-            python scripts/consolidate_artifacts.py
+            python -m scripts.consolidate_artifacts
       - name: Upload quality bundle artifact
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -673,7 +673,7 @@ jobs:
           COMMENT_FILE: ${{ github.workspace }}/quality-pr-comment.md
         run: |
           if ! uv run --python "${UV_PYTHON}" --directory "${DEVOPS_ROOT}" \
-            python scripts/pr_comment_markdown.py > "${COMMENT_FILE}"; then
+            python -m scripts.pr_comment_markdown > "${COMMENT_FILE}"; then
             rm -f "${COMMENT_FILE}"
           fi
           if [ ! -s "${COMMENT_FILE}" ] || ! grep -q '[^[:space:]]' "${COMMENT_FILE}"; then
