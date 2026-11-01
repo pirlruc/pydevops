@@ -187,4 +187,4 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-10-31 (3.3.10 consolidator runs as a module)*
+*Last updated: 2026-11-01 (README example pins 3.3.10).*

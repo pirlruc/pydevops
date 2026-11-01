@@ -1,9 +1,8 @@
 # DevOps Quality-as-a-Service
 
-Reusable GitHub Actions workflows and scripts for high-performance Python CI/CD: **uv**, **Ruff**,
-**Pylint**, **Mypy**, **pydoclint**, **jscpd**, **Radon**, **Gitleaks**, **Semgrep**, **Bandit**,
-**deptry**, **pip-audit**, **Syft**, **Grype**, **pytest**/**coverage**, optional **DAST** (ZAP +
-Locust) and **Mutmut** (scheduled).
+Reusable GitHub Actions quality gates for Python projects.
+
+The workflows use uv, Ruff, Pylint, Mypy, coverage, an SBOM, and SAST. DAST is optional.
 
 ## Documentation
 
@@ -30,10 +29,10 @@ jobs:
       contents: read
       pull-requests: write
       security-events: write
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.3.1
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.3.10
     with:
       devops_repository: pirlruc/pydevops
-      devops_ref: 3.3.1
+      devops_ref: 3.3.10
       strictness_level: High
       docstring_format: Google
       enable_dast: false
