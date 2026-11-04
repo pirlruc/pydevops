@@ -79,8 +79,6 @@ jobs:
     with:
       blocking: true
       scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
-    secrets:
-      checkout_token: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && secrets.DEPENDABOT_GITHUB_TOKEN || secrets.COMMONDEVOPS_READ_TOKEN }}
 
   docs:
     permissions:
@@ -94,8 +92,6 @@ jobs:
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
       scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
-    secrets:
-      checkout_token: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && secrets.DEPENDABOT_GITHUB_TOKEN || secrets.COMMONDEVOPS_READ_TOKEN }}
 
   secrets-sast:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
