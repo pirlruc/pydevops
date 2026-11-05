@@ -36,9 +36,6 @@ jobs:
       run_infra_lint: false
       run_secrets_scan: true
       blocking: true
-    secrets:
-      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
 
   build:
     needs: [lint]
@@ -59,7 +56,6 @@ jobs:
       structure_test_config: docker/ci-python/container-structure-test.yml
       ignorefile: docker/ci-python/.trivyignore.yaml
     secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -82,7 +78,6 @@ jobs:
       structure_test_config: docker/ci-python/container-structure-test.yml
       ignorefile: docker/ci-python/.trivyignore.yaml
     secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -102,8 +97,6 @@ jobs:
       pkg_types: os,library
       ignorefile: none
       blocking: false
-    secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
 
   scan-posture-alpine:
     needs: build-alpine
@@ -121,8 +114,6 @@ jobs:
       pkg_types: os,library
       ignorefile: none
       blocking: false
-    secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
 
   publish:
     needs: [build]
@@ -153,7 +144,6 @@ jobs:
       verify_command: ruff --version
       source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build.outputs.handoff_package, needs.build.outputs.digest) }}
     secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
@@ -184,6 +174,5 @@ jobs:
       verify_command: ruff --version
       source_image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build-alpine.outputs.handoff_package, needs.build-alpine.outputs.digest) }}
     secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
