@@ -72,4 +72,4 @@ Pull the digest recorded in the release. Signing follows repository visibility
 
 ## License
 
-MIT. Source: https://github.com/pirlruc/pydevops
+MIT. Source: <https://github.com/pirlruc/pydevops>
