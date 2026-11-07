@@ -64,7 +64,7 @@ The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** per com
 [`devops-scheduled.yml`](../.github/workflows/devops-scheduled.yml), not in the app `python-quality`
 pipeline.
 
-**Triggers**
+### Triggers
 
 - `workflow_call` — primary entry point for app repositories.
 - `workflow_dispatch` — manual runs (self-test / debugging).
@@ -113,7 +113,7 @@ job’s release step is gated on `refs/tags/X.Y.Z` (no `v` prefix) and successfu
 | `docker_compose_file` | string  | no       | `docker-compose.yml`    | Used when `enable_dast` is true                                                                                                                                                                                          |
 | `dast_target_url`     | string  | no       | `http://localhost:8080` | ZAP / Locust target                                                                                                                                                                                                      |
 
-**Secrets**
+### Secrets
 
 | Secret       | Required | Purpose                                                                                                                                                                                              |
 | ------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -143,7 +143,7 @@ separate Grype CLI `--fail-on` step in the same job, or it would override those 
 **Cross-job cache:** Static, supply-chain, and test jobs restore **`~/.cache/uv`** via
 **`actions/cache`** so repeated `uv` work stays warm across parallel jobs.
 
-**Caller configuration**
+### Caller configuration
 
 Use an explicit `secrets:` map (`caller_pat` is optional). `secrets: inherit` would pass
 every caller secret into the reusable workflow.

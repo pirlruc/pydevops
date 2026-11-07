@@ -93,7 +93,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
   unset. `GITHUB_TOKEN` cannot ListCommits; blocking `true` fails DevOps CI on
-  `main` once paths-filter selects the Scorecard job (docs/` .github/` changes).
+  `main` once paths-filter selects the Scorecard job (`docs/` or `.github/` changes).
 - Private `docs/guardrails` is not initialized in default checkout; High floors
   load from vendored `scripts/python.profile.thresholds.yml` (fail closed on
   missing keys). Missing checkout without a vendored copy warns loudly and uses
