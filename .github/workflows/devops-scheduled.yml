@@ -18,9 +18,9 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       blocking: true
 
@@ -29,11 +29,11 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       blocking: true
       working_directory: .
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
 
   scheduled-supply-chain:
@@ -43,11 +43,11 @@ jobs:
       actions: read
       packages: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       blocking: true
       working_directory: .
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
       container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:dc83deb4465d5989a03b14ccabef46c3f3426231048b962c69b8e434a7200d48
 
   scheduled-openssf-scorecard:
@@ -58,7 +58,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.
@@ -70,15 +70,15 @@ jobs:
   token-audit:
     name: Scheduled — token audit
     permissions: {}
-    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
     secrets:
       guardrails_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
 
   scheduled-mutmut:
     name: Scheduled — mutation testing (Mutmut)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
       contents: read
@@ -128,7 +128,7 @@ jobs:
             mutants
   scheduled-eol:
     name: Scheduled — Python EOL watch
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -234,3 +234,37 @@ jobs:
             exit 1
           fi
           echo "EOL watch job passed."
+
+  security-aggregate:
+    if: always()
+    needs:
+      - scheduled-secrets-sast
+      - scheduled-supply-chain
+      - scheduled-openssf-scorecard
+      - token-audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Fail when a security job failed
+        env:
+          SECRETS: ${{ needs.scheduled-secrets-sast.result }}
+          SUPPLY: ${{ needs.scheduled-supply-chain.result }}
+          SCORE: ${{ needs.scheduled-openssf-scorecard.result }}
+          TOKEN: ${{ needs.token-audit.result }}
+        run: |
+          set -eu
+          failed=""
+          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}" "scorecard=${SCORE}" "token-audit=${TOKEN}"; do
+            name=${item%%=*}
+            result=${item#*=}
+            if [ "${result}" != "success" ] && [ "${result}" != "skipped" ]; then
+              failed="${failed} ${name}(${result})"
+            fi
+          done
+          if [ -n "${failed}" ]; then
+            echo "::error::Security jobs failed:${failed}"
+            exit 1
+          fi
+          echo "Security aggregate passed."

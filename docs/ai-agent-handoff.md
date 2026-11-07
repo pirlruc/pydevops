@@ -8,10 +8,10 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | Item | Value |
 |------|-------|
 | Branch | `main`. GitHub Release **3.3.0** published `ci-python`. Tag **3.3.1** records those manifests and does not republish. Do not move `3.2.3` through `3.3.0`. The repo is public; the owner can set it private. |
-| `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
-| `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
+| `docs/guardrails` | tag **1.15.0** → `2d4bb70e95449f6922781716857adeb22badf676` |
+| `.github/scaffold` | tag **1.12.0** → `9c443ea978851768f451b1df2020dd86dfb1a967` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | tag **5.6.2** → `b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12`. Job containers use the 5.6.1 linux/amd64 manifests. |
+| commondevops caller pin | tag **6.0.1** → `e41270c45b858cfa7a9f8404eaee781b5c29b61c`. Job containers stay on the published linux/amd64 manifests. |
 | containerdevops caller pin | tag **6.3.6** → `b419c24cbaf09f39d73fa0146a71155f1a4fbd54` |
 | ci-python (debian, unsuffixed) | `3.3.0` linux/amd64 `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd` (tag index `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`) |
 | ci-python (alpine) | `3.3.0-alpine` linux/amd64 `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05` (tag index `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`) |
@@ -188,3 +188,5 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   is ignored until 2027-01-31.
 
 *Last updated: 2026-11-01 (README example pins 3.3.10).*
+
+*Last updated: 2026-11-07 — 3.4.0 branch. Guardrails 1.15.0. Scaffold 1.12.0. commondevops 6.0.1. ubuntu-24.04.*

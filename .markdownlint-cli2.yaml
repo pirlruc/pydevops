@@ -1,0 +1,14 @@
+# Authored docs. Generated agent files and pinned submodules are not rewritten here.
+config:
+  MD013: false
+  MD024:
+    siblings_only: true
+  MD033: false
+  MD041: false
+  MD060: false
+ignores:
+  - "docs/guardrails/**"
+  - ".github/scaffold/**"
+  - ".agents/**"
+  - "AGENTS.md"
+  - "SKILLS.md"

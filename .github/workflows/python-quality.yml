@@ -144,7 +144,7 @@ concurrency:
 jobs:
   devops-coordinates:
     name: Resolve DevOps checkout (workflow ref or inputs)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       repository: ${{ steps.calc.outputs.repository }}
@@ -176,7 +176,7 @@ jobs:
   quality-shield:
     name: Job 1 — Shield (secrets + Semgrep SARIF)
     needs: devops-coordinates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       credentials:
@@ -271,7 +271,7 @@ jobs:
   quality-static:
     name: Job 2 — Static analysis (Gatekeeper)
     needs: [devops-coordinates, quality-shield]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
@@ -360,7 +360,7 @@ jobs:
   quality-supply-chain:
     name: Job 3 — Supply chain & SBOM
     needs: [devops-coordinates, quality-shield]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
@@ -448,7 +448,7 @@ jobs:
   quality-test:
     name: Job 4 — Tests & coverage
     needs: [devops-coordinates, quality-static]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
@@ -541,7 +541,7 @@ jobs:
       - quality-supply-chain
       - quality-test
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
       gates_passed: ${{ steps.gates-out.outputs.passed }}
@@ -722,7 +722,7 @@ jobs:
       always() && github.event.pull_request.user.login != 'dependabot[bot]' &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -761,7 +761,7 @@ jobs:
     name: Dynamic analysis (ZAP + Locust)
     if: ${{ inputs.enable_dast == true }}
     needs: [devops-coordinates, quality-test]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
       contents: read
@@ -834,7 +834,7 @@ jobs:
             quality-output
   release-github:
     name: Create GitHub release (dist + quality bundle)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs:
       - quality-supply-chain

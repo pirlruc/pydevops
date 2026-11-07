@@ -75,15 +75,18 @@ jobs:
     permissions:
       contents: read
       issues: read
-    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-scaffold-verify.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       blocking: true
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
+      packs_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
 
   docs:
     permissions:
       contents: read
-    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-doc-verify.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       blocking: true
       shell_scripts: scripts/*.sh
@@ -91,22 +94,25 @@ jobs:
       yaml_files: docs/issues.yml docs/guardrail-deviations.yml docs/issues-sync-targets.yml
       yaml_globs: .github/workflows/*.yml
       run_link_lint: true
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    secrets:
+      checkout_token: ${{ secrets.COMMONDEVOPS_READ_TOKEN }}
 
   secrets-sast:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       blocking: true
       working_directory: .
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
   changes:
     name: Detect changed paths
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     # Workflow-level permissions: {} — explicit read for checkout + paths-filter on PRs.
     permissions:
       contents: read
@@ -161,9 +167,9 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
-      scripts_ref: b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       blocking: true
 
@@ -174,7 +180,7 @@ jobs:
     if: >
       github.event.pull_request.user.login != 'dependabot[bot]' &&
       (github.event_name == 'workflow_dispatch' || needs.changes.outputs.workflows
-      == 'true') &&
+      == 'true' || needs.changes.outputs.scripts == 'true') &&
       github.event.repository.fork == false &&
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     permissions:
@@ -182,7 +188,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Without it, ossf/scorecard-action fails with
@@ -198,7 +204,8 @@ jobs:
     needs: changes
     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.scripts
       == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -515,3 +522,31 @@ jobs:
             exit 1
           fi
           echo "Scripts job passed."
+
+  security-aggregate:
+    if: always()
+    needs: [secrets-sast, ci-supply-chain]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Fail when a security job failed
+        env:
+          SECRETS: ${{ needs.secrets-sast.result }}
+          SUPPLY: ${{ needs.ci-supply-chain.result }}
+        run: |
+          set -eu
+          failed=""
+          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}"; do
+            name=${item%%=*}
+            result=${item#*=}
+            if [ "${result}" != "success" ] && [ "${result}" != "skipped" ]; then
+              failed="${failed} ${name}(${result})"
+            fi
+          done
+          if [ -n "${failed}" ]; then
+            echo "::error::Security jobs failed:${failed}"
+            exit 1
+          fi
+          echo "Security aggregate passed."
