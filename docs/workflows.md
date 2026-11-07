@@ -148,7 +148,7 @@ separate Grype CLI `--fail-on` step in the same job, or it would override those 
 Use an explicit `secrets:` map (`caller_pat` is optional). `secrets: inherit` would pass
 every caller secret into the reusable workflow.
 
-##### Caller permissions
+#### Caller permissions
 
 Callers should **not** grant broad default scopes. Recommended wrapper:
 
