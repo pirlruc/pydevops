@@ -190,3 +190,5 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 *Last updated: 2026-11-01 (README example pins 3.3.10).*
 
 *Last updated: 2026-11-07 — 3.4.0 branch. Guardrails 1.15.0. Scaffold 1.12.0. commondevops 6.0.1. ubuntu-24.04.*
+
+*Last updated: 2026-11-07 — Scorecard Code-Review, Fuzzing, and CII-Best-Practices stay open. See docs/scorecard-open-checks.md.*
