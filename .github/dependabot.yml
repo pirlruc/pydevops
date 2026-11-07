@@ -107,6 +107,20 @@ updates:
     cooldown:
       default-days: 7
 
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Lisbon
+    registries:
+      - github-private
+    commit-message:
+      prefix: build
+      include: scope
+    cooldown:
+      default-days: 7
+
   - package-ecosystem: pre-commit
     directory: /
     patterns: ["*"]

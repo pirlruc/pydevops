@@ -58,4 +58,4 @@ provenance (`mode=max`) and an SBOM.
 
 ## License
 
-MIT. Source: https://github.com/pirlruc/pydevops
+MIT. Source: <https://github.com/pirlruc/pydevops>

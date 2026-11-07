@@ -19,9 +19,9 @@ cd "${ROOT}"
 
 USE_DOCKER=1
 for arg in "$@"; do
-  if [ "${arg}" = "--no-docker" ]; then
-    USE_DOCKER=0
-  fi
+    if [ "${arg}" = "--no-docker" ]; then
+        USE_DOCKER=0
+    fi
 done
 
 DOCKER_STEPS=""
@@ -29,22 +29,22 @@ EXECUTED=""
 MISSING=""
 
 queue_docker() {
-  name="$1"
-  echo "→ ${name} missing on host; queue Docker"
-  DOCKER_STEPS="${DOCKER_STEPS} ${name}"
-  MISSING="${MISSING} ${name}"
+    name="$1"
+    echo "→ ${name} missing on host; queue Docker"
+    DOCKER_STEPS="${DOCKER_STEPS} ${name}"
+    MISSING="${MISSING} ${name}"
 }
 
 run_or_queue() {
-  name="$1"
-  echo "==> ${name}"
-  if command -v "${name}" >/dev/null 2>&1; then
-    echo "→ ${name} (host)"
-    dispatch_ci_step "${name}"
-    EXECUTED="${EXECUTED} ${name}"
-    return 0
-  fi
-  queue_docker "${name}"
+    name="$1"
+    echo "==> ${name}"
+    if command -v "${name}" >/dev/null 2>&1; then
+        echo "→ ${name} (host)"
+        dispatch_ci_step "${name}"
+        EXECUTED="${EXECUTED} ${name}"
+        return 0
+    fi
+    queue_docker "${name}"
 }
 
 echo "==> threshold drift"
@@ -62,13 +62,13 @@ echo "==> markdown links"
 python3 "${SCRIPT_DIR}/lint-doc-links.py"
 
 if [ -n "${DOCKER_STEPS}" ]; then
-  if [ "${USE_DOCKER}" = "1" ]; then
-    # shellcheck disable=SC2086
-    PYDEVOPS_DOCKER_STEPS="${DOCKER_STEPS}" sh "${SCRIPT_DIR}/check-ci-docker.sh"
-  else
-    echo "error: --no-docker set but tools missing on host:${MISSING}" >&2
-    exit 1
-  fi
+    if [ "${USE_DOCKER}" = "1" ]; then
+        # shellcheck disable=SC2086
+        PYDEVOPS_DOCKER_STEPS="${DOCKER_STEPS}" sh "${SCRIPT_DIR}/check-ci-docker.sh"
+    else
+        echo "error: --no-docker set but tools missing on host:${MISSING}" >&2
+        exit 1
+    fi
 fi
 
 echo "Local CI parity finished. Host tools:${EXECUTED:- none}"

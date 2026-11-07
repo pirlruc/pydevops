@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed
+
+- Runners in the quality, publish, and devops workflows are `ubuntu-24.04`.
+  The path-detect and scripts jobs set `timeout-minutes`.
+- The Scorecard job also runs when `pyproject.toml` or `uv.lock` changes.
+  `devops-ci` and `devops-scheduled` have an always-on security aggregate.
+- Callers pin commondevops 6.0.1. Scaffold verify receives `packs_token`.
+  Guardrails 1.15.0 and github-scaffold 1.12.0. Dependabot updates
+  submodules outside the grouped pull request. SC-SIGN-001 is retired
+  because the repo is public and signs keyless.
+
 ## [3.3.10] - 2026-10-31
 
 ### Fixed

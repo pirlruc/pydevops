@@ -8,10 +8,10 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | Item | Value |
 |------|-------|
 | Branch | `main`. GitHub Release **3.3.0** published `ci-python`. Tag **3.3.1** records those manifests and does not republish. Do not move `3.2.3` through `3.3.0`. The repo is public; the owner can set it private. |
-| `docs/guardrails` | tag **1.13.1** → `1945211ac851c3c0f83694bd4ea53571fdced4ab` |
-| `.github/scaffold` | tag **1.10.2** → `c8eddcfb2c8a808981e640fa9739cb4fcefa991e` |
+| `docs/guardrails` | tag **1.15.0** → `2d4bb70e95449f6922781716857adeb22badf676` |
+| `.github/scaffold` | tag **1.12.0** → `9c443ea978851768f451b1df2020dd86dfb1a967` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | tag **5.6.2** → `b85f95bbac8ba7d82eb90d1d84d1b8d1e8590a12`. Job containers use the 5.6.1 linux/amd64 manifests. |
+| commondevops caller pin | tag **6.0.1** → `e41270c45b858cfa7a9f8404eaee781b5c29b61c`. Job containers stay on the published linux/amd64 manifests. |
 | containerdevops caller pin | tag **6.3.6** → `b419c24cbaf09f39d73fa0146a71155f1a4fbd54` |
 | ci-python (debian, unsuffixed) | `3.3.0` linux/amd64 `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd` (tag index `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`) |
 | ci-python (alpine) | `3.3.0-alpine` linux/amd64 `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05` (tag index `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`) |
@@ -93,7 +93,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is
   unset. `GITHUB_TOKEN` cannot ListCommits; blocking `true` fails DevOps CI on
-  `main` once paths-filter selects the Scorecard job (docs/` .github/` changes).
+  `main` once paths-filter selects the Scorecard job (`docs/` or `.github/` changes).
 - Private `docs/guardrails` is not initialized in default checkout; High floors
   load from vendored `scripts/python.profile.thresholds.yml` (fail closed on
   missing keys). Missing checkout without a vendored copy warns loudly and uses
@@ -149,14 +149,14 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 ## Recent history
 
 - 2026-10-31: **3.3.10** runs the quality consolidator and the PR comment as modules so `scripts` stays importable. **3.3.9** reads pip-audit 2.10's dependencies object and pins `pypa/gh-action-pypi-publish` v1.14.3. No image republish. Do not move 3.3.1 through 3.3.9.
-- 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (https://github.com/pirlruc/pydevops/actions/runs/40761650692). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
+- 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (<https://github.com/pirlruc/pydevops/actions/runs/40761650692>). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
 - 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Merged as pull request 241.
-- 2026-10-28: PR 239 merged as `8abeabd`. The Alpine pip lock pins msgpack 1.2.3. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40682682559 on that commit succeeded, including supply-chain and mutmut. Do not dispatch it again unless a new finding lands. The image is not republished. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%.
-- 2026-10-28: PR 238 merged as `52d8b22`. ci-python pip locks pin filelock 4.2.4. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40681089801 on that commit cleared trivy and grant. Grype still failed on msgpack 1.2.2 in `requirements-alpine.txt` (GHSA-j586-36cw-2gc2, fixed in 1.2.3). The Alpine lock now pins 1.2.3. The image is not republished.
-- 2026-10-28: PR 237 merged as `37cb98f`. Dependabot scaffold and doc verify pass `DEPENDABOT_GITHUB_TOKEN`. virtualenv is 21.14.13 (`exclude-newer-package` through 2026-10-23; drop after 2026-10-30). jscpd 5.3.2 drops spark-md5. commondevops pin is `71bdc68`. Scheduled run https://github.com/pirlruc/pydevops/actions/runs/40678919180 cleared grant and `uv.lock`. It still failed on filelock 4.0.9 in `docker/ci-python/requirements.txt` (CVE-2026-112940, fixed in 4.2.1). The follow-up pins 4.2.4 in both pip locks. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%. No image republish.
+- 2026-10-28: PR 239 merged as `8abeabd`. The Alpine pip lock pins msgpack 1.2.3. Scheduled run <https://github.com/pirlruc/pydevops/actions/runs/40682682559> on that commit succeeded, including supply-chain and mutmut. Do not dispatch it again unless a new finding lands. The image is not republished. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%.
+- 2026-10-28: PR 238 merged as `52d8b22`. ci-python pip locks pin filelock 4.2.4. Scheduled run <https://github.com/pirlruc/pydevops/actions/runs/40681089801> on that commit cleared trivy and grant. Grype still failed on msgpack 1.2.2 in `requirements-alpine.txt` (GHSA-j586-36cw-2gc2, fixed in 1.2.3). The Alpine lock now pins 1.2.3. The image is not republished.
+- 2026-10-28: PR 237 merged as `37cb98f`. Dependabot scaffold and doc verify pass `DEPENDABOT_GITHUB_TOKEN`. virtualenv is 21.14.13 (`exclude-newer-package` through 2026-10-23; drop after 2026-10-30). jscpd 5.3.2 drops spark-md5. commondevops pin is `71bdc68`. Scheduled run <https://github.com/pirlruc/pydevops/actions/runs/40678919180> cleared grant and `uv.lock`. It still failed on filelock 4.0.9 in `docker/ci-python/requirements.txt` (CVE-2026-112940, fixed in 4.2.1). The follow-up pins 4.2.4 in both pip locks. Tags `3.2.3` and `3.2.10` stay. The mutmut gate stays 85%. No image republish.
 - 2026-10-28: uv security updates are one Dependabot group (`uv-security`, `applies-to: security-updates`). Version updates stay in `all-dependencies`. Pull requests 225 (filelock 4.2.1, `c44cdf5`), 221 (msgpack 1.2.3, `94870e2`), 222 (certifi 2026.10.18, `461c546`), and 224 (pylint 4.0.9, `2d2cee9`) are merged. 224 also syncs `.github/dependencies/quality-tools/requirements.txt`, which the scripts job regenerates from `pyproject.toml`.
 - 2026-10-28: commondevops callers pin 5.5.3 (`c8ab717`). `scripts_ref` matches, so a `devops-scheduled.yml` dispatch no longer shares one concurrency group across those reusables. Job containers pass the 5.5.0 linux/amd64 manifests (`ci-lint` `4d96a023…`, `ci-supply-chain` Debian `b43eb3a9…`) and do not forward `checkout_token`. That PAT is the registry password and cannot see the package. `github.token` can. The mutmut gate stays 85%. Do not move `3.2.3` or `3.2.10`. No image republish.
-- 2026-10-28: **3.2.10** on `14c6499` (PR 232). Mutmut `source_paths` is the eight modules at or above 85% on the 3.2.7 run. The gate stays 85%. Dispatch https://github.com/pirlruc/pydevops/actions/runs/40617845190 scored 91.75% (278 killed, 25 survived). Supply-chain, workflow lint, and secrets-sast were cancelled by the `4a7c8c43` dispatch concurrency group before any step ran. The README `uses:` example is `@3.2.9`. Do not move `3.2.3` through `3.2.10`.
+- 2026-10-28: **3.2.10** on `14c6499` (PR 232). Mutmut `source_paths` is the eight modules at or above 85% on the 3.2.7 run. The gate stays 85%. Dispatch <https://github.com/pirlruc/pydevops/actions/runs/40617845190> scored 91.75% (278 killed, 25 survived). Supply-chain, workflow lint, and secrets-sast were cancelled by the `4a7c8c43` dispatch concurrency group before any step ran. The README `uses:` example is `@3.2.9`. Do not move `3.2.3` through `3.2.10`.
 - 2026-10-28: **3.2.4** through **3.2.9**. Mutmut `source_paths` was `scripts`. pytest 9 needs the `_nodeid` alias. The 3.2.7 dispatch scored 67.87% (gate 85%). The quality job image stays on the pullable digest; ci-lint 5.5.0 is private. commondevops callers stay at `4a7c8c43`. Do not move `3.2.3` through `3.2.9`.
 - 2026-10-24: **3.2.3** on `9c52f4aa` (PR 218). Mutmut 3.8 uses a real `[tool.mutmut]` list. No GitHub Release. No 3.3.0. `ci-python` was not republished. Do not move `3.2.3`.
 
@@ -188,3 +188,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   is ignored until 2027-01-31.
 
 *Last updated: 2026-11-01 (README example pins 3.3.10).*
+
+*Last updated: 2026-11-07 — 3.4.0 branch. Guardrails 1.15.0. Scaffold 1.12.0. commondevops 6.0.1. ubuntu-24.04.*
+
+*Last updated: 2026-11-07 — Scorecard Code-Review, Fuzzing, and CII-Best-Practices stay open. See docs/scorecard-open-checks.md.*
