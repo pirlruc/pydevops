@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-11-07
+
 ### Changed
 
 - Runners in the quality, publish, and devops workflows are `ubuntu-24.04`.
