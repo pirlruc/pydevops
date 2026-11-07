@@ -256,4 +256,3 @@ sh scripts/check-ci-local.sh
 
 Host PATH tools run first; missing actionlint/shellcheck/hadolint/zizmor/yamllint go to
 digest-pinned `ci-lint` via `scripts/check-ci-docker.sh` (CMN-WF-004).
-
