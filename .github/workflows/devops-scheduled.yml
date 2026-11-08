@@ -18,9 +18,9 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
-      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       blocking: true
 
@@ -29,11 +29,11 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
       blocking: true
       working_directory: .
-      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
       container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
 
   scheduled-supply-chain:
@@ -43,11 +43,11 @@ jobs:
       actions: read
       packages: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
       blocking: true
       working_directory: .
-      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
       container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:dc83deb4465d5989a03b14ccabef46c3f3426231048b962c69b8e434a7200d48
 
   scheduled-openssf-scorecard:
@@ -58,7 +58,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.
@@ -70,9 +70,9 @@ jobs:
   token-audit:
     name: Scheduled — token audit
     permissions: {}
-    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@e41270c45b858cfa7a9f8404eaee781b5c29b61c
+    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
-      scripts_ref: e41270c45b858cfa7a9f8404eaee781b5c29b61c
+      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
     secrets:
       guardrails_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
 

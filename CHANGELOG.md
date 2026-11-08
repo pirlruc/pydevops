@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-11-07
+
+### Added
+
+- `ci-python-image` appends the published image digests to the GitHub Release.
+
+### Changed
+
+- Callers pin commondevops 6.1.0 (`2c5e1ebe9797828128e01f3941b5a02650abe59a`) and containerdevops 6.5.0 (`b8c0746603eefdc89571b17c62d1e965b28ff31f`).
+- Image publish passes `environment: release` only on a release event. CI-032 and REL-PUB-004 are retired.
+
 ## [3.4.0] - 2026-11-07
 
 ### Changed

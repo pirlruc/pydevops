@@ -905,3 +905,40 @@ milestones:
             - docs/github-packages.md
           verification:
           - "rg -n 'credentials:' .github/workflows/python-quality.yml"
+      - id: PDO-ENV-001
+        status: done
+        title: Pass a release environment and append image digests
+        overview:
+          problem: >-
+            Image publish cannot name an environment from the caller, and
+            the Python image workflow never appends release digests.
+          goal: >-
+            Publish uses the release environment only on a release event,
+            and the Release body lists the image digests.
+        decision: >-
+          In the context of image publish, facing REL-PUB-004, we decided
+          to pass the environment input only on a release event and to call
+          the digest append job, to achieve the tag-limited environment,
+          accepting that schedule publishes stay on repository secrets.
+        acceptance_criteria:
+          - Image workflows pin containerdevops 6.5.0 and pass environment only on release
+          - ci-python-image calls common-release-digests
+          - CI-032 and REL-PUB-004 are retired
+        guardrail_refs:
+          - REL-PUB-004
+          - REL-PUB-005
+          - CI-032
+        tasks:
+          - id: PDO-ENV-001-T1
+            status: done
+            title: Wire the environment and the digest job
+            instructions:
+              files:
+                - .github/workflows/ci-python-image.yml
+                - docs/guardrail-deviations.yml
+            verification:
+              - rg -n "common-release-digests" .github/workflows/ci-python-image.yml
+              - rg -n "event_name == 'release'" .github/workflows/ci-python-image.yml
+            guardrail_refs:
+              - REL-PUB-005
+              - REL-PUB-004
