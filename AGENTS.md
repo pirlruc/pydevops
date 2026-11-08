@@ -21,7 +21,9 @@ the same text. Other agents apply a skill when its description matches.
 - [supply-chain-artifacts](.agents/skills/supply-chain-artifacts/SKILL.md)
 - [release-publish](.agents/skills/release-publish/SKILL.md)
 - [ansible-roles](.agents/skills/ansible-roles/SKILL.md)
+- [interrogate-docstrings](.agents/skills/interrogate-docstrings/SKILL.md)
 - [opentofu-iac](.agents/skills/opentofu-iac/SKILL.md)
+- [python-scripts-ci-gates](.agents/skills/python-scripts-ci-gates/SKILL.md)
 - [sops-secrets](.agents/skills/sops-secrets/SKILL.md)
 
 ## Always-on rules
