@@ -21,9 +21,8 @@ the same text. Other agents apply a skill when its description matches.
 - [supply-chain-artifacts](.agents/skills/supply-chain-artifacts/SKILL.md)
 - [release-publish](.agents/skills/release-publish/SKILL.md)
 - [ansible-roles](.agents/skills/ansible-roles/SKILL.md)
-- [interrogate-docstrings](.agents/skills/interrogate-docstrings/SKILL.md)
+- [cpp-quality-gates](.agents/skills/cpp-quality-gates/SKILL.md)
 - [opentofu-iac](.agents/skills/opentofu-iac/SKILL.md)
-- [python-scripts-ci-gates](.agents/skills/python-scripts-ci-gates/SKILL.md)
 - [sops-secrets](.agents/skills/sops-secrets/SKILL.md)
 
 ## Always-on rules
@@ -227,10 +226,7 @@ build-host/       # host-native
 
 ## Reference implementation
 
-[heimdall](https://github.com/pirlruc/heimdall) runs host PATH plus project-local virtualenvs first and fills the
-remaining gaps in Docker via
-[`scripts/check-ci-docker.sh`](https://github.com/pirlruc/heimdall/blob/main/scripts/check-ci-docker.sh), with a
-per-tool host-vs-Docker resolution table. Mirror that structure when adding container runners to a repo.
+A consumer runs host PATH plus a project-local virtualenv first and fills the remaining gaps in Docker via `scripts/check-ci-docker.sh`, with a per-tool host-versus-Docker table. Mirror that structure when adding container runners to a repo.
 
 ## Related
 
@@ -255,7 +251,7 @@ A workflow that only runs on GitHub (a private registry login, a release publish
 
 # Public docs hygiene
 
-README, Docker Hub Overview, GitHub Packages description, and GitHub Release notes are for someone using the repository or the image. Cite [DOC-PUB-001](https://github.com/pirlruc/guardrails/blob/1.12.0/markdown/guardrails.md).
+README, Docker Hub Overview, GitHub Packages description, and GitHub Release notes are for someone using the repository or the image. Cite [DOC-PUB-001](https://github.com/pirlruc/guardrails/blob/1.15.0/markdown/guardrails.md).
 
 ## Write
 
@@ -372,7 +368,7 @@ issue text by hand.
 
 Field definitions: [guardrails deviation rule](https://github.com/pirlruc/guardrails#deviation-rule).
 Process and approval flow:
-[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.9.1/github-issue-adr/docs/process/guardrail-compliance.md).
+[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.11.0/github-issue-adr/docs/process/guardrail-compliance.md).
 
 ## Related
 
@@ -383,7 +379,7 @@ Process and approval flow:
 
 # github-issue-adr methodology
 
-[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.9.1/github-issue-adr) is the methodology for every
+[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.11.0/github-issue-adr) is the methodology for every
 repo carrying this scaffold. Do not introduce a second decision-record format alongside it.
 
 ## Core model
