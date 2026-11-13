@@ -211,9 +211,14 @@ if [[ "${want_security}" == "1" ]]; then
         echo "uv or pyproject.toml missing; skipped uv lock --check" >"$OUT/uv_lock_check.txt"
     fi
 
-    # Bandit
+    # Bandit. A [tool.bandit] table is the consumer's exclude list. Without
+    # -c, bandit scans tests and the gate counts assert_used.
     if command -v bandit >/dev/null 2>&1; then
-        bandit -q -r . -x ./.devops -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
+        bandit_config=()
+        if [[ -f pyproject.toml ]] && grep -q '^\[tool\.bandit\]' pyproject.toml; then
+            bandit_config=(-c pyproject.toml)
+        fi
+        bandit -q "${bandit_config[@]}" -r . -x ./.devops -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
     else
         rm -f "$OUT/bandit.json"
     fi

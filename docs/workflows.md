@@ -106,7 +106,7 @@ job’s release step is gated on `refs/tags/X.Y.Z` (no `v` prefix) and successfu
 | `strictness_level`    | string  | no       | `Medium`                | `Low` \| `Medium` \| `High` — see **Strictness tiers** below                                                                                                                                                             |
 | `docstring_format`    | string  | no       | `Google`                | `Google` \| `Numpy` \| `Pep257` — Ruff pydocstyle convention matches the name; **Pep257** uses pydoclint `--style=sphinx` (pydoclint has no pep257 mode; Google/NumPy section layouts conflict with pep257-focused Ruff) |
 | `enable_dast`         | boolean | no       | `false`                 | Runs ZAP + Locust job after quality                                                                                                                                                                                      |
-| `license_deny_list`   | string  | no       | `[]`                    | JSON array string; SPDX substring deny list                                                                                                                                                                              |
+| `license_deny_list`   | string  | no       | org SC-LIC-001 list     | JSON array string; SPDX substring deny list. Default names AGPL-3.0, SSPL-1.0, BUSL-1.1, Commons-Clause, and CC-BY-NC |
 | `working_directory`   | string  | no       | `.`                     | App subdirectory with `pyproject.toml` / package                                                                                                                                                                         |
 | `python_version`      | string  | no       | `3.13`                  | Passed to `uv python install`                                                                                                                                                                                            |
 | `app_install_command` | string  | no       | *(see workflow)*        | Shell to install app deps; empty skips for `workflow_call` path                                                                                                                                                          |
@@ -231,6 +231,14 @@ tag-scoped builds.
 [PyPI trusted publisher](https://docs.pypi.org/trusted-publishers/) for this repository.
 
 ______________________________________________________________________
+
+## `python-release.yml`
+
+Builds a sdist and a wheel with `uv build`, writes `dist/sbom.cdx.json`, attests
+`dist/*`, and on an annotated tag attaches the files to the GitHub Release.
+PyPI Trusted Publishing stays in the caller. A reusable workflow cannot be the
+publisher. The caller grants `contents: write`, `id-token: write`, and
+`attestations: write`.
 
 ## Dependabot and pins
 
