@@ -942,3 +942,72 @@ milestones:
             guardrail_refs:
               - REL-PUB-005
               - REL-PUB-004
+      - id: PDO-QUAL-001
+        status: done
+        title: Honour the consumer Bandit config and the org deny list
+        overview:
+          problem: >-
+            Bandit scans the whole tree and ignores pyproject.toml, so
+            test asserts fail the Medium gate. An omitted license deny
+            list is an empty array, so SC-LIC-001 does not apply.
+          goal: >-
+            Bandit uses [tool.bandit] when it exists, and the deny list
+            defaults to the org list.
+        decision: >-
+          In the context of the Python quality gate, facing test-only
+          Bandit findings and an empty deny default, we decided to pass
+          the consumer config and the org deny list, to achieve a gate
+          that matches the written config, accepting that a repository
+          without [tool.bandit] still scans the whole tree.
+        acceptance_criteria:
+          - ci_run_quality.sh passes -c pyproject.toml when [tool.bandit] exists
+          - license_deny_list defaults to AGPL-3.0, SSPL-1.0, BUSL-1.1, Commons-Clause, and CC-BY-NC
+        guardrail_refs:
+          - PY-QUAL-001
+          - SC-LIC-001
+        tasks:
+          - id: PDO-QUAL-001-T1
+            status: done
+            title: Pass the Bandit config and the org deny list
+            instructions:
+              files:
+                - scripts/ci_run_quality.sh
+                - .github/workflows/python-quality.yml
+            verification:
+              - rg -n "tool.bandit" scripts/ci_run_quality.sh
+              - rg -n "AGPL-3.0" .github/workflows/python-quality.yml
+            guardrail_refs:
+              - SC-LIC-001
+      - id: PDO-REL-001
+        status: done
+        title: Publish a Python GitHub Release from one workflow
+        overview:
+          problem: >-
+            Callers copy the wheel, SBOM, and attestation steps, and a
+            tag glob that disagrees with the version tool skips the job.
+          goal: >-
+            One reusable workflow builds and attests. PyPI stays in the caller.
+        decision: >-
+          In the context of a Python library release, facing a copied
+          release job, we decided to publish python-release and leave
+          PyPI Trusted Publishing in the caller, to achieve one build,
+          accepting that the caller still chooses the tag pattern.
+        acceptance_criteria:
+          - python-release.yml builds with uv, writes a CycloneDX file, and attests dist
+          - The GitHub Release step runs only on a tag
+          - The workflow does not call pypa/gh-action-pypi-publish
+        guardrail_refs:
+          - REL-PUB-001
+          - REL-PUB-003
+        tasks:
+          - id: PDO-REL-001-T1
+            status: done
+            title: Add the release workflow
+            instructions:
+              files:
+                - .github/workflows/python-release.yml
+                - docs/workflows.md
+            verification:
+              - actionlint .github/workflows/python-release.yml
+            guardrail_refs:
+              - REL-PUB-003

@@ -187,6 +187,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
+*Last updated: 2026-11-13 — 3.6.0. Bandit reads [tool.bandit]. license_deny_list defaults to the org list. python-release.yml builds and attests. PyPI stays in the caller.*
+
 *Last updated: 2026-11-01 (README example pins 3.3.10).*
 
 *Last updated: 2026-11-07 — 3.5.0. commondevops 6.1.0. containerdevops 6.5.0. CI-032 and REL-PUB-004 retired. Image releases append digests.*

@@ -17,7 +17,7 @@ on:
       license_deny_list:
         required: false
         type: string
-        default: "[]"
+        default: '["AGPL-3.0", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "CC-BY-NC"]'
     secrets:
       checkout_token:
         required: false
@@ -31,7 +31,7 @@ on:
         default: .
       license_deny_list:
         type: string
-        default: "[]"
+        default: '["AGPL-3.0", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "CC-BY-NC"]'
 
 # CI-025
 permissions: {}

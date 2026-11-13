@@ -52,6 +52,7 @@ Pin it by digest. The pull command and the tag table are in the image docs linke
 | ------------------------------------------ | --------------------------------------------------------------------------------- |
 | `.github/workflows/README.md`              | **App vs DevOps** workflow index                                                  |
 | `.github/workflows/python-quality.yml`     | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
+| `.github/workflows/python-release.yml`     | **Apps:** sdist, wheel, CycloneDX, attestation, GitHub Release. No PyPI publish |
 | `.github/workflows/publish-pypi.yml`       | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`)             |
 | `.github/workflows/devops-ci.yml`          | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
 | `.github/workflows/devops-scheduled.yml`   | **This repo:** Thursday lint/Scorecard/Mutmut/EOL |

@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-11-13
+
+### Added
+
+- `python-release.yml` builds a sdist and a wheel, writes a CycloneDX SBOM, attests the files, and attaches them to the GitHub Release. PyPI Trusted Publishing stays in the caller.
+
+### Changed
+
+- Bandit reads `[tool.bandit]` when `pyproject.toml` has that table, so a consumer exclude list applies.
+- `license_deny_list` defaults to the org list: AGPL-3.0, SSPL-1.0, BUSL-1.1, Commons-Clause, and CC-BY-NC.
+
 ## [3.5.0] - 2026-11-07
 
 ### Added

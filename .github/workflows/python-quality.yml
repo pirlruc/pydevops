@@ -23,10 +23,10 @@ on:
         type: boolean
         default: false
       license_deny_list:
-        description: JSON array of license substrings to forbid (SPDX SBOM), e.g.
-          ["GPL-3.0"]
+        description: JSON array of license substrings to forbid (SPDX SBOM).
+          Default is the org SC-LIC-001 list. GPL is omitted because it matches LGPL.
         type: string
-        default: '[]'
+        default: '["AGPL-3.0", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "CC-BY-NC"]'
       license_allow_list:
         description: JSON array of SPDX allow-list patterns (SC-LIC-001). Empty keeps deny-list-only.
         type: string
@@ -106,7 +106,7 @@ on:
         default: false
       license_deny_list:
         type: string
-        default: '[]'
+        default: '["AGPL-3.0", "SSPL-1.0", "BUSL-1.1", "Commons-Clause", "CC-BY-NC"]'
       license_allow_list:
         type: string
         default: '[]'
