@@ -135,6 +135,7 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: all-dependencies
     registries:
+      - github-private
       - dhi
     cooldown:
       default-days: 7
