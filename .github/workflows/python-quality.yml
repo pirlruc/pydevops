@@ -179,9 +179,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-lint@sha256:e0f48be58460a9eeb3adcc8c7c4c3592db0318dbe4de9c90c1b4b9e863898f6c
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Public GHCR index. A GITHUB_TOKEN login hides it (manifest unknown).
       # ci-lint has no git and runs as uid 1000. Root can write the runner
       # temp dir. The git mount is the same closure common-infra-lint uses.
       options: >-
@@ -274,9 +272,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:9fd566c89c4dab86535e92a650d4cf35b6f5b9fa74c0ea7a2e7cbb67822be738
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Public GHCR index. A GITHUB_TOKEN login hides it (manifest unknown).
       # The image runs as uid 1000, which cannot write the runner temp dir.
       options: --user root
     timeout-minutes: 45
@@ -363,9 +359,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:9fd566c89c4dab86535e92a650d4cf35b6f5b9fa74c0ea7a2e7cbb67822be738
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Public GHCR index. A GITHUB_TOKEN login hides it (manifest unknown).
       # The image runs as uid 1000, which cannot write the runner temp dir.
       options: --user root
     timeout-minutes: 45
@@ -451,9 +445,7 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:9fd566c89c4dab86535e92a650d4cf35b6f5b9fa74c0ea7a2e7cbb67822be738
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Public GHCR index. A GITHUB_TOKEN login hides it (manifest unknown).
       # The image runs as uid 1000, which cannot write the runner temp dir.
       options: --user root
     timeout-minutes: 45
