@@ -134,7 +134,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 4. PyPI publish stays `workflow_dispatch`.
 5. PDO-PRIV-001 is done. The four `ghcr.io/pirlruc` jobs in `python-quality.yml`
    set `packages: read` and `container.credentials`.
-6. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
+6. PDO-VENV-001: `python-quality` static analysis scans `.venv` and hits the 45 minute job limit. Exclude it in `scripts/ci_run_quality.sh` before callers switch off the host gate.
+7. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
    `.github/workflows/hub-description.yml`. It calls
    [container-hub-description](https://github.com/pirlruc/containerdevops/blob/6.3.0/.github/workflows/container-hub-description.yml)
    and does not republish the image.
@@ -186,6 +187,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-20 — PDO-VENV-001. python-quality static analysis still scans .venv.*
 
 *Last updated: 2026-11-13 — 3.6.0. Bandit reads [tool.bandit]. license_deny_list defaults to the org list. python-release.yml builds and attests. PyPI stays in the caller.*
 
