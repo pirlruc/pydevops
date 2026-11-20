@@ -1012,7 +1012,7 @@ milestones:
             guardrail_refs:
               - REL-PUB-003
       - id: PDO-VENV-001
-        status: open
+        status: done
         title: Keep python-quality static analysis out of the virtualenv
         decision: >-
           In the context of python-quality static analysis, facing a job
@@ -1034,7 +1034,7 @@ milestones:
           - CI-027
         tasks:
           - id: PDO-VENV-001-T1
-            status: open
+            status: done
             title: Exclude .venv from the static phase
             instructions:
               files:

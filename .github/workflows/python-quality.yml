@@ -69,6 +69,23 @@ on:
         type: string
         default: if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras;
           elif [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+      uv_workspace:
+        description: >-
+          Install with uv sync --all-packages so every workspace member is
+          available to the static and test phases.
+        type: boolean
+        default: false
+      test_compose_file:
+        description: >-
+          Compose file, relative to working_directory, started before tests.
+          Empty skips the step. The test job mounts the runner Docker socket
+          only when this is set.
+        type: string
+        default: ''
+      test_compose_services:
+        description: Space-separated Compose service names to start. Empty starts the file.
+        type: string
+        default: ''
       docker_compose_file:
         description: Compose file for DAST (relative to app root)
         type: string
@@ -337,7 +354,7 @@ jobs:
           runner-temp: ${{ runner.temp }}
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
-          app-install-command: ${{ inputs.app_install_command || '' }}
+          app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
       - name: Run static analysis quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
@@ -426,7 +443,7 @@ jobs:
           runner-temp: ${{ runner.temp }}
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
-          app-install-command: ${{ inputs.app_install_command || '' }}
+          app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
       - name: Run security quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
@@ -455,7 +472,8 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
       # The image runs as uid 1000, which cannot write the runner temp dir.
-      options: --user root
+      # The socket mount is present only when the caller starts Compose services.
+      options: --user root ${{ inputs.test_compose_file != '' && '-v /var/run/docker.sock:/var/run/docker.sock' || '' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -514,8 +532,23 @@ jobs:
           runner-temp: ${{ runner.temp }}
           docstring-format: ${{ inputs.docstring_format }}
           github-event-name: ${{ github.event_name }}
-          app-install-command: ${{ inputs.app_install_command || '' }}
+          app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
+      - name: Start test services
+        if: inputs.test_compose_file != ''
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          COMPOSE_FILE: ${{ inputs.test_compose_file }}
+          COMPOSE_SERVICES: ${{ inputs.test_compose_services }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${COMPOSE_SERVICES}" ]]; then
+            # The input is a space-separated service list.
+            # shellcheck disable=SC2086
+            docker compose -f "${COMPOSE_FILE}" up --wait --detach ${COMPOSE_SERVICES}
+          else
+            docker compose -f "${COMPOSE_FILE}" up --wait --detach
+          fi
       - name: Run test quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -526,6 +559,12 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
           installable-app: ${{ inputs.installable_app }}
+      - name: Stop test services
+        if: always() && inputs.test_compose_file != ''
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          COMPOSE_FILE: ${{ inputs.test_compose_file }}
+        run: docker compose -f "${COMPOSE_FILE}" down -v
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

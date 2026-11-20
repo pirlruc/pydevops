@@ -188,7 +188,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-11-20 — PDO-VENV-001. python-quality static analysis still scans .venv.*
+*Last updated: 2026-11-20 — uv_workspace and test Compose inputs. Static analysis skips .venv (PDO-VENV-001).*
 
 *Last updated: 2026-11-13 — 3.6.0. Bandit reads [tool.bandit]. license_deny_list defaults to the org list. python-release.yml builds and attests. PyPI stays in the caller.*
 

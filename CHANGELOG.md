@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- `uv_workspace` installs a uv workspace with `uv sync --all-packages --all-extras --frozen`.
+- `test_compose_file` and `test_compose_services` start Compose services before the test phase and tear them down afterwards. The test job mounts the runner Docker socket only when a compose file is set.
+
+### Changed
+
+- pylint, mypy, pydoclint, and radon skip `.venv` (PDO-VENV-001).
+
 ## [3.6.0] - 2026-11-13
 
 ### Added
