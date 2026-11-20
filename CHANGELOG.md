@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-11-20
+
 ### Added
 
 - `uv_workspace` installs a uv workspace with `uv sync --all-packages --all-extras --frozen`.
