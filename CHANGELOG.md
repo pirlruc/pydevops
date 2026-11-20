@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.7.1] - 2026-11-20
+
+### Changed
+
+- When `test_compose_file` is set, the test job uses the runner host network so tests can reach published ports.
+
 ## [3.7.0] - 2026-11-20
 
 ### Added
