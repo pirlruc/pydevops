@@ -108,7 +108,7 @@ jobs:
       blocking: true
       working_directory: .
       scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:e0f48be58460a9eeb3adcc8c7c4c3592db0318dbe4de9c90c1b4b9e863898f6c
   changes:
     name: Detect changed paths
     runs-on: ubuntu-24.04
@@ -170,7 +170,7 @@ jobs:
     uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
     with:
       scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:e0f48be58460a9eeb3adcc8c7c4c3592db0318dbe4de9c90c1b4b9e863898f6c
       blocking: true
 
   ci-supply-chain:
