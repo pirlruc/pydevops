@@ -89,8 +89,8 @@ if [[ "${want_static}" == "1" ]]; then
     echo "quality: pylint"
     if command -v pylint >/dev/null 2>&1; then
         # --ignore matches directory names. ignore-paths alone still walked .devops.
-        pylint . --ignore=".devops,build,.gradle" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
-        pylint . --ignore=".devops,build,.gradle" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
+        pylint . --ignore=".devops,build,.gradle,.venv" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
+        pylint . --ignore=".devops,build,.gradle,.venv" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
         if grep -oE 'rated at [0-9.]+/10' "$OUT/pylint_full.txt" | tail -1 >"$OUT/pylint_score.txt" 2>/dev/null; then
             :
         else
@@ -116,7 +116,7 @@ if [[ "${want_static}" == "1" ]]; then
         echo "PACKAGE_MODE=scripts; skipping mypy" >"$OUT/mypy.txt"
     elif command -v mypy >/dev/null 2>&1; then
         mkdir -p "$OUT/mypy-reports/lineprecision" "$OUT/mypy-reports/anyexprs"
-        mypy_args=(. --exclude '\.devops' --show-error-codes
+        mypy_args=(. --exclude '(\.devops|\.venv)' --show-error-codes
             --lineprecision-report "$OUT/mypy-reports/lineprecision"
             --any-exprs-report "$OUT/mypy-reports/anyexprs")
         if [[ "${MYPY_STRICT:-0}" == "1" ]]; then
@@ -134,7 +134,7 @@ if [[ "${want_static}" == "1" ]]; then
     echo "quality: pydoclint"
     if command -v pydoclint >/dev/null 2>&1; then
         # shellcheck disable=SC2086
-        pydoclint . ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
+        pydoclint . --exclude '\.venv' ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/pydoclint.txt"
@@ -187,8 +187,8 @@ if [[ "${want_static}" == "1" ]]; then
     # Radon
     echo "quality: radon"
     if command -v radon >/dev/null 2>&1; then
-        radon cc -j . >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
-        radon mi -j . >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
+        radon cc -j . --exclude '.venv' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
+        radon mi -j . --exclude '.venv' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/radon_cc.json" "$OUT/radon_mi.json"
