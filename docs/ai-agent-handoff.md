@@ -151,6 +151,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-11-21: Test Compose reaches the runner through `host.docker.internal` and, when the image has no Docker CLI, Compose 2.32.4. `--network host` stays rejected. 3.7.2 stays the host-gateway tag until this client install is released.
 - 2026-10-31: **3.3.10** runs the quality consolidator and the PR comment as modules so `scripts` stays importable. **3.3.9** reads pip-audit 2.10's dependencies object and pins `pypa/gh-action-pypi-publish` v1.14.3. No image republish. Do not move 3.3.1 through 3.3.9.
 - 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (<https://github.com/pirlruc/pydevops/actions/runs/40761650692>). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
 - 2026-10-28: `feature-mutmut-restore` adds exact-value tests for `scripts/` (`tests/test_exact_gate_rows.py`, `tests/test_exact_cli_outputs.py`). Local mutmut on `source_paths = ["scripts"]` scored 87.46% (4448 killed, 638 survived). The 85% gate is unchanged. Merged as pull request 241.
