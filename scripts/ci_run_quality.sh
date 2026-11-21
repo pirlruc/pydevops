@@ -218,7 +218,9 @@ if [[ "${want_security}" == "1" ]]; then
         if [[ -f pyproject.toml ]] && grep -q '^\[tool\.bandit\]' pyproject.toml; then
             bandit_config=(-c pyproject.toml)
         fi
-        bandit -q "${bandit_config[@]}" -r . -x ./.devops -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
+        # site-packages are not the caller's code. Scaffold copies are not either.
+        bandit -q "${bandit_config[@]}" -r . -x ./.devops,./.venv,./.github/scaffold \
+            -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
     else
         rm -f "$OUT/bandit.json"
     fi
@@ -257,9 +259,16 @@ if [[ "${want_test}" == "1" && "${PACKAGE_MODE:-app}" == "scripts" ]]; then
     echo "PACKAGE_MODE=scripts; skipping pytest and coverage" >"$OUT/pytest.txt"
 elif [[ "${want_test}" == "1" ]]; then
     # Pytest + coverage (expects deps installed in app venv)
-    if command -v pytest >/dev/null 2>&1; then
+    if [[ -x .venv/bin/pytest ]]; then
+        pytest_bin=(.venv/bin/pytest)
+    elif command -v pytest >/dev/null 2>&1; then
+        pytest_bin=(pytest)
+    else
+        pytest_bin=()
+    fi
+    if [[ ${#pytest_bin[@]} -gt 0 ]]; then
         _py_rc=0
-        pytest \
+        "${pytest_bin[@]}" \
             --ignore="$PYTEST_IGNORE" \
             --cov=. \
             --cov-branch \
