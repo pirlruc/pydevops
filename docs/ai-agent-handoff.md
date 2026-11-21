@@ -87,6 +87,8 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
+- A test job that sets `test_compose_file` publishes ports on the runner and adds `host.docker.internal:host-gateway`. `ci-python` has no Docker CLI, so the job installs Compose `2.32.4` (`ed1917fb54db184192ea9d0717bcd59e3662ea79db48bff36d3475516c480a6b`) and uses the mounted socket. `--network host` is rejected on the runner network.
+
 - Mutmut 3 keeps a survived verdict until that mutant's result is cleared. Adding tests does not re-run mutants whose exit code is already stored. Clear survived (and no-test) entries in `mutants/scripts/**/*.meta` before `mutmut run` when the goal is to kill existing survivors. Killed results can stay cached.
 - Callers pin commondevops **5.5.3** (`c8ab717`). The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
@@ -188,7 +190,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-11-20 — uv_workspace and test Compose inputs. Static analysis skips .venv (PDO-VENV-001).*
+*Last updated: 2026-11-21 — test Compose uses a static client when the image has no Docker CLI.*
 
 *Last updated: 2026-11-13 — 3.6.0. Bandit reads [tool.bandit]. license_deny_list defaults to the org list. python-release.yml builds and attests. PyPI stays in the caller.*
 
