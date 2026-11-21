@@ -472,9 +472,10 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
       # The image runs as uid 1000, which cannot write the runner temp dir.
-      # The socket mount and host network are present only when the caller
-      # starts Compose services, so tests can reach ports published on the runner.
-      options: --user root ${{ inputs.test_compose_file != '' && '--network host -v /var/run/docker.sock:/var/run/docker.sock' || '' }}
+      # The socket mount is present only when the caller starts Compose
+      # services. host-gateway reaches ports published on the runner.
+      # --network host conflicts with the runner's own network.
+      options: --user root ${{ inputs.test_compose_file != '' && '--add-host=host.docker.internal:host-gateway -v /var/run/docker.sock:/var/run/docker.sock' || '' }}
     timeout-minutes: 45
     permissions:
       contents: read
