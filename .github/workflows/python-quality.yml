@@ -544,12 +544,30 @@ jobs:
           COMPOSE_SERVICES: ${{ inputs.test_compose_services }}
         run: |
           set -euo pipefail
+          # ci-python has no Docker CLI. The socket is the host daemon.
+          # Compose 2.32.4 is a static client for that socket.
+          if ! command -v docker >/dev/null 2>&1; then
+            if ! command -v curl >/dev/null 2>&1; then
+              apt-get update
+              apt-get install -y --no-install-recommends ca-certificates curl
+            fi
+            curl -fsSL -o /usr/local/bin/docker-compose \
+              https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64
+            echo 'ed1917fb54db184192ea9d0717bcd59e3662ea79db48bff36d3475516c480a6b  /usr/local/bin/docker-compose' \
+              | sha256sum -c -
+            chmod 0755 /usr/local/bin/docker-compose
+          fi
+          if command -v docker >/dev/null 2>&1; then
+            compose=(docker compose)
+          else
+            compose=(docker-compose)
+          fi
           if [[ -n "${COMPOSE_SERVICES}" ]]; then
             # The input is a space-separated service list.
             # shellcheck disable=SC2086
-            docker compose -f "${COMPOSE_FILE}" up --wait --detach ${COMPOSE_SERVICES}
+            "${compose[@]}" -f "${COMPOSE_FILE}" up --wait --detach ${COMPOSE_SERVICES}
           else
-            docker compose -f "${COMPOSE_FILE}" up --wait --detach
+            "${compose[@]}" -f "${COMPOSE_FILE}" up --wait --detach
           fi
       - name: Run test quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
@@ -566,7 +584,13 @@ jobs:
         working-directory: ${{ inputs.working_directory }}
         env:
           COMPOSE_FILE: ${{ inputs.test_compose_file }}
-        run: docker compose -f "${COMPOSE_FILE}" down -v
+        run: |
+          set -euo pipefail
+          if command -v docker >/dev/null 2>&1; then
+            docker compose -f "${COMPOSE_FILE}" down -v
+          else
+            docker-compose -f "${COMPOSE_FILE}" down -v
+          fi
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
