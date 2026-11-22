@@ -783,17 +783,6 @@ jobs:
           retention-days: 1
           name: quality-bundle
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
-      - name: Build release distributions (tag runs)
-        if: startsWith(github.ref, 'refs/tags/') && github.ref_type == 'tag'
-        working-directory: ${{ inputs.working_directory }}
-        run: uv build
-      - name: Upload release distributions
-        if: startsWith(github.ref, 'refs/tags/') && github.ref_type == 'tag'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          retention-days: 1
-          name: release-dist
-          path: ${{ format('{0}/dist', inputs.working_directory) }}
       - name: Render pull request comment body
         if: always() && github.event_name == 'pull_request'
         env:
@@ -962,68 +951,3 @@ jobs:
           path: |
             report_html.html
             quality-output
-  release-github:
-    name: Create GitHub release (dist + quality bundle)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    needs:
-      - quality-supply-chain
-      - quality-test
-      - quality-report
-      - quality-dast
-    if: |
-      always() &&
-      needs.quality-report.outputs.gates_passed == 'true' &&
-      needs.quality-supply-chain.result == 'success' &&
-      needs.quality-test.result == 'success' &&
-      needs.quality-report.result == 'success' &&
-      (needs.quality-dast.result == 'success' || needs.quality-dast.result == 'skipped') &&
-      startsWith(github.ref, 'refs/tags/') &&
-      github.ref_type == 'tag'
-    environment: production
-    permissions:
-      contents: write
-    steps:
-      - name: Harden runner with audited egress
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
-        with:
-          egress-policy: audit
-
-      # Expressions have no regex — strict unprefixed MAJOR.MINOR.PATCH is enforced here.
-      - name: Require SemVer tag X.Y.Z
-        shell: bash
-        run: |
-          if [[ ! "${GITHUB_REF}" =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release requires tag MAJOR.MINOR.PATCH (numeric only; no v-prefix; no prerelease suffix)."
-            exit 1
-          fi
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Download quality bundle
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          retention-days: 1
-          name: quality-bundle
-          path: bundle
-      - name: Download release distributions
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          retention-days: 1
-          name: release-dist
-          path: dist
-      - name: Create release with dist and quality bundle
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |-
-          set -euo pipefail
-          tag="${GITHUB_REF#refs/tags/}"
-          shopt -s nullglob
-          dists=(dist/*)
-          if [ "${#dists[@]}" -eq 0 ]; then
-            echo "::error::No built distributions found in dist/."
-            exit 1
-          fi
-          (cd bundle && zip -r "${{ github.workspace }}/quality-bundle-${tag}.zip" .)
-          gh release create "$tag" "${dists[@]}" "${{ github.workspace }}/quality-bundle-${tag}.zip" --generate-notes --title "$tag"
