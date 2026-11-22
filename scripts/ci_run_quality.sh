@@ -6,6 +6,15 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-.}"
 DEVOPS_DIR="${DEVOPS_DIR:-.devops}"
 cd "$APP_DIR"
+# The image PATH does not include the DevOps or app virtualenvs. Radon, grype,
+# and mypy are installed there by uv sync.
+if [[ -d "${DEVOPS_DIR}/.venv/bin" ]]; then
+    PATH="${DEVOPS_DIR}/.venv/bin:${PATH}"
+fi
+if [[ -d .venv/bin ]]; then
+    PATH=".venv/bin:${PATH}"
+fi
+export PATH
 OUT="${QUALITY_OUTPUT_DIR:-quality-output}"
 # Resolve relative output dir against the app root (after cd) so writes match mkdir.
 if [[ "$OUT" != /* ]]; then

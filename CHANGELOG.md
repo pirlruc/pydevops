@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The quality bundle finds radon and mypy in the DevOps and app virtualenvs.
+- Docstring coverage accepts the interrogate 1.7 summary table.
+
 ## [3.8.0] - 2026-11-22
 
 ### Added
