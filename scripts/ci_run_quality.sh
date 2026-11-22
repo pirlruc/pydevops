@@ -196,8 +196,9 @@ if [[ "${want_static}" == "1" ]]; then
     # Radon
     echo "quality: radon"
     if command -v radon >/dev/null 2>&1; then
-        radon cc -j . --exclude '.venv,scripts,.github' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
-        radon mi -j . --exclude '.venv,scripts,.github' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
+        # -i replaces the default hidden-directory ignore, so .* stays listed.
+        radon cc -j . -i '.*,scripts' --exclude '.venv' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
+        radon mi -j . -i '.*,scripts' --exclude '.venv' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/radon_cc.json" "$OUT/radon_mi.json"

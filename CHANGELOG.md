@@ -9,7 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 - The quality bundle finds radon and mypy in the DevOps and app virtualenvs.
 - Docstring coverage accepts the interrogate 1.7 summary table.
-- Radon, pylint, and ruff skip `scripts/` and `.github/`. Vendored doc checkers are not the library.
+- Radon, pylint, and ruff skip `scripts/` and `.github/`. Vendored doc checkers are not the library. Radon ignores a directory named `scripts` because `--exclude` does not.
 - The High mypy line-precision ceiling is 25%. mypy counts PEP 695 type variables as imprecise lines, and the any-exprs gate remains the Any budget.
 
 ## [3.8.0] - 2026-11-22
