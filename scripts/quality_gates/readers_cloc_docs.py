@@ -35,6 +35,11 @@ def interrogate_coverage(root: Path) -> float | None:
     if m:
         return parse_float_or_none(m.group(1))
 
+    # interrogate 1.7 -vv prints a summary table instead of TOTAL COVERAGE.
+    m = re.search(r'^\|\s*TOTAL\s*\|(?:[^|]*\|){3}\s*([\d.]+)%\s*\|', text, re.M)
+    if m:
+        return parse_float_or_none(m.group(1))
+
     m = re.search(r'([\d.]+)%\s*covered', text, re.I)
     return parse_float_or_none(m.group(1)) if m else None
 

@@ -793,6 +793,11 @@ def test_readers_exact_keys(tmp_path: Path) -> None:
     assert cloc_slocs_comments(tmp_path) == (10.0, 2.0)
     (tmp_path / 'interrogate.txt').write_text('TOTAL COVERAGE: 95.5%\n', encoding='utf-8')
     assert interrogate_coverage(tmp_path) == 95.5
+    (tmp_path / 'interrogate.txt').write_text(
+        '| TOTAL                            |       78 |       7 |       71 |     91.0% |\n',
+        encoding='utf-8',
+    )
+    assert interrogate_coverage(tmp_path) == 91.0
     (tmp_path / 'pydoclint.txt').write_text(
         'a.py:1:1: ERROR D100\nsummary: 1\n',
         encoding='utf-8',
