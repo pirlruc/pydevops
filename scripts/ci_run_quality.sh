@@ -35,7 +35,7 @@ esac
 # When the DevOps repo is checked out into .devops/, exclude it from app scans
 # Match .devops anywhere. A leading ^ misses the absolute path pylint records.
 IGNORE_PYLINT="${IGNORE_PYLINT:-\\.devops}"
-RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build}"
+RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build,scripts,.github}"
 PYTEST_IGNORE="${PYTEST_IGNORE:-.devops}"
 IFS=',' read -ra RUFF_EXCL_ITEMS <<<"$RUFF_EXCL"
 RUFF_EXCLUDE_ARGS=()
@@ -98,8 +98,8 @@ if [[ "${want_static}" == "1" ]]; then
     echo "quality: pylint"
     if command -v pylint >/dev/null 2>&1; then
         # --ignore matches directory names. ignore-paths alone still walked .devops.
-        pylint . --ignore=".devops,build,.gradle,.venv" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
-        pylint . --ignore=".devops,build,.gradle,.venv" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
+        pylint . --ignore=".devops,build,.gradle,.venv,scripts,.github" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
+        pylint . --ignore=".devops,build,.gradle,.venv,scripts,.github" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
         if grep -oE 'rated at [0-9.]+/10' "$OUT/pylint_full.txt" | tail -1 >"$OUT/pylint_score.txt" 2>/dev/null; then
             :
         else
@@ -196,8 +196,8 @@ if [[ "${want_static}" == "1" ]]; then
     # Radon
     echo "quality: radon"
     if command -v radon >/dev/null 2>&1; then
-        radon cc -j . --exclude '.venv' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
-        radon mi -j . --exclude '.venv' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
+        radon cc -j . --exclude '.venv,scripts,.github' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
+        radon mi -j . --exclude '.venv,scripts,.github' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/radon_cc.json" "$OUT/radon_mi.json"
