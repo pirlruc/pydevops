@@ -152,6 +152,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-11-22: 3.9.0 drops the tag release job from `python-quality.yml`. Ruff check extends the project config. The support list includes 3.14. Callers grant `contents: read`.
 - 2026-11-22: `feature-python-callers` adds `container_username`, `container_token`, and `python_versions` on `python-quality.yml`, plus `python-codeql.yml` and `scripts/check-consumer-quality.sh`. Callers outside this account pass `GHCR_READ_TOKEN`. Coverage is still read from `python_version`.
 - 2026-11-21: Test Compose reaches the runner through `host.docker.internal` and, when the image has no Docker CLI, Compose 2.32.4. `--network host` stays rejected. 3.7.2 stays the host-gateway tag until this client install is released.
 - 2026-10-31: **3.3.10** runs the quality consolidator and the PR comment as modules so `scripts` stays importable. **3.3.9** reads pip-audit 2.10's dependencies object and pins `pypa/gh-action-pypi-publish` v1.14.3. No image republish. Do not move 3.3.1 through 3.3.9.
@@ -192,6 +193,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-22 — 3.9.0. Quality no longer creates a release. Ruff extends the project config. 3.14 is supported.*
 
 *Last updated: 2026-11-22 — quality bundle skips vendored scripts; line-precision ceiling is 25%.*
 

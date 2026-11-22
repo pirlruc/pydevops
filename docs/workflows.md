@@ -55,7 +55,6 @@ artifacts. Composites under `.github/actions/` stay the unit of reuse
 | **quality-report**       | Merge artifacts, **license** gate, full **`scripts.quality_gates`**, consolidate, bundle + PR comment artifact | `if: always()` on the job; final step fails the job if license or gates failed (after uploads)                                                                                                                                                                                                          |
 | **pr-quality-comment**   | Post PR summary                                                                                                | Downloads comment artifact                                                                                                                                                                                                                                                                              |
 | **quality-dast**         | Optional ZAP + Locust                                                                                          | After tests when `enable_dast`; **`zaproxy/action-baseline`** runs the [OWASP ZAP](https://www.zaproxy.org/) **baseline** scan (passive checks against `dast_target_url` with the repo’s `.zap/rules.tsv` if present). Locust load smoke reads **`.github/dependencies/dast-python/requirements.txt`**. |
-| **release-github**       | Tag-only GitHub Release                                                                                        | **`environment: production`**; needs supply + test + report + dast; runs only on unprefixed `refs/tags/*.*.*` (SemVer, no `v`) when **`gates_passed`** is true and DAST succeeded or was skipped                                                                                                        |
 
 The shell driver `scripts/ci_run_quality.sh` honors **`QUALITY_PHASES`** per composite call
 (`static`, `security`, or `test`).
@@ -69,9 +68,8 @@ pipeline.
 - `workflow_call` — primary entry point for app repositories.
 - `workflow_dispatch` — manual runs (self-test / debugging).
 
-To produce **GitHub Releases** from **`release-github`**, the **calling** workflow must run on
-unprefixed SemVer tag pushes (for example `on.push.tags: ['[0-9]+.[0-9]+.[0-9]+']`); the reusable
-job’s release step is gated on `refs/tags/X.Y.Z` (no `v` prefix) and successful gates.
+GitHub Releases are **`python-release.yml`**, not this workflow. A caller grants
+`contents: read` here. The release workflow is the job that needs `contents: write`.
 
 **`workflow_call` outputs**
 
@@ -88,7 +86,6 @@ job’s release step is gated on `refs/tags/X.Y.Z` (no `v` prefix) and successfu
 | `quality-static`, `quality-supply-chain`, `quality-test`, `quality-report` | read        | write     | —                 | —               |
 | `pr-quality-comment`                                                       | read        | read      | —                 | write           |
 | `quality-dast`                                                             | read        | write     | —                 | —               |
-| `release-github`                                                           | write       | —         | —                 | —               |
 
 - **`devops-coordinates`** — no explicit `permissions` block; resolves `devops_repository` /
   inputs (no checkout in that job).

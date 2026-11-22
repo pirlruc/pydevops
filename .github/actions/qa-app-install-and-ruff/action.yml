@@ -60,6 +60,8 @@ runs:
       env:
         INPUT_DOCSTRING_FORMAT: ${{ inputs.docstring-format }}
         TMP: ${{ inputs.runner-temp }}
+        WS: ${{ inputs.workspace }}
+        WD: ${{ inputs.working-directory }}
       run: |
         set -euo pipefail
         case "$INPUT_DOCSTRING_FORMAT" in
@@ -68,12 +70,32 @@ runs:
           Pep257|pep257) CONV=pep257 ;;
           *) CONV=google ;;
         esac
-        cat > "$TMP/ruff-qaas.toml" <<EOF
+        # A bare config replaces the project file, so line-length falls back
+        # to 88. Extend the project file when one exists.
+        ROOT="$(cd "$WS/$WD" && pwd)"
+        EXTEND=""
+        if [ -f "$ROOT/ruff.toml" ]; then
+          EXTEND="$ROOT/ruff.toml"
+        elif [ -f "$ROOT/pyproject.toml" ]; then
+          EXTEND="$ROOT/pyproject.toml"
+        fi
+        if [ -n "$EXTEND" ]; then
+          cat > "$TMP/ruff-qaas.toml" <<EOF
+        extend = "${EXTEND}"
         [lint]
         select = ["E", "F", "D"]
         [lint.pydocstyle]
         convention = "${CONV}"
         EOF
+        else
+          cat > "$TMP/ruff-qaas.toml" <<EOF
+        line-length = 88
+        [lint]
+        select = ["E", "F", "D"]
+        [lint.pydocstyle]
+        convention = "${CONV}"
+        EOF
+        fi
     - name: Export docstring style for later steps
       shell: bash
       env:

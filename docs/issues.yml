@@ -1044,7 +1044,7 @@ milestones:
             guardrail_refs:
               - CI-027
       - id: PDO-CALL-001
-        status: open
+        status: done
         title: Let another account run the Python quality workflow
         overview:
           problem: >-
@@ -1071,7 +1071,7 @@ milestones:
           - PY-TEST-002
         tasks:
           - id: PDO-CALL-001-T1
-            status: open
+            status: done
             title: Add the caller inputs, CodeQL workflow, and local parity script
             instructions:
               files:
@@ -1084,3 +1084,42 @@ milestones:
               - sh scripts/check-ci-local.sh
             guardrail_refs:
               - CI-001
+      - id: PDO-QAS-001
+        status: done
+        title: Keep the quality workflow read-only
+        decision: >-
+          In the context of a reusable quality check, facing callers that
+          must grant every permission the workflow declares, we decided to
+          move release creation to python-release.yml and to extend the
+          project Ruff config, to achieve a read-only quality job and the
+          project's line length, accepting that tag releases are a second
+          workflow.
+        overview:
+          problem: >-
+            python-quality.yml created a GitHub Release, so every caller
+            granted contents write. Ruff check replaced the project config
+            and enforced 88 columns.
+          goal: >-
+            The quality workflow has no write-contents job. Ruff keeps the
+            project line length. 3.14 is a supported interpreter.
+        acceptance_criteria:
+          - python-quality.yml has no contents write permission
+          - Ruff check extends pyproject.toml or ruff.toml when present
+          - python-support-versions.json lists 3.14
+        guardrail_refs:
+          - CI-025
+          - CI-031
+        tasks:
+          - id: PDO-QAS-001-T1
+            status: done
+            title: Drop the release job and extend the Ruff config
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+                - .github/actions/qa-app-install-and-ruff/action.yml
+                - .github/config/python-support-versions.json
+                - docs/workflows.md
+            verification:
+              - sh scripts/check-ci-local.sh
+            guardrail_refs:
+              - CI-025

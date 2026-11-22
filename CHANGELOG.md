@@ -5,8 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-11-22
+
+### Changed
+
+- `python-quality.yml` no longer creates a GitHub Release. Callers use `python-release.yml` and grant `contents: read` on the quality job.
+- The supported interpreter list includes 3.14. The default test matrix stays 3.13.
+- The README and the caller example pin `3.9.0`.
+
 ### Fixed
 
+- Ruff check extends the project config, so `line-length` is no longer forced to 88.
 - The quality bundle finds radon and mypy in the DevOps and app virtualenvs.
 - Docstring coverage accepts the interrogate 1.7 summary table.
 - Radon, pylint, and ruff skip `scripts/` and `.github/`. Vendored doc checkers are not the library. Radon ignores a directory named `scripts` because `--exclude` does not.
