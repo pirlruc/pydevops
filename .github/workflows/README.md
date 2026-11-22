@@ -10,6 +10,7 @@ These define reusable automation you call with `uses: pirlruc/pydevops/.github/w
 | Workflow                 | Purpose                                                                                                                    |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | **`python-quality.yml`** | Main QaaS pipeline (`workflow_call` + `workflow_dispatch`). See [workflows.md](../../docs/workflows.md#python-qualityyml). |
+| **`python-codeql.yml`**  | CodeQL for Python (`workflow_call`). Private repos without code scanning set `run_codeql: false`. |
 
 Optional: **`publish-pypi.yml`** is only relevant if the **app** (or this repo) publishes a Python
 package from the same layout; most apps will not call it from the DevOps repo.

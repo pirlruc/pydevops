@@ -3,6 +3,7 @@
 | File                      | Purpose                                                      |
 | ------------------------- | ------------------------------------------------------------ |
 | `call-python-quality.yml` | Minimal `workflow_call` usage from an application repository |
+| `publish-pypi.yml`        | Manual PyPI publish. Trusted Publishing stays in the caller |
 
 Copy the YAML into **your app** repository (for example `.github/workflows/quality.yml`), replace
 the SemVer tag with your DevOps repo coordinates, pass the same value as

@@ -53,6 +53,19 @@ on:
         description: Python version for the application. DevOps itself stays on 3.13.
         type: string
         default: '3.13'
+      python_versions:
+        description: >-
+          JSON array of CPython versions for the test job, for example
+          ["3.13","3.14"]. python_version is always included. The report job
+          reads coverage from that version.
+        type: string
+        default: '["3.13"]'
+      container_username:
+        description: >-
+          Registry username for container_token. Empty uses github.actor.
+          Set this when the package owner is another account.
+        type: string
+        default: ''
       typecheck_strict:
         description: Pass --strict to mypy (PDO-STRICT-001). Exit code is always blocking.
         type: boolean
@@ -102,6 +115,12 @@ on:
         description: >
           Optional PAT with contents:read on pirlruc/pydevops for private cross-repo checkout.
         required: false
+      container_token:
+        description: >-
+          Token that can pull the private ci-python and ci-lint images.
+          Empty uses GITHUB_TOKEN, which works when the caller can already
+          read those packages.
+        required: false
     outputs:
       gates_passed:
         description: True when license and full quality gate enforcement succeeded
@@ -143,6 +162,14 @@ on:
       python_version:
         type: string
         default: '3.13'
+      python_versions:
+        description: JSON array of CPython versions for the test job.
+        type: string
+        default: '["3.13"]'
+      container_username:
+        description: Registry username for a private image pull. Empty uses github.actor.
+        type: string
+        default: ''
       docker_compose_file:
         type: string
         default: docker-compose.yml
@@ -166,12 +193,15 @@ jobs:
     outputs:
       repository: ${{ steps.calc.outputs.repository }}
       ref: ${{ steps.calc.outputs.ref }}
+      python_versions: ${{ steps.calc.outputs.python_versions }}
     steps:
       - id: calc
         shell: bash
         env:
           INPUT_DEVOPS_REPO: ${{ inputs.devops_repository }}
           INPUT_DEVOPS_REF: ${{ inputs.devops_ref }}
+          INPUT_PYTHON_VERSION: ${{ inputs.python_version }}
+          INPUT_PYTHON_VERSIONS: ${{ inputs.python_versions }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
@@ -190,6 +220,37 @@ jobs:
           fi
           echo "repository=${repo}" >> "${GITHUB_OUTPUT}"
           echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+
+          primary = os.environ["INPUT_PYTHON_VERSION"].strip()
+          raw = os.environ["INPUT_PYTHON_VERSIONS"].strip()
+          pattern = re.compile(r"^3\.\d{1,2}$")
+          if pattern.fullmatch(primary) is None:
+              raise SystemExit(
+                  f"python_version must look like 3.13 (received {primary!r})"
+              )
+          try:
+              parsed = json.loads(raw) if raw else [primary]
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"python_versions must be a JSON array: {exc}") from exc
+          if not isinstance(parsed, list) or not parsed:
+              raise SystemExit("python_versions must be a non-empty JSON array")
+          versions: list[str] = []
+          for item in parsed:
+              if not isinstance(item, str) or pattern.fullmatch(item) is None:
+                  raise SystemExit(
+                      f"python_versions entry must look like 3.13 (received {item!r})"
+                  )
+              if item not in versions:
+                  versions.append(item)
+          if primary not in versions:
+              versions.insert(0, primary)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+              handle.write("python_versions=" + json.dumps(versions) + "\n")
+          PY
   quality-shield:
     name: Job 1 — Shield (secrets + Semgrep SARIF)
     needs: devops-coordinates
@@ -197,8 +258,8 @@ jobs:
     container:
       image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
       credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ inputs.container_username || github.actor }}
+        password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
       # ci-lint has no git and runs as uid 1000. Root can write the runner
       # temp dir. The git mount is the same closure common-infra-lint uses.
       options: >-
@@ -292,8 +353,8 @@ jobs:
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ inputs.container_username || github.actor }}
+        password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
       # The image runs as uid 1000, which cannot write the runner temp dir.
       options: --user root
     timeout-minutes: 45
@@ -381,8 +442,8 @@ jobs:
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ inputs.container_username || github.actor }}
+        password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
       # The image runs as uid 1000, which cannot write the runner temp dir.
       options: --user root
     timeout-minutes: 45
@@ -465,12 +526,16 @@ jobs:
   quality-test:
     name: Job 4 — Tests & coverage
     needs: [devops-coordinates, quality-static]
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version: ${{ fromJSON(needs.devops-coordinates.outputs.python_versions) }}
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
       credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ inputs.container_username || github.actor }}
+        password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
       # The image runs as uid 1000, which cannot write the runner temp dir.
       # The socket mount is present only when the caller starts Compose
       # services. host-gateway reaches ports published on the runner.
@@ -503,19 +568,19 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/uv
-          key: ${{ runner.os }}-qa-uv-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock',
+          key: ${{ runner.os }}-qa-uv-${{ matrix.python_version }}-${{ hashFiles('.devops/uv.lock', format('{0}/uv.lock',
             inputs.working_directory), format('{0}/pyproject.toml', inputs.working_directory))
             }}
           restore-keys: |
-            ${{ runner.os }}-qa-uv-
+            ${{ runner.os }}-qa-uv-${{ matrix.python_version }}-
       - name: Install uv
         uses: ./.devops/.github/actions/setup-uv-python
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ matrix.python_version }}
           working-directory: .
       - name: Sync DevOps dependencies
         env:
-          PY: ${{ inputs.python_version }}
+          PY: ${{ matrix.python_version }}
           DEVOPS: ${{ github.workspace }}/.devops
         run: |
           set -euo pipefail
@@ -596,7 +661,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           retention-days: 1
-          name: quality-test-artifacts
+          name: quality-test-${{ matrix.python_version }}
           path: ${{ env.QUALITY_OUTPUT_DIR }}/
   quality-report:
     name: Job 5 — Reporting & artifacts
@@ -669,7 +734,7 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           retention-days: 1
-          name: quality-test-artifacts
+          name: quality-test-${{ inputs.python_version }}
           path: _merge/test
       - name: Merge downloaded artifacts
         run: |

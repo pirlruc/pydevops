@@ -29,10 +29,10 @@ jobs:
       contents: read
       pull-requests: write
       security-events: write
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.3.10
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.8.0
     with:
       devops_repository: pirlruc/pydevops
-      devops_ref: 3.3.10
+      devops_ref: 3.8.0
       strictness_level: High
       docstring_format: Google
       enable_dast: false
@@ -52,6 +52,7 @@ Pin it by digest. The pull command and the tag table are in the image docs linke
 | ------------------------------------------ | --------------------------------------------------------------------------------- |
 | `.github/workflows/README.md`              | **App vs DevOps** workflow index                                                  |
 | `.github/workflows/python-quality.yml`     | **Apps:** `workflow_call` multi-job quality pipeline + optional tag release asset |
+| `.github/workflows/python-codeql.yml`      | **Apps:** CodeQL analysis for Python |
 | `.github/workflows/python-release.yml`     | **Apps:** sdist, wheel, CycloneDX, attestation, GitHub Release. No PyPI publish |
 | `.github/workflows/publish-pypi.yml`       | **This repo:** manual PyPI (`workflow_dispatch`, `environment: pypi`)             |
 | `.github/workflows/devops-ci.yml`          | **This repo:** consolidated CI (lint, Scorecard, dependency review, scripts jobs) |
