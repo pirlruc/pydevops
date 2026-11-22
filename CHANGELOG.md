@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.8.0] - 2026-11-22
+
+### Added
+
+- `container_username` and `container_token` let a caller outside this account pull the private `ci-python` and `ci-lint` images.
+- `python_versions` runs the test job on each listed interpreter. The report still reads coverage from `python_version`.
+- `python-codeql.yml` runs CodeQL for Python. A private repository without code scanning sets `run_codeql: false`.
+- `scripts/check-consumer-quality.sh` runs the quality bundle inside `ci-python` against a caller checkout.
+- `examples/publish-pypi.yml` shows a manual PyPI publish that validates the tag in an environment variable.
+
+### Changed
+
+- The README and the caller example pin `3.8.0`.
+
 ## [3.7.1] - 2026-11-20
 
 ### Changed

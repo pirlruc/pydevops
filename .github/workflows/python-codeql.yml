@@ -1,0 +1,57 @@
+name: Python CodeQL (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        description: Directory that contains the Python sources.
+        type: string
+        default: .
+      queries:
+        description: CodeQL query suite.
+        type: string
+        default: security-extended
+      run_codeql:
+        description: >-
+          A private repository without code scanning sets this false.
+          The job still uploads SARIF when it runs.
+        type: boolean
+        default: true
+    secrets:
+      checkout_token:
+        description: Optional token for the caller checkout. Empty uses GITHUB_TOKEN.
+        required: false
+
+permissions: {}
+
+jobs:
+  analyze:
+    if: inputs.run_codeql
+    name: CodeQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Harden runner with audited egress
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+      - name: Check out application
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.checkout_token || github.token }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: python
+          queries: ${{ inputs.queries }}
+          source-root: ${{ inputs.working_directory }}
+      - name: Analyze
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:python

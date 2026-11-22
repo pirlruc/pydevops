@@ -152,6 +152,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-11-22: `feature-python-callers` adds `container_username`, `container_token`, and `python_versions` on `python-quality.yml`, plus `python-codeql.yml` and `scripts/check-consumer-quality.sh`. Callers outside this account pass `GHCR_READ_TOKEN`. Coverage is still read from `python_version`.
 - 2026-11-21: Test Compose reaches the runner through `host.docker.internal` and, when the image has no Docker CLI, Compose 2.32.4. `--network host` stays rejected. 3.7.2 stays the host-gateway tag until this client install is released.
 - 2026-10-31: **3.3.10** runs the quality consolidator and the PR comment as modules so `scripts` stays importable. **3.3.9** reads pip-audit 2.10's dependencies object and pins `pypa/gh-action-pypi-publish` v1.14.3. No image republish. Do not move 3.3.1 through 3.3.9.
 - 2026-10-28: Release **3.3.0** (`24a1b50`, pull request 241) published `ci-python` (<https://github.com/pirlruc/pydevops/actions/runs/40761650692>). **3.3.1** records the Debian and Alpine index and linux/amd64 manifests in Hub, GHCR, and `python-quality.yml`. No second publish. Mutmut `source_paths` is `scripts/`, excluding `scripts/lint-doc-links.py` and `scripts/validate-yaml.py`. Score 87.46% (4448 killed, 638 survived). The 85% gate stayed.
@@ -192,7 +193,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-11-21 — test Compose uses a static client when the image has no Docker CLI.*
+*Last updated: 2026-11-22 — caller registry token, test matrix, CodeQL, and consumer local parity.*
 
 *Last updated: 2026-11-13 — 3.6.0. Bandit reads [tool.bandit]. license_deny_list defaults to the org list. python-release.yml builds and attests. PyPI stays in the caller.*
 

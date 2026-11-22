@@ -1043,3 +1043,44 @@ milestones:
               - rg -n '\.venv' scripts/ci_run_quality.sh
             guardrail_refs:
               - CI-027
+      - id: PDO-CALL-001
+        status: open
+        title: Let another account run the Python quality workflow
+        overview:
+          problem: >-
+            A caller that does not own the ci-python package cannot pull the
+            job image with its own GITHUB_TOKEN. The test job also runs one
+            interpreter, and there is no CodeQL workflow or local parity entry
+            for a consumer checkout.
+          goal: >-
+            Pass a registry token, test several interpreters, run CodeQL, and
+            reproduce the quality bundle locally.
+        decision: >-
+          In the context of a Python library in another account, facing a
+          private quality image, we decided to accept a registry token and a
+          version list on the existing workflow, to achieve one caller pin,
+          accepting that coverage is enforced for python_version only.
+        acceptance_criteria:
+          - container_username and container_token reach every job image
+          - python_versions expands the test job and keeps python_version in the list
+          - python-codeql.yml is workflow_call and hash-pinned
+          - check-consumer-quality.sh runs ci_run_quality.sh in ci-python
+        guardrail_refs:
+          - CI-001
+          - CI-034
+          - PY-TEST-002
+        tasks:
+          - id: PDO-CALL-001-T1
+            status: open
+            title: Add the caller inputs, CodeQL workflow, and local parity script
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+                - .github/workflows/python-codeql.yml
+                - scripts/check-consumer-quality.sh
+                - examples/call-python-quality.yml
+                - examples/publish-pypi.yml
+            verification:
+              - sh scripts/check-ci-local.sh
+            guardrail_refs:
+              - CI-001
