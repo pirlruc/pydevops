@@ -98,7 +98,7 @@ def test_build_strictness_literal_floors() -> None:
         low.vuln_high_max,
         low.vuln_medium_max,
         low.bandit_findings_max,
-    ) == (70.0, 65.0, 7.0, 15, 10, 10.0, 25.0, 25.0, 25.0, 70.0, 8.0, 85.0, 5.0, 5.0, 2, 25, 15)
+    ) == (70.0, 65.0, 7.0, 15, 10, 10.0, 25.0, 25.0, 25.0, 70.0, 8.0, 85.0, 40.0, 5.0, 2, 25, 15)
     assert (
         medium.coverage_line_min,
         medium.coverage_branch_min,
@@ -117,7 +117,7 @@ def test_build_strictness_literal_floors() -> None:
         medium.vuln_high_max,
         medium.vuln_medium_max,
         medium.bandit_findings_max,
-    ) == (85.0, 80.0, 8.0, 10, 7, 20.0, 40.0, 15.0, 15.0, 85.0, 5.0, 90.0, 2.0, 2.0, 0, 10, 3)
+    ) == (85.0, 80.0, 8.0, 10, 7, 20.0, 40.0, 15.0, 15.0, 85.0, 5.0, 90.0, 30.0, 2.0, 0, 10, 3)
     assert (
         high.coverage_line_min,
         high.coverage_branch_min,
@@ -136,7 +136,7 @@ def test_build_strictness_literal_floors() -> None:
         high.vuln_high_max,
         high.vuln_medium_max,
         high.bandit_findings_max,
-    ) == (95.0, 95.0, 9.5, 8.0, 5.0, 40.0, 60.0, 5.0, 5.0, 95.0, 2.0, 95.0, 1.0, 1.0, 0, 5, 0)
+    ) == (95.0, 95.0, 9.5, 8.0, 5.0, 40.0, 60.0, 5.0, 5.0, 95.0, 2.0, 95.0, 25.0, 1.0, 0, 5, 0)
     assert isinstance(high.vuln_high_max, int)
     assert isinstance(high.bandit_findings_max, int)
 
@@ -571,11 +571,11 @@ def test_mypy_gate_rows_exact_and_boundaries() -> None:
     assert fails == ['mypy type coverage']
     assert type_coverage_row(None, t, 'Medium') == ([], [])
 
-    rows, fails = imprecision_row(0.99, t, 'High')
+    rows, fails = imprecision_row(24.99, t, 'High')
     assert rows[0]['gate'] == 'Mypy imprecision (lineprecision)'
-    assert rows[0]['required'] == '< 1.0%'
+    assert rows[0]['required'] == '< 25.0%'
     assert rows[0]['ok'] is True
-    assert imprecision_row(1.0, t, 'High')[0][0]['ok'] is False
+    assert imprecision_row(25.0, t, 'High')[0][0]['ok'] is False
     assert imprecision_row(None, t, 'High')[1] == ['mypy imprecision']
     assert imprecision_row(None, t, 'High')[0][0]['actual'] == (
         'missing or unparsable lineprecision report'

@@ -216,7 +216,10 @@ def _build_strictness() -> dict[str, Thresholds]:
         docstring_coverage_min=org['doc_coverage'],
         docstring_issues_per_kloc_cloc_max=2.0,
         mypy_type_coverage_min=95.0,
-        mypy_imprecision_lt_pct=1.0,
+        # mypy's Imprecise column counts omitted generics (PEP 695 type
+        # variables). A generic module is about 20% imprecise while the
+        # any-exprs gate stays at zero Anys. Any budget stays on any-exprs.
+        mypy_imprecision_lt_pct=25.0,
         mypy_any_per_kloc_lt=1.0,
         vuln_high_max=0,
         vuln_medium_max=5,
@@ -235,7 +238,7 @@ def _build_strictness() -> dict[str, Thresholds]:
         docstring_coverage_min=85.0,
         docstring_issues_per_kloc_cloc_max=5.0,
         mypy_type_coverage_min=90.0,
-        mypy_imprecision_lt_pct=2.0,
+        mypy_imprecision_lt_pct=30.0,
         mypy_any_per_kloc_lt=2.0,
         vuln_high_max=0,
         vuln_medium_max=10,
@@ -254,7 +257,7 @@ def _build_strictness() -> dict[str, Thresholds]:
         docstring_coverage_min=70.0,
         docstring_issues_per_kloc_cloc_max=8.0,
         mypy_type_coverage_min=85.0,
-        mypy_imprecision_lt_pct=5.0,
+        mypy_imprecision_lt_pct=40.0,
         mypy_any_per_kloc_lt=5.0,
         vuln_high_max=2,
         vuln_medium_max=25,
