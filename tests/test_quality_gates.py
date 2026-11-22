@@ -440,13 +440,13 @@ def test_mypy_medium_fails_any_density(tmp_out: Path) -> None:
 
 
 def test_mypy_high_fails_imprecision(tmp_out: Path) -> None:
-    """High tier requires imprecision share below 1%."""
+    """High tier requires imprecision share below 25%."""
     (tmp_out / 'bandit.json').write_text(json.dumps({'results': []}), encoding='utf-8')
     lp = tmp_out / 'mypy-reports' / 'lineprecision' / 'lineprecision.txt'
     lp.write_text(
         'Name                                          Lines  Precise  Imprecise  Any  Empty  Unanalyzed\n'
         '-----------------------------------------------------------------------------------------------\n'
-        'm                                               100       90         10    0      0           0\n',
+        'm                                               100       70         30    0      0           0\n',
         encoding='utf-8',
     )
     passed, rows = qg.evaluate(tmp_out, 'High')
