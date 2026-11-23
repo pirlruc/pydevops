@@ -5,14 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-11-23
+
 ### Fixed
 
 - The ci-python build sets OCI title and description. The local tag is `ci-python:ci`, and that string was becoming the image title.
 - The shield job no longer requests `security-events: write`. It checks out code and does not upload SARIF (CI-042).
+- The Debian and Alpine bases are inside the 30-day age gate. Alpine git is `2.54.1-r0` and jq is `1.8.2_git20261021-r2`.
 
 ### Changed
 
 - `docs/guardrails` is 1.17.0 and `.github/scaffold` is 1.14.0.
+- Image builds and the Hub caller pin containerdevops 6.7.0.
+- The README and the caller example pin `3.10.0`.
 
 ## [3.9.0] - 2026-11-22
 
