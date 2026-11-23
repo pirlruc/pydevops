@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The release digest job checks out commondevops v6.8.0. The previous pin checked out this repository and could not find `scripts/append-release-digests.sh`.
+
 ## [3.10.0] - 2026-11-23
 
 ### Fixed
