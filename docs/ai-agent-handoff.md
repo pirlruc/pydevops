@@ -3,19 +3,19 @@
 **Repository purpose:** Reusable GitHub Actions (“Quality-as-a-Service”) and Python scripts for
 Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.md).
 
-## Branch / pins (2026-10-28)
+## Branch / pins (2026-11-23)
 
 | Item | Value |
 |------|-------|
-| Branch | `main`. GitHub Release **3.3.0** published `ci-python`. Tag **3.3.1** records those manifests and does not republish. Do not move `3.2.3` through `3.3.0`. The repo is public; the owner can set it private. |
+| Branch | `main`. Published tip is **3.10.0** (`7519cbba9b6cbf48a6d53272f613645f70167a61`). Release-digest callers pin commondevops v6.8.0 (`4de58c74`). The repo is public; the owner can set it private. |
 | `docs/guardrails` | tag **1.17.0** → `9a17ebb269a5ab02899570dd3e40fb72e50ad762` |
 | `.github/scaffold` | tag **1.14.0** → `da8942edf17a0d2736d297c90338fd78b7ec31fb` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
-| commondevops caller pin | tag **6.1.0** → `2c5e1ebe9797828128e01f3941b5a02650abe59a`. Job containers stay on the published linux/amd64 manifests. |
+| commondevops caller pin | most jobs `2c5e1ebe9797828128e01f3941b5a02650abe59a`. Release digests `4de58c7449029c2022301c1654d1aa2da9f7bcec` (v6.8.0). |
 | containerdevops caller pin | tag **6.7.0** → `f0f9077ced9f79097e7597de1a2e00f8eb42e216` |
 | ci-python (debian, unsuffixed) | `3.3.0` linux/amd64 `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd` (tag index `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`) |
 | ci-python (alpine) | `3.3.0-alpine` linux/amd64 `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05` (tag index `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`) |
-| Latest annotated tag | **`3.3.1`** records the 3.3.0 digests. README `uses:` example is `@3.3.1`. Release **3.3.0** published the image. |
+| Latest annotated tag | **`3.10.0`**. README `uses:` example is `@3.10.0`. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
