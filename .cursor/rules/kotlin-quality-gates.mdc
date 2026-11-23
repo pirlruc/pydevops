@@ -1,0 +1,17 @@
+---
+description: Prove KT-* quality gates still hold before finishing Kotlin edits
+globs: "**/*.{kt,kts}"
+alwaysApply: false
+---
+
+# Kotlin quality gates
+
+When you add or edit Kotlin, prove the org Kotlin guardrails still hold before finishing.
+Read floors from `docs/guardrails/kotlin/profile.thresholds.yml`. Do not bake numbers here.
+
+Run the repo local parity script when it exists. Otherwise run the Gradle tasks the
+caller template names: lint, unit tests, and Kover. A `@Suppress` in a build script
+is a suppression and needs the same record as a source suppression.
+
+Policy and deviations: [guardrails-compliance.mdc](guardrails-compliance.mdc).
+Tool choice: [build-test-environments.mdc](build-test-environments.mdc).

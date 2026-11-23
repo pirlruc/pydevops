@@ -1,0 +1,17 @@
+---
+description: Prove RUST-* quality gates still hold before finishing Rust edits
+globs: "**/Cargo.toml"
+alwaysApply: false
+---
+
+# Rust quality gates
+
+When you add or edit Rust, prove the org Rust guardrails still hold before finishing.
+Read floors from `docs/guardrails/rust/profile.thresholds.yml`. Do not bake numbers here.
+
+Run the repo local parity script when it exists. Otherwise run rustfmt, clippy with
+warnings denied, and the coverage command the Rust caller template names. Record the
+MSRV in `Cargo.toml`. `cargo deny` and `cargo audit` are part of the pack.
+
+Policy and deviations: [guardrails-compliance.mdc](guardrails-compliance.mdc).
+Tool choice: [build-test-environments.mdc](build-test-environments.mdc).

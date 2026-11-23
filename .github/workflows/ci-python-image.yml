@@ -47,6 +47,9 @@ jobs:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
       image_name: ci-python:ci
+      image_title: ci-python
+      image_description: >-
+        Python quality toolchain. Debian 13. Non-root 1000:1000.
       artifact_name: container-image-ci-python
       handoff_package: ci-python
       scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
@@ -69,6 +72,9 @@ jobs:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
       image_name: ci-python:ci-alpine
+      image_title: ci-python
+      image_description: >-
+        Python quality toolchain. Alpine 3.24. Non-root 1000:1000.
       artifact_name: container-image-ci-python-alpine
       handoff_package: ci-python
       scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f

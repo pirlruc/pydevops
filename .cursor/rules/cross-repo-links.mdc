@@ -26,7 +26,7 @@ links that should always track the tip.
 | `../../guardrails/cpp/guardrails.md` | Assumes a shared parent directory |
 | `/home/<user>/Developer/...` | Machine-specific absolute path |
 | `documentation/guardrails/...` from another repo | Assumes a monorepo that does not exist |
-| A library folder name as a path root (`traits/docs/issues.yml`) | Assumes the old monorepo layout |
+| A library folder name as a path root (`some-lib/docs/issues.yml`) | Assumes the old monorepo layout |
 
 ## Scope
 

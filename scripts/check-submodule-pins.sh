@@ -8,10 +8,10 @@ cd "${ROOT}"
 
 # Peeled commits for annotated tags guardrails 1.15.0 and github-scaffold 1.12.0.
 # methodologies is not a submodule here; decision links cite methodologies 1.11.0.
-GR_TAG="1.15.0"
-GR_EXPECT="2d4bb70e95449f6922781716857adeb22badf676"
-SC_TAG="1.12.0"
-SC_EXPECT="9c443ea978851768f451b1df2020dd86dfb1a967"
+GR_TAG="1.17.0"
+GR_EXPECT="9a17ebb269a5ab02899570dd3e40fb72e50ad762"
+SC_TAG="1.14.0"
+SC_EXPECT="da8942edf17a0d2736d297c90338fd78b7ec31fb"
 
 gr="$(git rev-parse 'HEAD:docs/guardrails')"
 sc="$(git rev-parse 'HEAD:.github/scaffold')"

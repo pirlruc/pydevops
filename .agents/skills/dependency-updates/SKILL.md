@@ -12,12 +12,12 @@ Cursor applies the matching `.cursor/rules` file by glob and does not auto-invok
 # Dependency updates (SC-DEP-*)
 
 Governs `.github/dependabot.yml` (and `.yaml`). Cite Guardrail IDs from
-[`docs/guardrails/supply-chain/`](https://github.com/pirlruc/guardrails/tree/1.15.0/supply-chain).
+[`docs/guardrails/supply-chain/`](https://github.com/pirlruc/guardrails/tree/1.17.0/supply-chain).
 Cadence and open-PR limit come from `docs/guardrails/supply-chain/profile.thresholds.yml` — do not bake numbers
 into this rule.
 
 Process companion:
-[dependency-updates.md](https://github.com/pirlruc/methodologies/blob/1.11.0/github-issue-adr/docs/process/dependency-updates.md).
+[dependency-updates.md](https://github.com/pirlruc/methodologies/blob/1.12.1/github-issue-adr/docs/process/dependency-updates.md).
 
 ## Required shape
 
@@ -80,7 +80,7 @@ Org **Grant Dependabot access** is org-only. On a personal account:
 ## CI interaction
 
 Skip jobs that need **Actions** secrets when `github.event.pull_request.user.login == 'dependabot[bot]'`. Do not compare `github.actor`.
-([CI-024](https://github.com/pirlruc/guardrails/blob/1.15.0/ci/guardrails.md)). Dependabot secrets are for
+([CI-024](https://github.com/pirlruc/guardrails/blob/1.17.0/ci/guardrails.md)). Dependabot secrets are for
 version updates only.
 
 A pull request whose jobs are all skipped is not evidence the change works. Build it locally before merging.
