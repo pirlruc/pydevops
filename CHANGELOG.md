@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The ci-python build sets OCI title and description. The local tag is `ci-python:ci`, and that string was becoming the image title.
+- The shield job no longer requests `security-events: write`. It checks out code and does not upload SARIF (CI-042).
+
+### Changed
+
+- `docs/guardrails` is 1.17.0 and `.github/scaffold` is 1.14.0.
+
 ## [3.9.0] - 2026-11-22
 
 ### Changed
