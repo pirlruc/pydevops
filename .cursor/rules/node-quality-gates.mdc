@@ -1,0 +1,17 @@
+---
+description: Prove NODE-* quality gates still hold before finishing Node edits
+globs: "**/package.json"
+alwaysApply: false
+---
+
+# Node quality gates
+
+When you add or edit Node, prove the org Node guardrails still hold before finishing.
+Read floors from `docs/guardrails/node/profile.thresholds.yml`. Do not bake numbers here.
+
+Run the repo local parity script when it exists. Otherwise run the lint, typecheck,
+and test commands the Node caller template names. Do not render unsanitized HTML.
+Do not put a secret in the client bundle.
+
+Policy and deviations: [guardrails-compliance.mdc](guardrails-compliance.mdc).
+Tool choice: [build-test-environments.mdc](build-test-environments.mdc).

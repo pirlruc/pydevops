@@ -19,7 +19,7 @@ jobs:
   ci-python:
     permissions:
       contents: read
-    uses: pirlruc/containerdevops/.github/workflows/container-hub-description.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-hub-description.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       dockerhub_image: pirlruc/ci-python
       dockerhub_readme: docs/docker-hub.md

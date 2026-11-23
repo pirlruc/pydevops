@@ -289,10 +289,10 @@ jobs:
         -v /usr/lib/x86_64-linux-gnu/libkrb5support.so.0:/usr/lib/x86_64-linux-gnu/libkrb5support.so.0:ro
         -v /usr/lib/x86_64-linux-gnu/libkeyutils.so.1:/usr/lib/x86_64-linux-gnu/libkeyutils.so.1:ro
     timeout-minutes: 30
+    # No SARIF upload. security-events does not belong on a job that checks out code (CI-042).
     permissions:
       contents: read
       packages: read
-      security-events: write
       actions: write
     steps:
       - name: Harden runner with audited egress

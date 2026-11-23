@@ -20,9 +20,13 @@ the same text. Other agents apply a skill when its description matches.
 - [dependency-updates](.agents/skills/dependency-updates/SKILL.md)
 - [supply-chain-artifacts](.agents/skills/supply-chain-artifacts/SKILL.md)
 - [release-publish](.agents/skills/release-publish/SKILL.md)
+- [android-quality-gates](.agents/skills/android-quality-gates/SKILL.md)
 - [ansible-roles](.agents/skills/ansible-roles/SKILL.md)
 - [cpp-quality-gates](.agents/skills/cpp-quality-gates/SKILL.md)
+- [kotlin-quality-gates](.agents/skills/kotlin-quality-gates/SKILL.md)
+- [node-quality-gates](.agents/skills/node-quality-gates/SKILL.md)
 - [opentofu-iac](.agents/skills/opentofu-iac/SKILL.md)
+- [rust-quality-gates](.agents/skills/rust-quality-gates/SKILL.md)
 - [sops-secrets](.agents/skills/sops-secrets/SKILL.md)
 
 ## Always-on rules
@@ -89,7 +93,7 @@ When creating a commit, use [Conventional Commits](https://www.conventionalcommi
 ## Format rules
 
 - **Subject:** imperative mood, lowercase, no trailing period, ~72 chars max
-- **Scope:** optional but recommended — module, library folder, or area (e.g. `traits`, `drawer`, `ci`, `docs`)
+- **Scope:** optional but recommended — module, library folder, or area (e.g. `api`, `layout`, `ci`, `docs`)
 - **Body:** explain *why*, not *what*; wrap at ~72 chars
 - **Breaking changes:** `feat!:` or footer `BREAKING CHANGE: <description>`
 
@@ -111,7 +115,7 @@ When creating a commit, use [Conventional Commits](https://www.conventionalcommi
 ## Examples
 
 ```
-feat(traits): add is_detected_v concept alias
+feat(api): add is_detected_v concept alias
 
 fix(ci): restore blocking flag on cpp-docs workflow
 
@@ -119,7 +123,7 @@ docs(issues): document github-scaffold sync in issues-index
 
 chore(scaffold): sync epic template Y-statement section
 
-refactor(drawer): simplify page element layout validation
+refactor(layout): simplify page element layout validation
 
 test(flow): cover typed graph cycle detection
 ```
@@ -251,7 +255,7 @@ A workflow that only runs on GitHub (a private registry login, a release publish
 
 # Public docs hygiene
 
-README, Docker Hub Overview, GitHub Packages description, and GitHub Release notes are for someone using the repository or the image. Cite [DOC-PUB-001](https://github.com/pirlruc/guardrails/blob/1.15.0/markdown/guardrails.md).
+README, Docker Hub Overview, GitHub Packages description, and GitHub Release notes are for someone using the repository or the image. Cite [DOC-PUB-001](https://github.com/pirlruc/guardrails/blob/1.17.0/markdown/guardrails.md).
 
 ## Write
 
@@ -292,7 +296,7 @@ links that should always track the tip.
 | `../../guardrails/cpp/guardrails.md` | Assumes a shared parent directory |
 | `/home/<user>/Developer/...` | Machine-specific absolute path |
 | `documentation/guardrails/...` from another repo | Assumes a monorepo that does not exist |
-| A library folder name as a path root (`traits/docs/issues.yml`) | Assumes the old monorepo layout |
+| A library folder name as a path root (`some-lib/docs/issues.yml`) | Assumes the old monorepo layout |
 
 ## Scope
 
@@ -368,7 +372,7 @@ issue text by hand.
 
 Field definitions: [guardrails deviation rule](https://github.com/pirlruc/guardrails#deviation-rule).
 Process and approval flow:
-[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.11.0/github-issue-adr/docs/process/guardrail-compliance.md).
+[guardrail-compliance.md](https://github.com/pirlruc/methodologies/blob/1.12.1/github-issue-adr/docs/process/guardrail-compliance.md).
 
 ## Related
 
@@ -379,7 +383,7 @@ Process and approval flow:
 
 # github-issue-adr methodology
 
-[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.11.0/github-issue-adr) is the methodology for every
+[github-issue-adr](https://github.com/pirlruc/methodologies/tree/1.12.1/github-issue-adr) is the methodology for every
 repo carrying this scaffold. Do not introduce a second decision-record format alongside it.
 
 ## Core model

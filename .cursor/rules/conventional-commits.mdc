@@ -18,7 +18,7 @@ When creating a commit, use [Conventional Commits](https://www.conventionalcommi
 ## Format rules
 
 - **Subject:** imperative mood, lowercase, no trailing period, ~72 chars max
-- **Scope:** optional but recommended — module, library folder, or area (e.g. `traits`, `drawer`, `ci`, `docs`)
+- **Scope:** optional but recommended — module, library folder, or area (e.g. `api`, `layout`, `ci`, `docs`)
 - **Body:** explain *why*, not *what*; wrap at ~72 chars
 - **Breaking changes:** `feat!:` or footer `BREAKING CHANGE: <description>`
 
@@ -40,7 +40,7 @@ When creating a commit, use [Conventional Commits](https://www.conventionalcommi
 ## Examples
 
 ```
-feat(traits): add is_detected_v concept alias
+feat(api): add is_detected_v concept alias
 
 fix(ci): restore blocking flag on cpp-docs workflow
 
@@ -48,7 +48,7 @@ docs(issues): document github-scaffold sync in issues-index
 
 chore(scaffold): sync epic template Y-statement section
 
-refactor(drawer): simplify page element layout validation
+refactor(layout): simplify page element layout validation
 
 test(flow): cover typed graph cycle detection
 ```

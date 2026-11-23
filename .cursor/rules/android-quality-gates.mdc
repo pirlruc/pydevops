@@ -1,0 +1,16 @@
+---
+description: Prove ANDROID-* quality gates still hold before finishing Android edits
+globs: "**/AndroidManifest.xml"
+alwaysApply: false
+---
+
+# Android quality gates
+
+When you add or edit an Android module, prove the org Android guardrails still hold
+before finishing. A module that also contains Kotlin or JNI still applies the kotlin
+and cpp packs. Read floors from `docs/guardrails/android/profile.thresholds.yml`.
+
+Secrets and keystore aliases are per build profile. Do not commit a keystore.
+
+Policy and deviations: [guardrails-compliance.mdc](guardrails-compliance.mdc).
+Tool choice: [build-test-environments.mdc](build-test-environments.mdc).
