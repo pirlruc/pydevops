@@ -3,13 +3,13 @@
 # No HEALTHCHECK. kics-scan disable=b03a748a-542d-44f4-bb86-9199ab4fd2d5
 # Base tag in a comment for DOCKER-BUILD-003: dhi.io/python:3.13-debian13-dev
 
-FROM dhi.io/node:24-debian13-dev@sha256:7472702d42985694a5a75938ee84e7fbd8bb418c2347ced74e00c57622d5fa75 AS jscpd
+FROM dhi.io/node:24-debian13-dev@sha256:96e25a7d16cd1dff155387709b78bf6fc3d97fe229bd0ee776c569b7908a9b3f AS jscpd
 WORKDIR /opt/jscpd
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-FROM dhi.io/python:3.13-debian13-dev@sha256:9f749050e3565136aa368b8f2314b88070522eac1778a0a149d3186bb0923af4 AS quality
-COPY --from=dhi.io/uv:0-debian13@sha256:f62f9c40d79d02b2a24dc6fce9e4860c27833b08a9501517537d665d4dc1caa6 \
+FROM dhi.io/python:3.13-debian13-dev@sha256:7cf7dea69d646294bbb1c69239a544ac17bf8da851a16bedf43871901c9dcbc1 AS quality
+COPY --from=dhi.io/uv:0-debian13@sha256:3003d7cdef643ab3a535dd4cfd29f56917750c378c1eb7c41fe20e30444e5bd2 \
   /uv /usr/local/bin/uv
 COPY requirements.txt /tmp/requirements.txt
 RUN /usr/local/bin/uv venv /opt/quality --python /usr/bin/python3 \
@@ -17,7 +17,7 @@ RUN /usr/local/bin/uv venv /opt/quality --python /usr/bin/python3 \
       -r /tmp/requirements.txt \
  && rm -f /tmp/requirements.txt
 
-FROM dhi.io/python:3.13-debian13-dev@sha256:9f749050e3565136aa368b8f2314b88070522eac1778a0a149d3186bb0923af4
+FROM dhi.io/python:3.13-debian13-dev@sha256:7cf7dea69d646294bbb1c69239a544ac17bf8da851a16bedf43871901c9dcbc1
 
 LABEL org.opencontainers.image.title="ci-python" \
       org.opencontainers.image.description="Python quality toolchain: uv, quality CLIs, jscpd, syft, grype, cloc, jq. Debian 13. Non-root 1000:1000, linux/amd64." \
@@ -48,7 +48,7 @@ COPY --from=dhi.io/syft:1-debian13@sha256:592be9e9fb223f5bd3f175bba8f9191847b065
   /usr/bin/syft /usr/local/bin/syft
 COPY --from=dhi.io/grype:0-debian13@sha256:aa59b66b65c0cc54f094cd35614b203288477bc5d4d256be003b00a96a473925 \
   /usr/bin/grype /usr/local/bin/grype
-COPY --from=dhi.io/node:24-debian13-dev@sha256:7472702d42985694a5a75938ee84e7fbd8bb418c2347ced74e00c57622d5fa75 \
+COPY --from=dhi.io/node:24-debian13-dev@sha256:96e25a7d16cd1dff155387709b78bf6fc3d97fe229bd0ee776c569b7908a9b3f \
   /usr/bin/node /usr/local/bin/node
 COPY --from=jscpd --chown=1000:1000 /opt/jscpd /opt/jscpd
 COPY --from=quality --chown=1000:1000 /opt/quality /opt/quality
