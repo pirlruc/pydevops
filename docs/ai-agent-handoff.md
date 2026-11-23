@@ -8,11 +8,11 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | Item | Value |
 |------|-------|
 | Branch | `main`. GitHub Release **3.3.0** published `ci-python`. Tag **3.3.1** records those manifests and does not republish. Do not move `3.2.3` through `3.3.0`. The repo is public; the owner can set it private. |
-| `docs/guardrails` | tag **1.15.0** → `2d4bb70e95449f6922781716857adeb22badf676` |
-| `.github/scaffold` | tag **1.12.0** → `9c443ea978851768f451b1df2020dd86dfb1a967` |
+| `docs/guardrails` | tag **1.17.0** → `9a17ebb269a5ab02899570dd3e40fb72e50ad762` |
+| `.github/scaffold` | tag **1.14.0** → `da8942edf17a0d2736d297c90338fd78b7ec31fb` |
 | methodologies (links only; not a submodule) | tag **1.9.1** |
 | commondevops caller pin | tag **6.1.0** → `2c5e1ebe9797828128e01f3941b5a02650abe59a`. Job containers stay on the published linux/amd64 manifests. |
-| containerdevops caller pin | tag **6.5.0** → `b8c0746603eefdc89571b17c62d1e965b28ff31f` |
+| containerdevops caller pin | tag **6.7.0** → `f0f9077ced9f79097e7597de1a2e00f8eb42e216` |
 | ci-python (debian, unsuffixed) | `3.3.0` linux/amd64 `sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd` (tag index `sha256:0aef20d62a9a5bee8ba7d5650bbd3a82e4d2f7535acb386207dc9670e597269a`) |
 | ci-python (alpine) | `3.3.0-alpine` linux/amd64 `sha256:cb118f77b1251dffdd0a4d1ae95dfb7ba1c4653b86aeff6e577ae622bdab3f05` (tag index `sha256:5496e75f1c811cccee3542bfcd21ee62467cea91ce5c9945de76ecc59dcca524`) |
 | Latest annotated tag | **`3.3.1`** records the 3.3.0 digests. README `uses:` example is `@3.3.1`. Release **3.3.0** published the image. |
@@ -152,6 +152,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 
 ## Recent history
 
+- 2026-11-23: **3.10.0** pins guardrails 1.17.0, scaffold 1.14.0, and containerdevops 6.7.0. ci-python sets OCI title and description. The shield job does not request `security-events: write`.
 - 2026-11-22: 3.9.0 drops the tag release job from `python-quality.yml`. Ruff check extends the project config. The support list includes 3.14. Callers grant `contents: read`.
 - 2026-11-22: `feature-python-callers` adds `container_username`, `container_token`, and `python_versions` on `python-quality.yml`, plus `python-codeql.yml` and `scripts/check-consumer-quality.sh`. Callers outside this account pass `GHCR_READ_TOKEN`. Coverage is still read from `python_version`.
 - 2026-11-21: Test Compose reaches the runner through `host.docker.internal` and, when the image has no Docker CLI, Compose 2.32.4. `--network host` stays rejected. 3.7.2 stays the host-gateway tag until this client install is released.
@@ -193,6 +194,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-23 — 3.10.0. Guardrails 1.17.0. Scaffold 1.14.0. containerdevops 6.7.0.*
 
 *Last updated: 2026-11-22 — 3.9.0. Quality no longer creates a release. Ruff extends the project config. 3.14 is supported.*
 
