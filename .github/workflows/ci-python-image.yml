@@ -27,11 +27,11 @@ jobs:
       contents: read
       packages: read
       security-events: write
-    uses: pirlruc/containerdevops/.github/workflows/container-lint.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-lint.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       dockerfile: docker/ci-python/Dockerfile
       working_directory: .
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       runner_image: ""
       run_infra_lint: false
       run_secrets_scan: true
@@ -42,7 +42,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
@@ -50,9 +50,11 @@ jobs:
       image_title: ci-python
       image_description: >-
         Python quality toolchain. Debian 13. Non-root 1000:1000.
+      image_documentation: https://github.com/pirlruc/pydevops
+      image_url: https://hub.docker.com/r/pirlruc/ci-python
       artifact_name: container-image-ci-python
       handoff_package: ci-python
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
@@ -67,7 +69,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-build.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
@@ -75,9 +77,11 @@ jobs:
       image_title: ci-python
       image_description: >-
         Python quality toolchain. Alpine 3.24. Non-root 1000:1000.
+      image_documentation: https://github.com/pirlruc/pydevops
+      image_url: https://hub.docker.com/r/pirlruc/ci-python
       artifact_name: container-image-ci-python-alpine
       handoff_package: ci-python
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       blocking: true
       size_class: ci_toolchain
       dhi_login: true
@@ -94,12 +98,12 @@ jobs:
       contents: read
       security-events: write
       packages: read
-    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build.outputs.handoff_package, needs.build.outputs.digest) }}
       results_artifact: container-scan-posture-debian
       sarif_category: trivy-posture-debian
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       pkg_types: os,library
       ignorefile: none
       blocking: false
@@ -111,12 +115,12 @@ jobs:
       contents: read
       security-events: write
       packages: read
-    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-scan.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       image: ${{ format('ghcr.io/{0}/{1}@{2}', github.repository_owner, needs.build-alpine.outputs.handoff_package, needs.build-alpine.outputs.digest) }}
       results_artifact: container-scan-posture-alpine
       sarif_category: trivy-posture-alpine
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       pkg_types: os,library
       ignorefile: none
       blocking: false
@@ -129,13 +133,13 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile
       image_name: ci-python
       dockerhub_image: pirlruc/ci-python
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       platforms: linux/amd64
       tag_suffix: -debian
       tag_alias_unsuffixed: true
@@ -162,13 +166,13 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@b8c0746603eefdc89571b17c62d1e965b28ff31f
+    uses: pirlruc/containerdevops/.github/workflows/container-publish.yml@f0f9077ced9f79097e7597de1a2e00f8eb42e216
     with:
       context: docker/ci-python
       dockerfile: docker/ci-python/Dockerfile.alpine
       image_name: ci-python
       dockerhub_image: pirlruc/ci-python
-      scripts_ref: b8c0746603eefdc89571b17c62d1e965b28ff31f
+      scripts_ref: f0f9077ced9f79097e7597de1a2e00f8eb42e216
       platforms: linux/amd64
       tag_suffix: -alpine
       tag_alias_unsuffixed: false
