@@ -39,7 +39,8 @@ RUN apk add --no-cache \
       printf 'ci:x:1000:\n' >> /etc/group; \
     fi \
  && mkdir -p /home/ci /workspace \
- && chown -R 1000:1000 /workspace /home/ci
+ && chown -R 1000:1000 /workspace /home/ci \
+ && find /usr -type d -path '*/site-packages/pip' -print0 | xargs -0 rm -rf
 
 COPY --from=dhi.io/syft:1-alpine3.24@sha256:ff505c41e35dbcdb067a75b059e2e2b25203442d3a4ba617270469b5e06f173b \
   /usr/bin/syft /usr/local/bin/syft

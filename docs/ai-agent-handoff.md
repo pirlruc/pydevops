@@ -8,13 +8,13 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | Item | Value |
 |------|-------|
 | Branch | `main`. Published tip is **3.10.1** (`1ebe447374d2fb655ee35eff578117be0c110865`). The repo is public; the owner can set it private. |
-| `docs/guardrails` | tag **1.17.0** → `9a17ebb269a5ab02899570dd3e40fb72e50ad762` |
-| `.github/scaffold` | tag **1.14.0** → `da8942edf17a0d2736d297c90338fd78b7ec31fb` |
+| `docs/guardrails` | tag **1.17.1** → `8508e93691aa3c4f769ecc215ddc83ecf26e70b2` |
+| `.github/scaffold` | tag **1.14.2** → `615dbbcbe906d62a29e4f4e4118cb94cb119f5a5` |
 | methodologies (links only; not a submodule) | tag **1.12.1** |
 | commondevops caller pin | v6.9.0 `5d8b83da2f8f0c0c1bd894ef920619fe127c033e` |
 | containerdevops caller pin | tag **6.8.0** → `ae9dbee9e4537bd3a0b533de3bad011cb44b201e` |
-| ci-python (debian, unsuffixed) | `3.10.0` linux/amd64 `sha256:1a7319a8f39b578998123c066acf5be7ea4368cce50ca458a6a8bdb3f4d2b9c9` |
-| ci-python (alpine) | `3.10.0-alpine` linux/amd64 `sha256:35bac9acb1213d0dc9e077371b11fdf4169d23ae31ab7814b39881111316c075` |
+| ci-python (debian, unsuffixed) | `3.10.1` linux/amd64 `sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d` |
+| ci-python (alpine) | `3.10.1-alpine` linux/amd64 `sha256:6e5215fd529e3639b7009dd50cb267633919b36593cecc195813d6ccae3a1ad7` |
 | Latest annotated tag | **`3.10.1`**. README `uses:` example is `@3.10.1`. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
@@ -196,6 +196,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-24 — Rescan and docs pin ci-python 3.10.1. The Debian base no longer ships pip. The quality venv still does, because pip-audit imports it. PDO-IMG-002 stays open.*
 
 *Last updated: 2026-11-24 — A current-DHI rebuild of ci-python still fails the library scan. pip vendors setuptools 70.3.0, and syft and grype still contain golang.org/x/crypto v0.58.0.*
 

@@ -1,0 +1,20 @@
+name: Artifact sweep (container-image*, build records, stale caches)
+
+# Caller for the commondevops sweep. The job runs in this repository.
+
+on:
+  schedule:
+    - cron: "12 4 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: artifact-sweep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    permissions:
+      actions: write
+    uses: pirlruc/commondevops/.github/workflows/artifact-sweep.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e # v6.9.0
