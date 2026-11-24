@@ -91,7 +91,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 - Pytest uses `.venv/bin/pytest` when the caller synced a workspace. The image's pytest does not see that install. Bandit skips `.venv` and `.github/scaffold`; those trees are not the caller's code. Radon ignores directories named `scripts` (`-i`); `--exclude` does not skip them. Pylint and ruff skip `scripts/` and `.github/`. The High line-precision ceiling is 25% because mypy counts PEP 695 type variables as imprecise lines. Any expressions stay on the any-exprs gate.
 
 - Mutmut 3 keeps a survived verdict until that mutant's result is cleared. Adding tests does not re-run mutants whose exit code is already stored. Clear survived (and no-test) entries in `mutants/scripts/**/*.meta` before `mutmut run` when the goal is to kill existing survivors. Killed results can stay cached.
-- Callers pin commondevops **5.5.3** (`c8ab717`). The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
+- Callers pin commondevops **v6.9.0** (`5d8b83d`). The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
 - CI-024: Scorecard, PyPI publish, secrets-sast, and PR comment jobs skip
   `dependabot[bot]`. Token-free `pins` still runs.
 - Scorecard is **advisory** while the repo is private and `SCORECARD_TOKEN` is

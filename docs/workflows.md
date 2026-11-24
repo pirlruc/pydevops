@@ -27,8 +27,8 @@ repository with no `pyproject.toml` should call
 ### `python-quality.yml`
 
 **Purpose:** Central Quality-as-a-Service pipeline: multi-job gated CI (shield, static, supply
-chain, tests, reporting), optional DAST, GitHub Release with the quality bundle on SemVer tags when
-all gates pass, and (on same-repo pull requests) a PR comment.
+chain, tests, reporting), optional DAST, and (on same-repo pull requests) a PR comment.
+GitHub Releases are `python-release.yml`.
 
 #### GitHub limitation (dynamic `uses:` vs dynamic checkout)
 
@@ -161,7 +161,7 @@ permissions: {}
 
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.0.0
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.10.1
     with: { ... }
     secrets:
       caller_pat: ${{ secrets.caller_pat }}
