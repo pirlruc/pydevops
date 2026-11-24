@@ -1136,13 +1136,14 @@ milestones:
           a follow-up commit that moves the rescan pin after the registry push.
         overview:
           problem: >-
-            Release 3.10.1 did publish ci-python (run 45319126865). The
-            blocking library scan still fails. The quality venv keeps pip
-            because pip-audit imports it, and pip 26.3 still vendors
-            setuptools 70.3.0. The Debian base also ships its own pip.
-            syft and grype still contain golang.org/x/crypto v0.58.0
-            (GO-2026-5932). The quality venv already has certifi
-            2026.10.19, msgpack 1.2.3, and urllib3 2.8.0.
+            Release 3.10.1 did publish ci-python (run 45319126865). Both
+            bases no longer ship their own pip. The blocking library scan
+            still fails. The quality venv keeps pip because pip-audit
+            imports it, and that pip still vendors setuptools, certifi,
+            msgpack, and urllib3. syft and grype still contain
+            golang.org/x/crypto and other Go modules with no image-side
+            rebuild. Do not tag another release until a local os,library
+            scan of both variants is clean.
           goal: >-
             A published Debian and Alpine image passes the blocking library
             rescan, and the Thursday job scans that digest.
