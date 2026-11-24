@@ -96,8 +96,11 @@ jobs:
         uses: ./.github/actions/install-uv
       - name: Install mutation testing runner
         run: |
-          MUT=$(grep -v '^#' .github/dependencies/mutmut/requirements.txt | head -1 | tr -d ' \n\r')
-          uv tool install "${MUT}"
+          mkdir -p "$HOME/.local/bin"
+          uv venv /tmp/mutmut-venv
+          uv pip install --python /tmp/mutmut-venv/bin/python --require-hashes \
+            -r .github/dependencies/mutmut/requirements.txt
+          ln -sfn /tmp/mutmut-venv/bin/mutmut "$HOME/.local/bin/mutmut"
       - name: Sync project and test dependencies
         run: |
           if [ -f pyproject.toml ]; then uv sync --all-groups --all-extras; fi
@@ -244,15 +247,29 @@ jobs:
       packages: read
     uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
     with:
-      image: ghcr.io/pirlruc/ci-python:3.10.0@sha256:1a7319a8f39b578998123c066acf5be7ea4368cce50ca458a6a8bdb3f4d2b9c9
+      image: ghcr.io/pirlruc/ci-python:3.10.1@sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d
       scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
       pkg_types: library
       ignorefile: docker/ci-python/.trivyignore.yaml
       results_artifact: published-ci-python-scan
       sarif_category: trivy-ci-python
       blocking: true
-    secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+  published-ci-python-alpine-rescan:
+    name: Scheduled — published ci-python alpine
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
+    with:
+      image: ghcr.io/pirlruc/ci-python:3.10.1-alpine@sha256:6e5215fd529e3639b7009dd50cb267633919b36593cecc195813d6ccae3a1ad7
+      scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
+      pkg_types: library
+      ignorefile: docker/ci-python/.trivyignore.yaml
+      results_artifact: published-ci-python-alpine-scan
+      sarif_category: trivy-ci-python-alpine
+      blocking: true
 
   published-posture-debian:
     name: Scheduled — ci-python posture debian
@@ -263,15 +280,13 @@ jobs:
       packages: read
     uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
     with:
-      image: ghcr.io/pirlruc/ci-python:3.10.0@sha256:1a7319a8f39b578998123c066acf5be7ea4368cce50ca458a6a8bdb3f4d2b9c9
+      image: ghcr.io/pirlruc/ci-python:3.10.1@sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d
       scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
       pkg_types: os,library
       ignorefile: none
       results_artifact: published-posture-debian
       sarif_category: trivy-posture-debian
       blocking: false
-    secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
 
   published-posture-alpine:
     name: Scheduled — ci-python posture alpine
@@ -282,15 +297,13 @@ jobs:
       packages: read
     uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
     with:
-      image: ghcr.io/pirlruc/ci-python:3.10.0-alpine@sha256:35bac9acb1213d0dc9e077371b11fdf4169d23ae31ab7814b39881111316c075
+      image: ghcr.io/pirlruc/ci-python:3.10.1-alpine@sha256:6e5215fd529e3639b7009dd50cb267633919b36593cecc195813d6ccae3a1ad7
       scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
       pkg_types: os,library
       ignorefile: none
       results_artifact: published-posture-alpine
       sarif_category: trivy-posture-alpine
       blocking: false
-    secrets:
-      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
 
   security-aggregate:
     if: always()
@@ -300,6 +313,7 @@ jobs:
       - scheduled-openssf-scorecard
       - token-audit
       - published-ci-python-rescan
+      - published-ci-python-alpine-rescan
       - published-posture-debian
       - published-posture-alpine
     runs-on: ubuntu-24.04
@@ -314,12 +328,13 @@ jobs:
           SCORE: ${{ needs.scheduled-openssf-scorecard.result }}
           TOKEN: ${{ needs.token-audit.result }}
           RESCAN: ${{ needs.published-ci-python-rescan.result }}
+          RESCAN_ALPINE: ${{ needs.published-ci-python-alpine-rescan.result }}
           POSTURE_DEBIAN: ${{ needs.published-posture-debian.result }}
           POSTURE_ALPINE: ${{ needs.published-posture-alpine.result }}
         run: |
           set -eu
           failed=""
-          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}" "scorecard=${SCORE}" "token-audit=${TOKEN}" "rescan=${RESCAN}" "posture-debian=${POSTURE_DEBIAN}" "posture-alpine=${POSTURE_ALPINE}"; do
+          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}" "scorecard=${SCORE}" "token-audit=${TOKEN}" "rescan=${RESCAN}" "rescan-alpine=${RESCAN_ALPINE}" "posture-debian=${POSTURE_DEBIAN}" "posture-alpine=${POSTURE_ALPINE}"; do
             name=${item%%=*}
             result=${item#*=}
             if [ "${result}" != "success" ] && [ "${result}" != "skipped" ]; then

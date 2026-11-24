@@ -42,7 +42,11 @@ RUN apt-get update \
       printf 'ci:x:1000:\n' >> /etc/group; \
     fi \
  && mkdir -p /home/ci /workspace \
- && chown -R 1000:1000 /workspace /home/ci
+ && chown -R 1000:1000 /workspace /home/ci \
+ && rm -rf /usr/lib/python3/dist-packages/pip \
+      /usr/lib/python3/dist-packages/pip-*.dist-info \
+      /usr/share/python-wheels/pip-*.whl \
+      /usr/bin/pip /usr/bin/pip3
 
 COPY --from=dhi.io/syft:1-debian13@sha256:592be9e9fb223f5bd3f175bba8f9191847b065cc97e03998cd3944c315b29128 \
   /usr/bin/syft /usr/local/bin/syft

@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The Thursday rescan reads the published 3.10.1 digests and adds a blocking Alpine library scan.
+- `python-quality` runs the published 3.10.1 ci-python digest. The ZAP copy step reads the workspace from the environment (CI-037). The Compose download retries (CI-054).
+- Mutmut is installed from a hash-locked requirements file (CI-039).
+- The final image removes the base image's pip. The quality venv still has pip, because pip-audit imports it. PDO-IMG-002 stays open.
+
+### Added
+
+- A daily artifact sweep caller.
+
 ## [3.10.1] - 2026-11-24
 
 ### Fixed

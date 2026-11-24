@@ -1,2 +1,3 @@
 # Mutmut for devops-scheduled.yml. Dependabot: pip, /.github/dependencies/mutmut
-mutmut==3.8.0
+mutmut==3.8.0 \
+    --hash=sha256:4c0abcef6b8d1116f2adfaad19df12e1c621e4a402d4367ef15bf8cba497b91d

@@ -351,7 +351,7 @@ jobs:
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
+      image: ghcr.io/pirlruc/ci-python@sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d
       credentials:
         username: ${{ inputs.container_username || github.actor }}
         password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
@@ -440,7 +440,7 @@ jobs:
     needs: [devops-coordinates, quality-shield]
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
+      image: ghcr.io/pirlruc/ci-python@sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d
       credentials:
         username: ${{ inputs.container_username || github.actor }}
         password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
@@ -532,7 +532,7 @@ jobs:
         python_version: ${{ fromJSON(needs.devops-coordinates.outputs.python_versions) }}
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/pirlruc/ci-python@sha256:894d5ae1d9bd55d68262f4ed65cd6f57d7186038d7e8e8668dba443ee0ebfbbd
+      image: ghcr.io/pirlruc/ci-python@sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d
       credentials:
         username: ${{ inputs.container_username || github.actor }}
         password: ${{ secrets.container_token || secrets.GITHUB_TOKEN }}
@@ -616,7 +616,7 @@ jobs:
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl
             fi
-            curl -fsSL -o /usr/local/bin/docker-compose \
+            curl -fsSL --retry 5 --retry-delay 2 -o /usr/local/bin/docker-compose \
               https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-linux-x86_64
             echo 'ed1917fb54db184192ea9d0717bcd59e3662ea79db48bff36d3475516c480a6b  /usr/local/bin/docker-compose' \
               | sha256sum -c -
@@ -935,9 +935,11 @@ jobs:
           allow_issue_writing: false
       - name: Copy scan report into bundle
         if: always()
+        env:
+          WORKSPACE: ${{ github.workspace }}
         run: |
           if [ -f report_html.html ]; then
-            cp report_html.html "${{ github.workspace }}/quality-output/zap_report.html" || true
+            cp report_html.html "${WORKSPACE}/quality-output/zap_report.html" || true
           fi
       - name: Tear down compose stack
         if: always()
