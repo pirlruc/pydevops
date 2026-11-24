@@ -1137,10 +1137,12 @@ milestones:
         overview:
           problem: >-
             The 3.10.1 release added the rescan and did not publish an image.
-            Trivy on ci-python 3.10.0 reports fixable findings in the base
-            and tool copies, including certifi GHSA-6q48-6c7w-9gw2,
-            setuptools, and containerd. The quality lock already pins newer
-            certifi, msgpack, and urllib3.
+            A 2026-11-24 rebuild from the current linux/amd64 DHI manifests
+            still fails a local os,library scan. pip 26.3 vendors setuptools
+            70.3.0, and the current syft and grype binaries still contain
+            golang.org/x/crypto v0.58.0 (GO-2026-5932). The quality venv
+            already has certifi 2026.10.19, msgpack 1.2.3, and urllib3 2.8.0.
+            The stale Python copies are pip's vendored copies.
           goal: >-
             A published Debian and Alpine image passes the blocking library
             rescan, and the Thursday job scans that digest.
