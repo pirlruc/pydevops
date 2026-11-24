@@ -5,9 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.10.1] - 2026-11-24
+
 ### Fixed
 
-- The release digest job checks out commondevops v6.8.0. The previous pin checked out this repository and could not find `scripts/append-release-digests.sh`.
+- The release digest job checks out commondevops. The previous pin checked out this repository and could not find `scripts/append-release-digests.sh`.
+- A weekly job rescans the published ci-python 3.10.0 images and uploads the posture categories on the default branch (CI-047).
+- The load-smoke step reads the workspace from the environment (CI-037).
+
+### Changed
+
+- Self-CI pins commondevops v6.9.0 and containerdevops 6.8.0. Job containers use the 6.8.0 ci-lint and ci-supply-chain manifests.
 
 ## [3.10.0] - 2026-11-23
 

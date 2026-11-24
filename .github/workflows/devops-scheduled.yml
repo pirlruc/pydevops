@@ -18,10 +18,10 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
+    uses: pirlruc/commondevops/.github/workflows/common-infra-lint.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     with:
-      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
+      scripts_ref: 5d8b83da2f8f0c0c1bd894ef920619fe127c033e
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:3ed6d8dcbb08abf82e563630f2c1218cf0e8f33bb883ed46770e147113af48b0
       blocking: true
 
   scheduled-secrets-sast:
@@ -29,12 +29,12 @@ jobs:
     permissions:
       contents: read
       packages: read
-    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
+    uses: pirlruc/commondevops/.github/workflows/common-secrets-sast.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
-      container_image: ghcr.io/pirlruc/ci-lint@sha256:f9001c4c8726f72107545094237d4fc0592baca023cfa299a532634666d88111
+      scripts_ref: 5d8b83da2f8f0c0c1bd894ef920619fe127c033e
+      container_image: ghcr.io/pirlruc/ci-lint@sha256:3ed6d8dcbb08abf82e563630f2c1218cf0e8f33bb883ed46770e147113af48b0
 
   scheduled-supply-chain:
     name: Scheduled — supply chain
@@ -43,12 +43,12 @@ jobs:
       actions: read
       packages: read
       security-events: write
-    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
+    uses: pirlruc/commondevops/.github/workflows/common-supply-chain.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     with:
       blocking: true
       working_directory: .
-      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
-      container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:dc83deb4465d5989a03b14ccabef46c3f3426231048b962c69b8e434a7200d48
+      scripts_ref: 5d8b83da2f8f0c0c1bd894ef920619fe127c033e
+      container_image: ghcr.io/pirlruc/ci-supply-chain@sha256:cceea28e7719138294d11396fa3b9ebdb078d5997de6b4454b9e3f14e33d5133
 
   scheduled-openssf-scorecard:
     name: Scheduled — OpenSSF Scorecard
@@ -58,7 +58,7 @@ jobs:
       actions: read
       security-events: write
       id-token: write
-    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
+    uses: pirlruc/commondevops/.github/workflows/common-scorecard.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     with:
       # Private repos need SCORECARD_TOKEN (classic PAT, repo scope) for
       # ListCommits. Match commondevops: advisory + no OSSF publish while private.
@@ -70,9 +70,9 @@ jobs:
   token-audit:
     name: Scheduled — token audit
     permissions: {}
-    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@2c5e1ebe9797828128e01f3941b5a02650abe59a
+    uses: pirlruc/commondevops/.github/workflows/common-token-audit.yml@5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     with:
-      scripts_ref: 2c5e1ebe9797828128e01f3941b5a02650abe59a
+      scripts_ref: 5d8b83da2f8f0c0c1bd894ef920619fe127c033e
     secrets:
       guardrails_token: ${{ secrets.GUARDRAILS_READ_TOKEN }}
 
@@ -235,6 +235,63 @@ jobs:
           fi
           echo "EOL watch job passed."
 
+  published-ci-python-rescan:
+    name: Scheduled — published ci-python
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
+    with:
+      image: ghcr.io/pirlruc/ci-python:3.10.0@sha256:1a7319a8f39b578998123c066acf5be7ea4368cce50ca458a6a8bdb3f4d2b9c9
+      scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
+      pkg_types: library
+      ignorefile: docker/ci-python/.trivyignore.yaml
+      results_artifact: published-ci-python-scan
+      sarif_category: trivy-ci-python
+      blocking: true
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  published-posture-debian:
+    name: Scheduled — ci-python posture debian
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
+    with:
+      image: ghcr.io/pirlruc/ci-python:3.10.0@sha256:1a7319a8f39b578998123c066acf5be7ea4368cce50ca458a6a8bdb3f4d2b9c9
+      scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
+      pkg_types: os,library
+      ignorefile: none
+      results_artifact: published-posture-debian
+      sarif_category: trivy-posture-debian
+      blocking: false
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
+  published-posture-alpine:
+    name: Scheduled — ci-python posture alpine
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+    uses: pirlruc/containerdevops/.github/workflows/container-published-rescan.yml@ae9dbee9e4537bd3a0b533de3bad011cb44b201e # 6.8.0
+    with:
+      image: ghcr.io/pirlruc/ci-python:3.10.0-alpine@sha256:35bac9acb1213d0dc9e077371b11fdf4169d23ae31ab7814b39881111316c075
+      scripts_ref: ae9dbee9e4537bd3a0b533de3bad011cb44b201e
+      pkg_types: os,library
+      ignorefile: none
+      results_artifact: published-posture-alpine
+      sarif_category: trivy-posture-alpine
+      blocking: false
+    secrets:
+      scripts_token: ${{ secrets.CONTAINERDEVOPS_READ_TOKEN }}
+
   security-aggregate:
     if: always()
     needs:
@@ -242,6 +299,9 @@ jobs:
       - scheduled-supply-chain
       - scheduled-openssf-scorecard
       - token-audit
+      - published-ci-python-rescan
+      - published-posture-debian
+      - published-posture-alpine
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -253,10 +313,13 @@ jobs:
           SUPPLY: ${{ needs.scheduled-supply-chain.result }}
           SCORE: ${{ needs.scheduled-openssf-scorecard.result }}
           TOKEN: ${{ needs.token-audit.result }}
+          RESCAN: ${{ needs.published-ci-python-rescan.result }}
+          POSTURE_DEBIAN: ${{ needs.published-posture-debian.result }}
+          POSTURE_ALPINE: ${{ needs.published-posture-alpine.result }}
         run: |
           set -eu
           failed=""
-          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}" "scorecard=${SCORE}" "token-audit=${TOKEN}"; do
+          for item in "secrets-sast=${SECRETS}" "supply-chain=${SUPPLY}" "scorecard=${SCORE}" "token-audit=${TOKEN}" "rescan=${RESCAN}" "posture-debian=${POSTURE_DEBIAN}" "posture-alpine=${POSTURE_ALPINE}"; do
             name=${item%%=*}
             result=${item#*=}
             if [ "${result}" != "success" ] && [ "${result}" != "skipped" ]; then
