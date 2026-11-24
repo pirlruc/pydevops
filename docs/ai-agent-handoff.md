@@ -130,7 +130,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. PDO-IMG-002: rebuild ci-python so the published library rescan is green. 3.10.1 did not publish an image.
+1. PDO-IMG-002: the published library rescan stays red. A rebuild from the current DHI digests still has pip's vendored setuptools 70.3.0 and golang.org/x/crypto v0.58.0 in syft and grype (GO-2026-5932). Do not publish 3.10.2 until those are gone.
 2. Callers pin **3.3.1**. Do not cut a second GitHub Release for the digest write-back. Do not move `3.2.3` through `3.3.0`.
 3. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.
@@ -196,6 +196,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-24 — A current-DHI rebuild of ci-python still fails the library scan. pip vendors setuptools 70.3.0, and syft and grype still contain golang.org/x/crypto v0.58.0.*
 
 *Last updated: 2026-11-24 — 3.10.1. The published ci-python 3.10.0 library rescan fails on fixable CVEs. Posture uploads are non-blocking.*
 
