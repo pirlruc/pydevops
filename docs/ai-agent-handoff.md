@@ -130,7 +130,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. Rebuild ci-python so the published library rescan is green. 3.10.1 did not publish an image.
+1. PDO-IMG-002: rebuild ci-python so the published library rescan is green. 3.10.1 did not publish an image.
 2. Callers pin **3.3.1**. Do not cut a second GitHub Release for the digest write-back. Do not move `3.2.3` through `3.3.0`.
 3. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.

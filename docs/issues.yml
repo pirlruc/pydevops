@@ -1123,3 +1123,49 @@ milestones:
               - sh scripts/check-ci-local.sh
             guardrail_refs:
               - CI-025
+
+      - id: PDO-IMG-002
+        status: open
+        title: Rebuild ci-python so the published rescan is clean
+        decision: >-
+          In the context of the Thursday scan of the published ci-python
+          image, facing fixable findings that live in the 3.10.0 image and
+          not in the quality lock, we decided to rebuild both variants from
+          current Docker Hardened Image digests and publish them as a patch,
+          to achieve a library rescan of the image callers pull, accepting
+          a follow-up commit that moves the rescan pin after the registry push.
+        overview:
+          problem: >-
+            The 3.10.1 release added the rescan and did not publish an image.
+            Trivy on ci-python 3.10.0 reports fixable findings in the base
+            and tool copies, including certifi GHSA-6q48-6c7w-9gw2,
+            setuptools, and containerd. The quality lock already pins newer
+            certifi, msgpack, and urllib3.
+          goal: >-
+            A published Debian and Alpine image passes the blocking library
+            rescan, and the Thursday job scans that digest.
+        acceptance_criteria:
+          - Both Dockerfiles pin current linux/amd64 manifests for the Python, Node, uv, syft, and grype bases
+          - A local os,library scan of the built images does not report those fixable findings
+          - A patch release publishes both images
+          - devops-scheduled.yml rescans the new platform digests
+        guardrail_refs:
+          - CI-047
+          - DOCKER-SEC-001
+          - DOCKER-BUILD-003
+        tasks:
+          - id: PDO-IMG-002-T1
+            status: open
+            title: Publish the rebuilt ci-python images and retarget the rescan
+            instructions:
+              files:
+                - docker/ci-python/Dockerfile
+                - docker/ci-python/Dockerfile.alpine
+                - .github/workflows/devops-scheduled.yml
+                - CHANGELOG.md
+            verification:
+              - docker build of both Dockerfiles
+              - Trivy os,library on the built images
+            guardrail_refs:
+              - CI-047
+              - DOCKER-SEC-001
