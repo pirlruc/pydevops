@@ -87,6 +87,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Known pitfalls
 
+- The Thursday library rescan of ci-python 3.10.0 fails on fixable findings (certifi GHSA-6q48-6c7w-9gw2, msgpack, setuptools, urllib3, containerd). The posture jobs stay non-blocking. The image has to be rebuilt. Do not ignore those CVEs to make the schedule green.
 - A test job that sets `test_compose_file` publishes ports on the runner and adds `host.docker.internal:host-gateway`. `ci-python` has no Docker CLI, so the job installs Compose `2.32.4` (`ed1917fb54db184192ea9d0717bcd59e3662ea79db48bff36d3475516c480a6b`) and uses the mounted socket. `--network host` is rejected on the runner network.
 - Pytest uses `.venv/bin/pytest` when the caller synced a workspace. The image's pytest does not see that install. Bandit skips `.venv` and `.github/scaffold`; those trees are not the caller's code. Radon ignores directories named `scripts` (`-i`); `--exclude` does not skip them. Pylint and ruff skip `scripts/` and `.github/`. The High line-precision ceiling is 25% because mypy counts PEP 695 type variables as imprecise lines. Any expressions stay on the any-exprs gate.
 
@@ -129,16 +130,17 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 ## Suggested next work
 
-1. Callers pin **3.3.1**. Do not cut a second GitHub Release for the digest write-back. Do not move `3.2.3` through `3.3.0`.
-2. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
+1. Rebuild ci-python so the published library rescan is green. 3.10.1 did not publish an image.
+2. Callers pin **3.3.1**. Do not cut a second GitHub Release for the digest write-back. Do not move `3.2.3` through `3.3.0`.
+3. braces `GHSA-vfj7-8cjw-p6xm` is ignored through 2027-01-31. There is no
    upstream fix in jscpd 4.0.5 / braces 3.0.3.
-3. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
+4. Add `SCORECARD_TOKEN` (classic PAT, `repo` scope) to enable blocking private Scorecard.
    Leave it unset until then.
-4. PyPI publish stays `workflow_dispatch`.
-5. PDO-PRIV-001 is done. The four `ghcr.io/pirlruc` jobs in `python-quality.yml`
+5. PyPI publish stays `workflow_dispatch`.
+6. PDO-PRIV-001 is done. The four `ghcr.io/pirlruc` jobs in `python-quality.yml`
    set `packages: read` and `container.credentials`.
-6. PDO-VENV-001: `python-quality` static analysis scans `.venv` and hits the 45 minute job limit. Exclude it in `scripts/ci_run_quality.sh` before callers switch off the host gate.
-7. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
+7. PDO-VENV-001: `python-quality` static analysis scans `.venv` and hits the 45 minute job limit. Exclude it in `scripts/ci_run_quality.sh` before callers switch off the host gate.
+8. Hub Overview for `pirlruc/ci-python` is `workflow_dispatch` on
    `.github/workflows/hub-description.yml`. It calls
    [container-hub-description](https://github.com/pirlruc/containerdevops/blob/6.3.0/.github/workflows/container-hub-description.yml)
    and does not republish the image.
@@ -194,6 +196,8 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
 - 2026-10-23: **3.2.0** pins guardrails 1.12.0, scaffold 1.10.0,
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
+
+*Last updated: 2026-11-24 — 3.10.1. The published ci-python 3.10.0 library rescan fails on fixable CVEs. Posture uploads are non-blocking.*
 
 *Last updated: 2026-11-23 — 3.10.0. Guardrails 1.17.0. Scaffold 1.14.0. containerdevops 6.7.0.*
 
