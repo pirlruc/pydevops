@@ -731,28 +731,24 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 1
           name: quality-shield-artifacts
           path: _merge/shield
       - name: Download static artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 1
           name: quality-static-artifacts
           path: _merge/static
       - name: Download supply-chain artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 1
           name: quality-security-artifacts
           path: _merge/security
       - name: Download test artifacts
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          retention-days: 1
           name: quality-test-${{ inputs.python_version }}
           path: _merge/test
       - name: Merge downloaded artifacts
@@ -876,7 +872,6 @@ jobs:
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         continue-on-error: true
         with:
-          retention-days: 1
           name: pr-quality-comment
       - name: Post quality summary comment
         if: steps.download.outcome == 'success'
