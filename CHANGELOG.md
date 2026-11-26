@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.11.3] - 2026-11-26
+
+### Fixed
+
+- The release install check checks out the repository. `gh` still runs git to find the host, so `GH_REPO` alone did not stop the "not a git repository" failure.
+
 ## [3.11.2] - 2026-11-26
 
 ### Fixed
