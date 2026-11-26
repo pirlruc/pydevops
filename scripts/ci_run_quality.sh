@@ -63,10 +63,10 @@ if [[ -n "${GENERATED_PATHS:-}" ]]; then
             continue
         fi
         case "${_gen}" in
-            /* | *..* | *,*)
-                echo "generated path must be a relative path: ${_gen}" >&2
-                exit 1
-                ;;
+        /* | *..* | *,*)
+            echo "generated path must be a relative path: ${_gen}" >&2
+            exit 1
+            ;;
         esac
         GEN_PATHS+=("${_gen}")
         # shellcheck disable=SC2016

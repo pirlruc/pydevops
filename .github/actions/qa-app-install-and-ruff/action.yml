@@ -139,7 +139,7 @@ runs:
               continue
             fi
             case "${_gen}" in
-              /*|*..*|*,*)
+            /* | *..* | *,*)
                 echo "generated path must be a relative path: ${_gen}" >&2
                 exit 1
                 ;;
