@@ -142,6 +142,7 @@ jobs:
       - name: Install the wheel in a clean image
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
           # python:3.13-slim-trixie
           IMAGE: python@sha256:7249d5587b78209a006dc4a3b5340678f84ea729239193aa559962cd8c1fce50

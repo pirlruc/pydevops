@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.11.2] - 2026-11-26
+
+### Fixed
+
+- The release install check sets `GH_REPO`. The job does not check out the repository, so `gh` could not tell which release to download.
+
 ## [3.11.1] - 2026-11-26
 
 ### Fixed
