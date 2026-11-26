@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.11.1] - 2026-11-26
+
+### Fixed
+
+- The quality report job no longer passes `retention-days` to `actions/download-artifact`. That input belongs on the upload.
+
 ## [3.11.0] - 2026-11-26
 
 ### Added
