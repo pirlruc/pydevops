@@ -15,7 +15,7 @@ Python CI. See [`README.md`](../README.md) and [`docs/workflows.md`](workflows.m
 | containerdevops caller pin | tag **6.8.0** → `ae9dbee9e4537bd3a0b533de3bad011cb44b201e` |
 | ci-python (debian, unsuffixed) | `3.10.1` linux/amd64 `sha256:8bdd74a184074a58c75473da06fce79d890ef2ddb230011ddf70ebfb7b10778d` |
 | ci-python (alpine) | `3.10.1-alpine` linux/amd64 `sha256:6e5215fd529e3639b7009dd50cb267633919b36593cecc195813d6ccae3a1ad7` |
-| Latest annotated tag | **`3.10.1`**. README `uses:` example is `@3.10.1`. |
+| Latest annotated tag | Cut **`3.11.0`** from this change. README `uses:` example is `@3.11.0`. Quality jobs still pull ci-python **3.10.1**. |
 | Package version | **3.0.1** (`pyproject.toml`) |
 
 ## Delivery status
@@ -89,7 +89,7 @@ After Wave E backlog merges, sync with approval (`issues-sync.py` write is publi
 
 - The Thursday library rescan of ci-python 3.10.0 fails on fixable findings (certifi GHSA-6q48-6c7w-9gw2, msgpack, setuptools, urllib3, containerd). The posture jobs stay non-blocking. The image has to be rebuilt. Do not ignore those CVEs to make the schedule green.
 - A test job that sets `test_compose_file` publishes ports on the runner and adds `host.docker.internal:host-gateway`. `ci-python` has no Docker CLI, so the job installs Compose `2.32.4` (`ed1917fb54db184192ea9d0717bcd59e3662ea79db48bff36d3475516c480a6b`) and uses the mounted socket. `--network host` is rejected on the runner network.
-- Pytest uses `.venv/bin/pytest` when the caller synced a workspace. The image's pytest does not see that install. Bandit skips `.venv` and `.github/scaffold`; those trees are not the caller's code. Radon ignores directories named `scripts` (`-i`); `--exclude` does not skip them. Pylint and ruff skip `scripts/` and `.github/`. The High line-precision ceiling is 25% because mypy counts PEP 695 type variables as imprecise lines. Any expressions stay on the any-exprs gate.
+- Pytest uses `.venv/bin/pytest` when the caller synced a workspace. The image's pytest does not see that install. Bandit skips `.venv` and `.github/scaffold`; those trees are not the caller's code. Radon, pylint, and ruff skip the top-level `scripts` directory. A package named `scripts` is scanned. `generated_paths` is the input for generated trees. The High line-precision ceiling is 25% because mypy counts PEP 695 type variables as imprecise lines. Any expressions stay on the any-exprs gate.
 
 - Mutmut 3 keeps a survived verdict until that mutant's result is cleared. Adding tests does not re-run mutants whose exit code is already stored. Clear survived (and no-test) entries in `mutants/scripts/**/*.meta` before `mutmut run` when the goal is to kill existing survivors. Killed results can stay cached.
 - Callers pin commondevops **v6.9.0** (`5d8b83d`). The scaffold job needs `issues: read`. Scorecard and supply-chain jobs need `actions: read` for the nested SARIF upload. Omitting either is a workflow `startup_failure` with no jobs.
@@ -197,7 +197,7 @@ Wave 5: commondevops **5.1.2** (`b3c462be…`). `ci-scripts` and `python-quality
   commondevops 5.4.1, and containerdevops 6.3.0. braces GHSA-vfj7-8cjw-p6xm
   is ignored until 2027-01-31.
 
-*Last updated: 2026-11-24 — Rescan and docs pin ci-python 3.10.1. The Debian base no longer ships pip. The quality venv still does, because pip-audit imports it. PDO-IMG-002 stays open.*
+*Last updated: 2026-11-26 — 3.11.0 adds generated_paths and a hashed wheel install line. Quality jobs still pull ci-python 3.10.1. PDO-IMG-002 stays open.*
 
 *Last updated: 2026-11-24 — A current-DHI rebuild of ci-python still fails the library scan. pip vendors setuptools 70.3.0, and syft and grype still contain golang.org/x/crypto v0.58.0.*
 

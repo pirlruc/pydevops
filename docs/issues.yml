@@ -1172,3 +1172,118 @@ milestones:
             guardrail_refs:
               - CI-047
               - DOCKER-SEC-001
+
+      - id: PDO-GEN-001
+        status: done
+        title: Let a caller name generated trees
+        decision: >-
+          In the context of a library quality scan, facing a directory name
+          that skips every tree called scripts, we decided to skip only the
+          top-level scripts directory and to take generated paths as an
+          input, to achieve a scan of hand-written packages, accepting that
+          a caller must list generated trees.
+        overview:
+          problem: >-
+            Pylint, ruff, and radon skipped any directory named scripts.
+            A caller put hand-written modules there so the scan would miss
+            them. Generated protobuf stubs need an explicit skip.
+          goal: >-
+            generated_paths skips generated trees. A package named scripts
+            is scanned. The top-level scripts directory stays out.
+        acceptance_criteria:
+          - python-quality.yml accepts generated_paths
+          - ci_run_quality.sh applies that list to pylint, mypy, radon, pydoclint, interrogate, and bandit
+          - The ruff action applies the same list
+          - The scripts skip matches the top-level directory only
+        guardrail_refs:
+          - PY-QUAL-001
+          - CI-051
+        tasks:
+          - id: PDO-GEN-001-T1
+            status: done
+            title: Add generated_paths and anchor the scripts skip
+            instructions:
+              files:
+                - .github/workflows/python-quality.yml
+                - .github/actions/qa-app-install-and-ruff/action.yml
+                - .github/actions/qa-run-quality-phase/action.yml
+                - scripts/ci_run_quality.sh
+                - docs/workflows.md
+            verification:
+              - sh scripts/check-ci-local.sh
+            guardrail_refs:
+              - PY-QUAL-001
+
+      - id: PDO-REL-002
+        status: done
+        title: Publish a hashed wheel install line
+        decision: >-
+          In the context of installing a library from a GitHub Release,
+          facing a wheel with no checksum in the notes, we decided to write
+          a sha256 sidecar and an install line and to install that wheel in
+          a clean image, to achieve a release a caller can pin, accepting
+          that a private repository installs the downloaded asset.
+        overview:
+          problem: >-
+            python-release attached the wheel and did not record its
+            checksum or prove the asset installs.
+          goal: >-
+            The release notes contain a pip install URL with a sha256
+            fragment, and a job installs that wheel.
+        acceptance_criteria:
+          - Each wheel and sdist has a .sha256 sidecar on the release
+          - The release notes contain a pip install line with #sha256=
+          - install-verify installs the wheel in a digest-pinned image
+        guardrail_refs:
+          - REL-PUB-001
+          - REL-PUB-006
+        tasks:
+          - id: PDO-REL-002-T1
+            status: done
+            title: Add checksums, the install line, and the verify job
+            instructions:
+              files:
+                - .github/workflows/python-release.yml
+                - docs/workflows.md
+            verification:
+              - actionlint .github/workflows/python-release.yml
+            guardrail_refs:
+              - REL-PUB-006
+
+      - id: PDO-IMG-003
+        status: open
+        title: Ship uv on the published ci-python image
+        decision: >-
+          In the context of a local container parity script, facing an
+          image whose quality venv has pip and not uv, we decided to add
+          uv on PATH in the published image, to achieve a hash-locked
+          install without a second toolchain, accepting a rebuild after
+          the library rescan is clean.
+        overview:
+          problem: >-
+            Callers cannot uv sync inside the published ci-python image.
+            The image has pip on the quality venv and no uv binary.
+          goal: >-
+            The published image has uv on PATH, and the structure test
+            checks uv --version.
+        acceptance_criteria:
+          - The Debian and Alpine images provide uv on PATH
+          - The structure test runs uv --version
+          - The change waits until PDO-IMG-002 publishes a clean rescan
+        guardrail_refs:
+          - CI-039
+          - DOCKER-BUILD-003
+        tasks:
+          - id: PDO-IMG-003-T1
+            status: open
+            title: Install uv in both ci-python variants
+            instructions:
+              files:
+                - docker/ci-python/Dockerfile
+                - docker/ci-python/Dockerfile.alpine
+                - docker/ci-python/container-structure-test.yml
+            verification:
+              - docker build of both Dockerfiles
+              - container structure test runs uv --version
+            guardrail_refs:
+              - CI-039
