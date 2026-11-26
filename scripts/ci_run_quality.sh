@@ -35,7 +35,8 @@ esac
 # When the DevOps repo is checked out into .devops/, exclude it from app scans
 # Match .devops anywhere. A leading ^ misses the absolute path pylint records.
 IGNORE_PYLINT="${IGNORE_PYLINT:-\\.devops}"
-RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build,scripts,.github}"
+# scripts/** is the top-level tooling directory. A package named scripts is scanned.
+RUFF_EXCL="${RUFF_EXCLUDE:-.devops,.git,.venv,__pycache__,htmlcov,dist,build,scripts/**,.github}"
 PYTEST_IGNORE="${PYTEST_IGNORE:-.devops}"
 IFS=',' read -ra RUFF_EXCL_ITEMS <<<"$RUFF_EXCL"
 RUFF_EXCLUDE_ARGS=()
@@ -45,6 +46,51 @@ for _pat in "${RUFF_EXCL_ITEMS[@]}"; do
         RUFF_EXCLUDE_ARGS+=(--exclude "$_trimmed")
     fi
 done
+
+# GENERATED_PATHS is comma-separated, relative to the app root. Those trees
+# are generated. Hand-written code is not a generated path.
+GEN_PATHS=()
+GEN_RE=""
+GEN_RADON=""
+if [[ -n "${GENERATED_PATHS:-}" ]]; then
+    IFS=',' read -ra _gen_items <<<"${GENERATED_PATHS}"
+    for _gen in "${_gen_items[@]}"; do
+        _gen="${_gen#"${_gen%%[![:space:]]*}"}"
+        _gen="${_gen%"${_gen##*[![:space:]]}"}"
+        _gen="${_gen#./}"
+        _gen="${_gen%/}"
+        if [[ -z "${_gen}" ]]; then
+            continue
+        fi
+        case "${_gen}" in
+        /* | *..* | *,*)
+            echo "generated path must be a relative path: ${_gen}" >&2
+            exit 1
+            ;;
+        esac
+        GEN_PATHS+=("${_gen}")
+        # shellcheck disable=SC2016
+        _esc="$(printf '%s' "${_gen}" | sed -e 's/[.[\*^$()+?{|\\]/\\&/g')"
+        if [[ -n "${GEN_RE}" ]]; then
+            GEN_RE="${GEN_RE}|"
+        fi
+        GEN_RE="${GEN_RE}^(\\./)?${_esc}(/|$)"
+        if [[ -n "${GEN_RADON}" ]]; then
+            GEN_RADON="${GEN_RADON},"
+        fi
+        GEN_RADON="${GEN_RADON}${_gen}/*"
+        RUFF_EXCLUDE_ARGS+=(--exclude "${_gen}")
+    done
+fi
+ROOT_SCRIPTS_RE='^(\./)?scripts(/|$)'
+IGNORE_PATHS="${IGNORE_PYLINT}|${ROOT_SCRIPTS_RE}"
+if [[ -n "${GEN_RE}" ]]; then
+    IGNORE_PATHS="${IGNORE_PATHS}|${GEN_RE}"
+fi
+RADON_EXCLUDE=".venv,scripts/*"
+if [[ -n "${GEN_RADON}" ]]; then
+    RADON_EXCLUDE="${RADON_EXCLUDE},${GEN_RADON}"
+fi
 
 # shellcheck disable=SC2155
 QUALITY_PHASES_RAW="${QUALITY_PHASES:-all}"
@@ -97,9 +143,10 @@ if [[ "${want_static}" == "1" ]]; then
     # Pylint (JSON + score line for quality_gates)
     echo "quality: pylint"
     if command -v pylint >/dev/null 2>&1; then
-        # --ignore matches directory names. ignore-paths alone still walked .devops.
-        pylint . --ignore=".devops,build,.gradle,.venv,scripts,.github" --ignore-paths="$IGNORE_PYLINT" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
-        pylint . --ignore=".devops,build,.gradle,.venv,scripts,.github" --ignore-paths="$IGNORE_PYLINT" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
+        # --ignore matches a directory name anywhere. Top-level scripts/ is a
+        # path regex so a package named scripts is still scanned.
+        pylint . --ignore=".devops,build,.gradle,.venv,.github" --ignore-paths="$IGNORE_PATHS" --output-format=json --exit-zero >"$OUT/pylint.json" 2>"$OUT/pylint.stderr" || true
+        pylint . --ignore=".devops,build,.gradle,.venv,.github" --ignore-paths="$IGNORE_PATHS" --exit-zero 2>&1 | tee "$OUT/pylint_full.txt" >/dev/null || true
         if grep -oE 'rated at [0-9.]+/10' "$OUT/pylint_full.txt" | tail -1 >"$OUT/pylint_score.txt" 2>/dev/null; then
             :
         else
@@ -125,7 +172,11 @@ if [[ "${want_static}" == "1" ]]; then
         echo "PACKAGE_MODE=scripts; skipping mypy" >"$OUT/mypy.txt"
     elif command -v mypy >/dev/null 2>&1; then
         mkdir -p "$OUT/mypy-reports/lineprecision" "$OUT/mypy-reports/anyexprs"
-        mypy_args=(. --exclude '(\.devops|\.venv)' --show-error-codes
+        mypy_exclude='(\.devops|\.venv)'
+        if [[ -n "${GEN_RE}" ]]; then
+            mypy_exclude="${mypy_exclude}|${GEN_RE}"
+        fi
+        mypy_args=(. --exclude "${mypy_exclude}" --show-error-codes
             --lineprecision-report "$OUT/mypy-reports/lineprecision"
             --any-exprs-report "$OUT/mypy-reports/anyexprs")
         if [[ "${MYPY_STRICT:-0}" == "1" ]]; then
@@ -142,8 +193,12 @@ if [[ "${want_static}" == "1" ]]; then
     # pydoclint
     echo "quality: pydoclint"
     if command -v pydoclint >/dev/null 2>&1; then
+        pydoc_exclude='\.venv'
+        if [[ -n "${GEN_RE}" ]]; then
+            pydoc_exclude="${pydoc_exclude}|${GEN_RE}"
+        fi
         # shellcheck disable=SC2086
-        pydoclint . --exclude '\.venv' ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
+        pydoclint . --exclude "${pydoc_exclude}" ${PYDOCLINT_FLAGS:-} >"$OUT/pydoclint.txt" 2>&1 || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/pydoclint.txt"
@@ -155,7 +210,11 @@ if [[ "${want_static}" == "1" ]]; then
     # Interrogate (docstring coverage)
     echo "quality: interrogate"
     if command -v interrogate >/dev/null 2>&1; then
-        interrogate . -vv -e .devops >"$OUT/interrogate.txt" 2>&1 || true
+        interrogate_cmd=(interrogate . -vv -e .devops)
+        for _gen in "${GEN_PATHS[@]}"; do
+            interrogate_cmd+=(-e "${_gen}")
+        done
+        "${interrogate_cmd[@]}" >"$OUT/interrogate.txt" 2>&1 || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/interrogate.txt"
@@ -197,8 +256,9 @@ if [[ "${want_static}" == "1" ]]; then
     echo "quality: radon"
     if command -v radon >/dev/null 2>&1; then
         # -i replaces the default hidden-directory ignore, so .* stays listed.
-        radon cc -j . -i '.*,scripts' --exclude '.venv' >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
-        radon mi -j . -i '.*,scripts' --exclude '.venv' >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
+        # scripts/* is the top-level directory. A package named scripts is scanned.
+        radon cc -j . -i '.*' --exclude "${RADON_EXCLUDE}" >"$OUT/radon_cc.json" 2>"$OUT/radon_cc.stderr" || true
+        radon mi -j . -i '.*' --exclude "${RADON_EXCLUDE}" >"$OUT/radon_mi.json" 2>"$OUT/radon_mi.stderr" || true
     else
         if [[ "${_high}" == "1" ]]; then
             rm -f "$OUT/radon_cc.json" "$OUT/radon_mi.json"
@@ -229,7 +289,11 @@ if [[ "${want_security}" == "1" ]]; then
             bandit_config=(-c pyproject.toml)
         fi
         # site-packages are not the caller's code. Scaffold copies are not either.
-        bandit -q "${bandit_config[@]}" -r . -x ./.devops,./.venv,./.github/scaffold \
+        bandit_skip="./.devops,./.venv,./.github/scaffold"
+        for _gen in "${GEN_PATHS[@]}"; do
+            bandit_skip="${bandit_skip},./${_gen}"
+        done
+        bandit -q "${bandit_config[@]}" -r . -x "${bandit_skip}" \
             -f json -o "$OUT/bandit.json" 2>"$OUT/bandit.stderr" || true
     else
         rm -f "$OUT/bandit.json"

@@ -1,8 +1,11 @@
 name: Python GitHub Release (reusable)
 
 # Build a sdist and a wheel, write a CycloneDX SBOM, attest the files, and
-# attach them to the GitHub Release for an annotated tag. PyPI Trusted
-# Publishing stays in the caller. A reusable workflow cannot be the publisher.
+# attach them to the GitHub Release for an annotated tag. Each distribution
+# gets a .sha256 sidecar, and the release notes gain a pip install line for
+# the wheel. A later job installs that wheel in a clean interpreter image.
+# PyPI Trusted Publishing stays in the caller. A reusable workflow cannot be
+# the publisher.
 
 on:
   workflow_call:
@@ -77,6 +80,19 @@ jobs:
       - name: CycloneDX SBOM
         run: uv run --with cyclonedx-bom cyclonedx-py environment --output-file dist/sbom.cdx.json
 
+      - name: Write distribution checksums
+        run: |
+          set -eu
+          found=0
+          for dist in dist/*.whl dist/*.tar.gz; do
+            if [ ! -f "${dist}" ]; then
+              continue
+            fi
+            sha256sum "${dist}" | awk '{print $1}' > "${dist}.sha256"
+            found=1
+          done
+          test "${found}" = "1"
+
       - name: Attest build provenance
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
         with:
@@ -88,3 +104,60 @@ jobs:
         with:
           files: ${{ inputs.working_directory }}/dist/*
           generate_release_notes: true
+
+      - name: Add the wheel install line
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          notes="$(mktemp)"
+          gh release view "${TAG}" --json body --jq .body > "${notes}"
+          {
+            echo
+            echo "## Install"
+            echo
+            echo "Install the wheel from this release. The fragment is the wheel sha256."
+            echo
+            echo '```bash'
+            for sidecar in dist/*.whl.sha256; do
+              wheel="$(basename "${sidecar}" .sha256)"
+              hash="$(tr -d '[:space:]' < "${sidecar}")"
+              echo "pip install \"https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${wheel}#sha256=${hash}\""
+            done
+            echo '```'
+          } >> "${notes}"
+          gh release edit "${TAG}" --notes-file "${notes}"
+
+  install-verify:
+    name: Install the release wheel
+    needs: github-release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Install the wheel in a clean image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          # python:3.13-slim-trixie
+          IMAGE: python@sha256:7249d5587b78209a006dc4a3b5340678f84ea729239193aa559962cd8c1fce50
+        run: |
+          set -eu
+          work="$(mktemp -d)"
+          gh release download "${TAG}" --pattern '*.whl' --pattern '*.whl.sha256' --dir "${work}"
+          wheel="$(find "${work}" -name '*.whl' -printf '%f\n' | head -1)"
+          test -n "${wheel}"
+          hash="$(tr -d '[:space:]' < "${work}/${wheel}.sha256")"
+          echo "${hash}  ${work}/${wheel}" | sha256sum -c -
+          visibility="$(gh repo view --json visibility --jq .visibility)"
+          if [ "${visibility}" = "PUBLIC" ]; then
+            url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${wheel}#sha256=${hash}"
+            docker run --rm "${IMAGE}" python -m pip install --no-cache-dir "${url}"
+          else
+            docker run --rm -v "${work}:/dist:ro" "${IMAGE}" \
+              python -m pip install --no-cache-dir "/dist/${wheel}"
+          fi

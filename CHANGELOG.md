@@ -5,16 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-11-26
+
+### Added
+
+- `generated_paths` skips generated trees in ruff, pylint, mypy, radon, pydoclint, interrogate, and bandit. The top-level `scripts` directory stays out of those scans. A package named `scripts` is scanned.
+- `python-release.yml` writes a `.sha256` sidecar for each distribution and adds a `pip install` line with `#sha256=` to the release notes. A second job installs the wheel in a clean interpreter image.
+- A daily artifact sweep caller.
+
 ### Fixed
 
 - The Thursday rescan reads the published 3.10.1 digests and adds a blocking Alpine library scan.
 - `python-quality` runs the published 3.10.1 ci-python digest. The ZAP copy step reads the workspace from the environment (CI-037). The Compose download retries (CI-054).
 - Mutmut is installed from a hash-locked requirements file (CI-039).
-- The final image removes the base image's pip. The quality venv still has pip, because pip-audit imports it. PDO-IMG-002 stays open.
-
-### Added
-
-- A daily artifact sweep caller.
+- The final image removes the base image's pip. The quality venv still has pip, because pip-audit imports it. PDO-IMG-002 stays open. This tag does not move the digest the quality jobs pull.
 
 ## [3.10.1] - 2026-11-24
 

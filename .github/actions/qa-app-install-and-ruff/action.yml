@@ -25,6 +25,12 @@ inputs:
     description: When false, do not uv sync an application package
     required: false
     default: 'true'
+  generated-paths:
+    description: >-
+      Comma-separated paths of generated code, relative to working-directory.
+      Ruff skips them. Hand-written code is not a generated path.
+    required: false
+    default: ''
 runs:
   using: composite
   steps:
@@ -115,9 +121,31 @@ runs:
         WD: ${{ inputs.working-directory }}
         OUT: ${{ inputs.quality-output-dir }}
         TMP: ${{ inputs.runner-temp }}
+        GENERATED: ${{ inputs.generated-paths }}
       run: |-
         set -euo pipefail
         export PATH="$HOME/.local/bin:$PATH"
         cd "$WS/$WD"
-        ruff check . --exclude .devops --config "$TMP/ruff-qaas.toml" --output-format=json > "$OUT/ruff.json" || true
-        ruff format --check . --exclude .devops > "$OUT/ruff_format.txt" 2>&1 || true
+        # scripts/** is the top-level tooling directory. A package named scripts is scanned.
+        excludes=(--exclude .devops --exclude 'scripts/**')
+        if [ -n "${GENERATED}" ]; then
+          IFS=',' read -ra _gen_items <<<"${GENERATED}"
+          for _gen in "${_gen_items[@]}"; do
+            _gen="${_gen#"${_gen%%[![:space:]]*}"}"
+            _gen="${_gen%"${_gen##*[![:space:]]}"}"
+            _gen="${_gen#./}"
+            _gen="${_gen%/}"
+            if [ -z "${_gen}" ]; then
+              continue
+            fi
+            case "${_gen}" in
+            /* | *..* | *,*)
+                echo "generated path must be a relative path: ${_gen}" >&2
+                exit 1
+                ;;
+            esac
+            excludes+=(--exclude "${_gen}")
+          done
+        fi
+        ruff check . "${excludes[@]}" --config "$TMP/ruff-qaas.toml" --output-format=json > "$OUT/ruff.json" || true
+        ruff format --check . "${excludes[@]}" > "$OUT/ruff_format.txt" 2>&1 || true

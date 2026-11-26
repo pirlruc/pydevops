@@ -112,6 +112,7 @@ GitHub Releases are **`python-release.yml`**, not this workflow. A caller grants
 | `uv_workspace`        | boolean | no       | `false`                 | When true, install with `uv sync --all-packages --all-extras --frozen`                                                                                                                                                   |
 | `test_compose_file`   | string  | no       | empty                   | Compose file started before tests. Mounts the runner Docker socket and uses the host network only when set                                                                                                              |
 | `test_compose_services` | string | no      | empty                   | Space-separated service names. Empty starts every service in the file                                                                                                                                                    |
+| `generated_paths`     | string  | no       | empty                   | Comma-separated generated trees, relative to `working_directory`. Ruff, pylint, mypy, radon, pydoclint, interrogate, and bandit skip them. Hand-written code is not a generated path. The top-level `scripts` directory is already skipped; a package named `scripts` is scanned. |
 | `docker_compose_file` | string  | no       | `docker-compose.yml`    | Used when `enable_dast` is true                                                                                                                                                                                          |
 | `dast_target_url`     | string  | no       | `http://localhost:8080` | ZAP / Locust target                                                                                                                                                                                                      |
 
@@ -161,7 +162,7 @@ permissions: {}
 
 jobs:
   python-quality:
-    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.10.1
+    uses: pirlruc/pydevops/.github/workflows/python-quality.yml@3.11.0
     with: { ... }
     secrets:
       caller_pat: ${{ secrets.caller_pat }}
@@ -238,11 +239,16 @@ ______________________________________________________________________
 
 ## `python-release.yml`
 
-Builds a sdist and a wheel with `uv build`, writes `dist/sbom.cdx.json`, attests
-`dist/*`, and on an annotated tag attaches the files to the GitHub Release.
-PyPI Trusted Publishing stays in the caller. A reusable workflow cannot be the
-publisher. The caller grants `contents: write`, `id-token: write`, and
-`attestations: write`.
+Builds a sdist and a wheel with `uv build`, writes `dist/sbom.cdx.json`, writes
+a `.sha256` sidecar for each distribution, attests `dist/*`, and on an
+annotated tag attaches the files to the GitHub Release. The release notes gain
+a `pip install` line for the wheel with `#sha256=`. A second job installs that
+wheel in a digest-pinned `python:3.13-slim` image. A public repository installs
+from the release URL. A private repository installs the downloaded asset after
+the sidecar matches. PyPI Trusted Publishing stays in the caller. A reusable
+workflow cannot be the publisher. The caller grants `contents: write`,
+`id-token: write`, and `attestations: write` on the release job. The install
+job needs `contents: read`.
 
 ## Dependabot and pins
 

@@ -77,6 +77,14 @@ on:
           extra services such as Postgres stay on the caller.
         type: boolean
         default: true
+      generated_paths:
+        description: >-
+          Comma-separated paths of generated code, relative to working_directory.
+          Ruff, pylint, mypy, radon, pydoclint, interrogate, and bandit skip them.
+          Hand-written code is not a generated path. The top-level scripts
+          directory is already skipped; a package named scripts is scanned.
+        type: string
+        default: ''
       app_install_command:
         description: Install app deps before tests (empty to skip)
         type: string
@@ -176,6 +184,11 @@ on:
       dast_target_url:
         type: string
         default: http://localhost:8080
+      generated_paths:
+        description: >-
+          Comma-separated paths of generated code, relative to working_directory.
+        type: string
+        default: ''
 permissions: {}
 
 concurrency:
@@ -417,6 +430,7 @@ jobs:
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Run static analysis quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -428,6 +442,7 @@ jobs:
           strictness-level: ${{ inputs.strictness_level }}
           installable-app: ${{ inputs.installable_app }}
           mypy-strict: ${{ inputs.typecheck_strict }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Upload static analysis artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -506,6 +521,7 @@ jobs:
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Run security quality phase
         uses: ./.devops/.github/actions/qa-run-quality-phase
         with:
@@ -516,6 +532,7 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
           installable-app: ${{ inputs.installable_app }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Upload supply-chain artifacts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -601,6 +618,7 @@ jobs:
           github-event-name: ${{ github.event_name }}
           app-install-command: ${{ inputs.uv_workspace && 'uv sync --all-packages --all-extras --frozen' || inputs.app_install_command || '' }}
           installable-app: ${{ inputs.installable_app }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Start test services
         if: inputs.test_compose_file != ''
         working-directory: ${{ inputs.working_directory }}
@@ -644,6 +662,7 @@ jobs:
           quality-output-dir: ${{ env.QUALITY_OUTPUT_DIR }}
           strictness-level: ${{ inputs.strictness_level }}
           installable-app: ${{ inputs.installable_app }}
+          generated-paths: ${{ inputs.generated_paths }}
       - name: Stop test services
         if: always() && inputs.test_compose_file != ''
         working-directory: ${{ inputs.working_directory }}
